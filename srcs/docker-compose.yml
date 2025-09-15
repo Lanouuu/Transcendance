@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+
+  fastify:
+    image: fastify:user
+    container_name: fastify
+    build: ./requirements/fastify
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    networks:
+      - pong_app
+    restart: always
+
+networks:
+  pong_app:
+    name: pong_app
