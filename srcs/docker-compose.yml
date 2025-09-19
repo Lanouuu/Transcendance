@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
 
   fastify:
@@ -8,11 +6,22 @@ services:
     build: ./requirements/fastify
     ports:
       - "8080:8080"
+    volumes:
+      - sqlite:/app/data
     env_file:
       - .env
     networks:
       - pong_app
     restart: always
+
+volumes:
+  sqlite:
+    name: sqlite
+    driver: local
+    driver_opts:
+      device: ${PWD}/data/sqlite
+      o: bind
+      type: none
 
 networks:
   pong_app:
