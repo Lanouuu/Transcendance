@@ -5,7 +5,7 @@
     "main": "index.js",
     "dependencies": {
         "fastify": "^5.6.0",
-        "better-sqlite3": "^8.0.0"
+        "better-sqlite3": "^9.0.0"
     },
     "author": "ade-fran",
     "license": "42"
