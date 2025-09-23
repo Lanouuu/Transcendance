@@ -2,7 +2,8 @@
     "name": "fastify-backend",
     "version": "1.0.0",
     "description": "Configuration fastify backend (transcendance, 42)",
-    "main": "index.js",
+    "main": "./scripts/main.js",
+    "type": "module",
     "dependencies": {
         "fastify": "^5.6.0",
         "better-sqlite3": "^9.0.0"
