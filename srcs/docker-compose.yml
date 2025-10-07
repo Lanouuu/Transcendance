@@ -1,6 +1,6 @@
 services:
 
-  fastify:
+  users:
     image: users:user
     container_name: users
     build: ./requirements/users
