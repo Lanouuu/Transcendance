@@ -1,7 +1,7 @@
 {
-    "name": "fastify-backend",
+    "name": "users-backend",
     "version": "1.0.0",
-    "description": "Configuration fastify backend (transcendance, 42)",
+    "description": "Configuration users docker backend (transcendance, 42)",
     "main": "./scripts/main.js",
     "type": "module",
     "dependencies": {

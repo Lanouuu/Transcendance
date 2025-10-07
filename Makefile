@@ -1,9 +1,6 @@
-SQLITE_DB	=	./data/sqlite/
-
 all: up
 
 up: build
-	@mkdir -p ${SQLITE_DB}
 	docker compose -f ./srcs/docker-compose.yml up -d
 
 down:
@@ -28,5 +25,4 @@ clean:
 re: clean up
 
 prune: clean
-	@rm -rf data
 	@docker system prune -a --volumes -f
