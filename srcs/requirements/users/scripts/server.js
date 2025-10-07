@@ -19,9 +19,7 @@ export function runServer() {
                 return reply.status(404).send({ error : "User not find" });
             return reply.send({ id, name: user.name});
         } catch (err) {
-            console.error(err.message);
-            console.error(err.stack);
-            return reply.status(500).send({error : err.message});
+            return reply.status(500).send({error : "Internal Server Error: " + err.message});
         }
     })
     

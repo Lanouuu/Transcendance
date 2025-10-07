@@ -8,10 +8,10 @@ COPY --chown=node:node ./scripts/ ./scripts/
 
 RUN mkdir ./data/
 
+# a supprimer une fois projet termine !!
 RUN apt-get update && apt-get install -y sqlite3
 
 RUN npm install 
 
-# a supprimer une fois projet termine !!
 
 CMD ["node", "./scripts/main.js"]
