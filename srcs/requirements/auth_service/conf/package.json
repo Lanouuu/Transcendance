@@ -1,0 +1,12 @@
+{
+  "name": "auth_service",
+  "type": "module",
+  "dependencies": {
+    "fastify": "^5.0.0",
+    "@fastify/jwt": "^5.0.0",
+    "bcryptjs": "^2.4.3",
+    "speakeasy": "^2.0.0",
+    "sqlite3": "^5.1.6",
+    "sqlite": "^5.1.1"
+  }
+}
