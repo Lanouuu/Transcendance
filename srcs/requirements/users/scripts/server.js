@@ -9,7 +9,7 @@ export function runServer() {
 
     const usersDB = db.initDB();
 
-    fastify.get('/:id', function handler (request, reply) {
+    fastify.get('/:id', function handler(request, reply) {
         const { id } = request.params;
 
         try {

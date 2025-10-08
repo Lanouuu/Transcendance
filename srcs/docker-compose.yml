@@ -1,11 +1,29 @@
 services:
 
+  gateway:
+    image: gateway:user
+    container_name: gateway
+    build: 
+      context: ./requirements/gateway
+      args:
+        DOMAIN_NAME: ${DOMAIN_NAME}
+        ADMIN_NAME: ${ADMIN_NAME}
+    ports:
+      - "8080:8080"
+      - "8443:443"
+    depends_on:
+      - users
+    env_file:
+      - .env
+    networks:
+      - pong_app
+    restart: always
+
   users:
     image: users:user
     container_name: users
     build: ./requirements/users
-    ports:
-      - "8080:8080"
+    expose: ["3000"]
     env_file:
       - .env
     networks:
