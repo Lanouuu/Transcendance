@@ -3,12 +3,12 @@ FROM node:slim
 WORKDIR /app
 
 COPY /conf/package.json ./
-COPY data/ ./
+
 COPY scripts/ ./
 
 COPY . .
 
-RUN npm install
+RUN npm install bcryptjs
 
 # # a supprimer une fois projet termine !!
 # RUN apt-get update && apt-get install -y sqlite3
