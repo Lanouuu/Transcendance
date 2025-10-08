@@ -4,8 +4,8 @@ import { initDB } from "./database.js";
 import authRoutes from "./routes.js";
 
 const fastify = Fastify({ logger: true });
-const PORT = parseInt(process.env.USERS_PORT, 10);
-const HOST = process.env.USERS_HOST;
+const PORT = parseInt(process.env.AUTH_PORT, 10);
+const HOST = process.env.AUTH_HOST;
 
 fastify.register(jwt, { secret: "supersecretkey" });
 

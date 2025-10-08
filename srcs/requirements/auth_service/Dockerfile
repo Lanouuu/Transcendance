@@ -14,3 +14,5 @@ RUN npm install bcryptjs
 # RUN apt-get update && apt-get install -y sqlite3
 
 CMD ["node", "scripts/server.js"]
+
+EXPOSE 3001
