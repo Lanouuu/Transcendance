@@ -9,6 +9,23 @@ export function runServer() {
 
     const usersDB = db.initDB();
 
+    fastify.post("/signup", async (request, reply) => {
+      const { name, email, password } = request.body;
+      if(!email || !password)
+            return reply.code(400).send({error: "Mail and password required"});
+    
+      const hashedPassword = await bcrypt.hash(password, 10);
+      try {
+        const result = await db.run(
+          "INSERT INTO users (name, email, password) VALUES (?, ?, ?)", [name, email, hashedPassword]
+        );
+        return reply.status(201).send({id: result.lastID, name, email});
+      } catch (err) {
+        fastify.log.error(err, "Error signup");
+        return reply.status(400).send({error: "Signup failed"});
+      }
+    });
+
     fastify.get('/:id', function handler (request, reply) {
         const { id } = request.params;
 
