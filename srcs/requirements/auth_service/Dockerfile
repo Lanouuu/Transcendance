@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY /conf/package.json ./
 
-COPY scripts/ ./
+COPY scripts/ ./scripts/
 
 COPY . .
 
