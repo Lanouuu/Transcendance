@@ -9,6 +9,14 @@ const HOST = process.env.AUTH_HOST;
 
 fastify.register(jwt, { secret: "supersecretkey" });
 
+app.decorate("authenticate", async function(request, reply) {
+  try {
+    await request.jwtVerify();
+  } catch (err) {
+    reply.status(401).send({ error: "Not authorized" });
+  }
+});
+
 const dbSessions = await initDB();
 
 fastify.register(authRoutes, { dbSessions });

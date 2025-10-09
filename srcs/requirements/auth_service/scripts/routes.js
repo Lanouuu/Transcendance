@@ -1,15 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "@fastify/jwt";
 
-// // Auth middleware
-// fastify.decorate("authenticate", async function(request, reply) {
-//   try {
-//     await request.jwtVerify();
-//   } catch (err) {
-//     reply.status(401).send({error: "Not authorized"});
-//   }
-// });
-
 export default async function routes(fastify, options) {
     const db = await options.db;
 
