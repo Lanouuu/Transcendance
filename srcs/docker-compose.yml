@@ -25,8 +25,6 @@ services:
     container_name: users
     build: ./requirements/users
     expose: ["3000"]
-    ports:
-      - "3000:3000"
     env_file:
       - .env
     networks:
@@ -37,8 +35,6 @@ services:
     container_name: auth_service
     build: ./requirements/auth_service
     expose: ["3001"]
-    ports:
-      - "3001:3001"
     env_file:
       - .env
     networks:
