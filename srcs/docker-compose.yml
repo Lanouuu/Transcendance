@@ -41,6 +41,16 @@ services:
       - pong_app
     restart: always
 
+  game:
+    container_name: game
+    build: ./requirements/game
+    expose: ["3002"]
+    env_file:
+      - .env
+    networks:
+      - pong_app
+    restart: always
+
 networks:
   pong_app:
     name: pong_app
