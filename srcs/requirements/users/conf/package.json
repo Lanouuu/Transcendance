@@ -5,9 +5,12 @@
     "main": "./scripts/main.js",
     "type": "module",
     "dependencies": {
+        "@fastify/cors": "^11.1.0",
         "fastify": "^5.6.0",
         "better-sqlite3": "^9.0.0",
-         "bcryptjs": "^2.4.3"
+        "bcryptjs": "^2.4.3",
+        "otplib": "^12.0.1",
+        "qrcode": "^1.5.3"
     },
     "author": "ade-fran",
     "license": "42"

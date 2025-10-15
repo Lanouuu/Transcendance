@@ -2,12 +2,19 @@ import Fastify from "fastify";
 import jwt from "@fastify/jwt";
 import { initDB } from "./database.js";
 import authRoutes from "./routes.js";
+import cors from "@fastify/cors";
 
 const fastify = Fastify({ logger: true });
 const PORT = parseInt(process.env.AUTH_PORT, 10);
 const HOST = process.env.AUTH_HOST;
 
 fastify.register(jwt, { secret: "supersecretkey" });
+
+await fastify.register(cors, {
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true
+});
 
 fastify.decorate("authenticate", async function(request, reply) {
 try {

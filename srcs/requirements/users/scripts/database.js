@@ -7,15 +7,17 @@ export function initDB() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name        CHAR(150),
             mail        CHAR(150),
-            password    CHAR(150)
+            password    CHAR(150),
+            enable2FA   BOOL DEFAULT FALSE,
+            secret2FA   TEXT
         )`
     );
 
-    const insertUser = usersDB.prepare("INSERT INTO users (name, mail, password) VALUES (?, ?, ?)");
+    // const insertUser = usersDB.prepare("INSERT INTO users (name, mail, password) VALUES (?, ?, ?)");
 
-    insertUser.run("Alice", "alice@mail.com", "1234");
-    insertUser.run("Alyssia", "alyssia@mail.com", "abcd");
-    insertUser.run("Doudou", "doudou@mail.com", "lol");
+    // insertUser.run("Alice", "alice@mail.com", "1234");
+    // insertUser.run("Alyssia", "alyssia@mail.com", "abcd");
+    // insertUser.run("Doudou", "doudou@mail.com", "lol");
 
     return usersDB;
 }
