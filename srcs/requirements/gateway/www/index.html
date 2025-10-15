@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Signup / Login</title>
+  <style>
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2rem;
+      padding: 2rem;
+    }
+    form {
+      background: #1e293b;
+      padding: 1.5rem;
+      border-radius: 10px;
+      width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    h2 {
+      margin: 0;
+      color: #38bdf8;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+    label {
+      font-size: 0.9rem;
+    }
+    input {
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: white;
+    }
+    button {
+      background: #38bdf8;
+      color: #0f172a;
+      padding: 0.6rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #0ea5e9;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIGNUP -->
+  <form action="https://127.0.0.1:8443/auth_service/signup/" method="POST">
+    <h2>Créer un compte</h2>
+
+    <label for="signup-name">Nom</label>
+    <input type="text" id="signup-name" name="name" required>
+
+    <label for="signup-mail">Email</label>
+    <input type="email" id="signup-mail" name="mail" required>
+
+    <label for="signup-pass">Mot de passe</label>
+    <input type="password" id="signup-pass" name="password" required>
+
+    <button type="submit">Créer</button>
+  </form>
+
+  <!-- LOGIN -->
+  <form action="https://127.0.0.1:8443/auth_service/login/" method="POST">
+    <h2>Connexion</h2>
+
+    <label for="login-mail">Email</label>
+    <input type="email" id="login-mail" name="mail" required>
+
+    <label for="login-pass">Mot de passe</label>
+    <input type="password" id="login-pass" name="password" required>
+
+    <button type="submit">Se connecter</button>
+  </form>
+
+</body>
+</html>
