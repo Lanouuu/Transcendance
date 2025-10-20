@@ -6,11 +6,11 @@ const board = new Sprite({
         x: 0,
         y: 0
     },
-    image: 'assets/Board.png'
+    image: '../assets/Board.png'
 })
 
 const player = new Sprite({
-    image: 'assets/Player.png',
+    image: '../assets/Player.png',
 })
 
 player.position = {

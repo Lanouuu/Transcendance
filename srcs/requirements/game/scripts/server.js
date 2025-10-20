@@ -14,7 +14,12 @@ export function runServer() {
     const dirname = join(filename, '..')
 
     fastify.register(fastifyStatic, {
-    root: join(dirname, './'),
+    root: join(dirname, '..'),
+    })
+
+    // A supprimer
+    fastify.get('/', (request, reply) => {
+        reply.sendFile('scripts/index.html')
     })
 
     fastify.listen({host: HOST, port: PORT}, (err) => {

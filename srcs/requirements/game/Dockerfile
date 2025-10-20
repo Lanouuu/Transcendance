@@ -6,7 +6,7 @@ RUN mkdir -p /app/public/scripts
 
 WORKDIR /app/public/assets
 
-COPY assets/* .
+COPY assets/* ./
 
 WORKDIR /app/public
 
