@@ -53,12 +53,24 @@
     button:hover {
       background: #0ea5e9;
     }
+    img.qr {
+      margin-top: 1rem;
+      width: 200px;
+      height: 200px;
+      border-radius: 8px;
+      align-self: center;
+    }
+    .message {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #f87171;
+    }
   </style>
 </head>
 <body>
 
   <!-- SIGNUP -->
-  <form action="https://127.0.0.1:8443/auth_service/signup/" method="POST">
+  <form id="signup-form">
     <h2>Créer un compte</h2>
 
     <label for="signup-name">Nom</label>
@@ -70,11 +82,17 @@
     <label for="signup-pass">Mot de passe</label>
     <input type="password" id="signup-pass" name="password" required>
 
+    <label>
+      <input type="checkbox" id="signup-2fa" name="enable2FA">
+      Activer la double authentification (2FA)
+    </label>
+
     <button type="submit">Créer</button>
+    <div class="message" id="signup-msg"></div>
   </form>
 
   <!-- LOGIN -->
-  <form action="https://127.0.0.1:8443/auth_service/login/" method="POST">
+  <form id="login-form">
     <h2>Connexion</h2>
 
     <label for="login-mail">Email</label>
@@ -83,8 +101,90 @@
     <label for="login-pass">Mot de passe</label>
     <input type="password" id="login-pass" name="password" required>
 
+    <label for="login-2fa">Code 2FA (si activé)</label>
+    <input type="text" id="login-2fa" name="code2FA" placeholder="123456">
+
     <button type="submit">Se connecter</button>
+    <div class="message" id="login-msg"></div>
   </form>
+
+  <script>
+    const BASE_URL = "https://localhost:8443/auth_service";
+
+    // --- SIGNUP ---
+    document.getElementById("signup-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("signup-name").value;
+      const mail = document.getElementById("signup-mail").value;
+      const password = document.getElementById("signup-pass").value;
+      const enable2FA = document.getElementById("signup-2fa").checked;
+
+      try {
+        const res = await fetch(`${BASE_URL}/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, mail, password, enable2FA }),
+        });
+
+        const data = await res.json();
+        const msg = document.getElementById("signup-msg");
+        msg.textContent = res.ok ? "Compte créé avec succès !" : (data.error || "Erreur lors de l'inscription");
+        msg.style.color = "lightgreen";
+
+        // Afficher le QR code si 2FA activé
+        if (data.qrcodedata) {
+          let img = document.querySelector("#signup-form img.qr");
+          if (!img) {
+            img = document.createElement("img");
+            img.classList.add("qr");
+            document.getElementById("signup-form").appendChild(img);
+          }
+          img.src = data.qrcodedata;
+          img.alt = "QR Code 2FA";
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById("signup-msg").textContent = "Erreur de communication avec le serveur.";
+      }
+    });
+
+    // --- LOGIN ---
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const mail = document.getElementById("login-mail").value;
+      const password = document.getElementById("login-pass").value;
+      const code2FA = document.getElementById("login-2fa").value;
+
+      try {
+        const res = await fetch(`${BASE_URL}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mail, password, code2FA }),
+        });
+
+        const data = await res.json();
+        const msg = document.getElementById("login-msg");
+        msg.textContent = res.ok ? "Connexion réussie !" : (data.error || "Erreur de connexion");
+        msg.style.color = "lightgreen";
+
+        if (res.ok && data.token) {
+          localStorage.setItem("jwt", data.token);
+
+          setTimeout(() => {
+            window.location.href = "profile.html"; 
+          }, 1000);
+        } else {
+          msg.textContent = data.error || "erreur de connexion.";
+          msg.style.color = "red";
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById("login-msg").textContent = "Erreur de communication avec le serveur.";
+      }
+    });
+  </script>
 
 </body>
 </html>

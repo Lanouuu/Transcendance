@@ -3,12 +3,13 @@ import jwt from "@fastify/jwt";
 import { initDB } from "./database.js";
 import authRoutes from "./routes.js";
 import cors from "@fastify/cors";
+import { verifyToken } from "./auth_utils.js";
 
 const fastify = Fastify({ logger: true });
 const PORT = parseInt(process.env.AUTH_PORT, 10);
 const HOST = process.env.AUTH_HOST;
 
-fastify.register(jwt, { secret: "supersecretkey" });
+fastify.register(jwt, { secret: process.env.JWT_SECRET });
 
 await fastify.register(cors, {
   origin: "*",
@@ -25,7 +26,7 @@ try {
 
     const token = authHeader.split(" ")[1];
 
-    request.user = await request.jwtVerify(token); //token decode
+    request.user = await verifyToken(token);
 
     const db = await initDB();
     const tokenHash = await bcrypt.hash(token, 10);

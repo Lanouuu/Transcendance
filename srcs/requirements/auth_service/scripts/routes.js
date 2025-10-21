@@ -3,6 +3,7 @@ import jwt from "@fastify/jwt";
 import { initDB } from "./database.js";
 import { authenticator } from "otplib";
 import QRCode from "qrcode";
+import { verifyToken } from "./auth_utils.js";
 
 export default async function routes(fastify, options) {
     // const db = await options.db;
@@ -12,6 +13,63 @@ export default async function routes(fastify, options) {
         reply.send('Hello World!')
     });
     
+    fastify.get("/verify", async (req, reply) => {
+      try {
+
+        const authHeader = request.headers["authorization"];
+        if(!authHeader) return reply.code(401).send();
+
+        const token = authHeader.split(" ")[1];
+        const decoded = await verifyToken(token);
+
+        reply.code(200).send({ user: decoded });
+      } catch {
+        reply.code(401).send({ error: "Invalid token" });
+      }
+    });
+
+    // signup
+    fastify.post("/signup", async (request, reply) => {
+      const { name, mail, password, enable2FA } = request.body;
+      if(!mail || !password)
+            return reply.code(400).send({error: "Mail and password required"});
+    
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      let secret2FA = null;
+      let qrcodedata = null;
+
+      if(enable2FA) {
+        secret2FA = authenticator.generateSecret();
+        const otpauth = authenticator.keyuri(mail, "Transcendence42", secret2FA);
+        qrcodedata = await QRCode.toDataURL(otpauth);
+      }
+
+      try {
+        const response = await fetch("http://users:3000/create_user", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            name: name,
+            mail: mail,
+            password: hashedPassword,
+            enable2FA: enable2FA ? 1 : 0,
+            secret2FA: enable2FA ? secret2FA : null,
+          }),
+        });
+
+      if(!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "User creation failed");
+      }
+
+      return reply.status(201).send({name, mail, qrcodedata });
+      } catch (err) {
+        fastify.log.error(err, "Error signup");
+        return reply.status(400).send({error: "Signup failed"});
+      }
+    });
+
     // connexion
     fastify.post("/login", async (request, reply) => {
       const { mail, password, code2FA } = request.body;
@@ -24,13 +82,13 @@ export default async function routes(fastify, options) {
       if (!isValid) return reply.status(401).send({ error: "Invalid password"});
     
 
-      if(user.secret2FA) {
+      if(user.enable2FA) {
         if(!code2FA) {
           return reply.status(400).send({error: "2FA code required" });
         }
+        const isValid2FA = authenticator.check(code2FA, user.secret2FA);
+        if(!isValid2FA) return reply.status(401).send({error: "Invalid 2FA code"});
       }
-      const isValid2FA = authenticator.check(code2FA, user.secret2FA);
-      if(!isValid2FA) return reply.status(401).send({error: "Invalid 2FA code"});
 
       const token = fastify.jwt.sign({id: user.id, mail: user.mail });
 
@@ -79,8 +137,4 @@ export default async function routes(fastify, options) {
       reply.send({ message: "Logged out" });
     });
 
-    // Route protégée
-    fastify.get("/profile", { preHandler: [fastify.authenticate] }, async (request, reply) => {
-      reply.send({ id: request.user.id, mail: request.user.mail })
-    });
 }

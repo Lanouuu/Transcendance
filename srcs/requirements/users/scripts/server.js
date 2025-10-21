@@ -17,32 +17,23 @@ export function runServer() {
       methods: ["GET", "POST", "DELETE"],
       credentials: true
     });
-
-    fastify.post("/signup", async (request, reply) => {
-      console.log(request.body);
-      const { name, mail, password, enable2FA } = request.body;
-      if(!mail || !password)
-            return reply.code(400).send({error: "Mail and password required"});
     
-      const hashedPassword = await bcrypt.hash(password, 10);
+    fastify.post("/create_user", async (request, reply) => {
+      const { name, mail, password, enable2FA, secret2FA } = request.body;
 
       try {
-        let secret2FA = null;
-        let qrcodedata = null;
-        if(enable2FA) {
-          secret2FA = authenticator.generateSecret();
-          const result = usersDB.prepare( "INSERT INTO users (name, mail, password, enable2FA, secret2FA) VALUES (?, ?, ?, ?, ?)" );
-          result.run(name, mail, hashedPassword, 1, secret2FA);
-          const otpauth = authenticator.keyuri(mail, "Transcendence42", secret2FA);
-          qrcodedata = await QRCode.toDataURL(otpauth);
-        }
-        return reply.status(201).send({name, mail, qrcodedata: enable2FA ? qrcodedata : null});
+        const stmt = usersDB.prepare(`
+          INSERT INTO users (name, mail, password, enable2FA, secret2FA)
+          VALUES (?, ?, ?, ?, ?)
+        `);
+        stmt.run(name, mail, password, enable2FA, secret2FA || null);
+        return reply.status(201).send({ success: true });
       } catch (err) {
-        fastify.log.error(err, "Error signup");
-        return reply.status(400).send({error: "Signup failed"});
+        fastify.log.error(err);
+        return reply.code(500).send({ error: "Database error" });
       }
     });
-    
+
     // Route pour récupérer un user par mail (utilisée par auth_service)
     fastify.get("/mail/:mail", (req, reply) => {
       try {
@@ -60,7 +51,6 @@ export function runServer() {
         return reply.status(500).send({ error: "Internal Server Error: " + err.message });
       }
     });
-
 
     fastify.get('/:id', function handler (request, reply) {
         const { id } = request.params;

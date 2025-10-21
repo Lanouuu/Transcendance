@@ -8,7 +8,7 @@ export function initDB() {
             name        CHAR(150),
             mail        CHAR(150),
             password    CHAR(150),
-            enable2FA   BOOL DEFAULT FALSE,
+            enable2FA   BOOLEAN DEFAULT 0,
             secret2FA   TEXT
         )`
     );
