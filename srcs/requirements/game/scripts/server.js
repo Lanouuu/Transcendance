@@ -21,9 +21,11 @@ export function runServer() {
     fastify.get('/', (request, reply) => {
         reply.sendFile('scripts/index.html')
     })
+    // A supprimer
     fastify.get('/game', (request, reply) => {
-        reply.send('hello')
+        reply.send( {obj: 'hello'})
     })
+
     fastify.listen({host: HOST, port: PORT}, (err) => {
         if (err) {
             fastify.log.error(err);

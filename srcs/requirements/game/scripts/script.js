@@ -18,6 +18,16 @@ player.position = {
     y: board.image.height / 2 - player.image.height / 2
 }
 
+const ball = new Sprite({
+    image: '../assets/Ball.png' 
+})
+
+
+ball.position = {
+    x: board.image.width / 2 - ball.image.width / 2,
+    y: board.image.height / 2 - ball.image.height / 2
+}
+
 const key = {
     a: {
         pressed: false
@@ -36,6 +46,7 @@ window.addEventListener('keydown', (e) => {
             key.d.pressed = true
             break
     }
+    console.log(ball.position)
 })
 
 
@@ -50,10 +61,22 @@ window.addEventListener('keyup', (e) => {
     }
 })
 
+async function getData() {
+
+    try {
+        const response =  await fetch(`http://localhost:3002/game`)
+        const res = await response.json()
+        console.log(res)
+    }catch(error) {
+        console.log(error.message)
+    }
+}
+
 function gameAnimation() {
-    window.requestAnimationFrame(gameAnimation)
+    window.requestAnimationFrame(gameAnimation)  
     board.draw()
     player.draw()
+    ball.draw()
     if (key.a.pressed){
         if (player.position.y != 0) {
             if (player.position.y > 0 && player.position.y < 1)
@@ -64,7 +87,7 @@ function gameAnimation() {
         }
         if (player.position.y <= 0)
         {
-            console.log("Out of screen")
+            console.log("Collision")
             player.position.y = 0;
         }
     }
