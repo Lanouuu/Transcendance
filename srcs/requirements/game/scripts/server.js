@@ -21,7 +21,9 @@ export function runServer() {
     fastify.get('/', (request, reply) => {
         reply.sendFile('scripts/index.html')
     })
-
+    fastify.get('/game', (request, reply) => {
+        reply.send('hello')
+    })
     fastify.listen({host: HOST, port: PORT}, (err) => {
         if (err) {
             fastify.log.error(err);
