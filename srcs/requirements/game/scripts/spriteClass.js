@@ -4,12 +4,12 @@ class Sprite {
         this.image.src = image
         this.position = position
         this.loaded = false
+        this.velocity = velocity
     }
 
     draw() {
-        this.image.onload = () => {
+        if (onload)
             this.loaded = true
-        }
 
         if (this.loaded) {
             canvasContext.drawImage(this.image, this.position.x, this.position.y)
