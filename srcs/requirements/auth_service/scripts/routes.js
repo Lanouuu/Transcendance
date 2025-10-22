@@ -1,26 +1,27 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import jwt from "@fastify/jwt";
 import { initDB } from "./database.js";
 import { authenticator } from "otplib";
 import QRCode from "qrcode";
 import { verifyToken } from "./auth_utils.js";
 
+const SECRET_HMAC = process.env.HMAC_SECRET;
+
 export default async function routes(fastify, options) {
     // const db = await options.db;
     const db = await initDB();
-
-    fastify.get('/', function handler (request, reply) {
-        reply.send('Hello World!')
-    });
     
     fastify.get("/verify", async (req, reply) => {
       try {
 
-        const authHeader = request.headers["authorization"];
+        const authHeader = req.headers["authorization"];
         if(!authHeader) return reply.code(401).send();
-
+        
         const token = authHeader.split(" ")[1];
-        const decoded = await verifyToken(token);
+        if (!token) return reply.code(401).send({ error: "Token manquant" });
+        
+        const decoded = await verifyToken(fastify, token);
 
         reply.code(200).send({ user: decoded });
       } catch {
@@ -77,10 +78,9 @@ export default async function routes(fastify, options) {
       const res = await fetch(`http://users:3000/mail/${mail}`);
       if(!res.ok) return reply.status(400).send({ error: "User not found (in auth)" });
       const user = await res.json();
-
-      const isValid = await bcrypt.compare(password, user.password);
+      
+      const isValid = await bcrypt.compare(password, user.password); 
       if (!isValid) return reply.status(401).send({ error: "Invalid password"});
-    
 
       if(user.enable2FA) {
         if(!code2FA) {
@@ -92,10 +92,10 @@ export default async function routes(fastify, options) {
 
       const token = fastify.jwt.sign({id: user.id, mail: user.mail });
 
-      const tokenHash = await bcrypt.hash(token, 10);
+      const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(token).digest("hex");
       await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
 
-      reply.send({token});
+      reply.code(200).send({token});
     });
 
     // creation du code

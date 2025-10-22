@@ -25,18 +25,13 @@ try {
     }
 
     const token = authHeader.split(" ")[1];
-
-    request.user = await verifyToken(token);
-
-    const db = await initDB();
-    const tokenHash = await bcrypt.hash(token, 10);
-    const session = await db.get("SELECT * FROM sessions WHERE token_hash = ?", [tokenHash]);
-
-    if (!session) {
-    return reply.status(401).send({ error: "Token invalidated" });
+    if (!token) {
+        return reply.code(401).send({ error: "No token provided" });
     }
 
-    // Ajout du token brut à la requete
+    const decoded = await verifyToken(token);
+    
+    request.user = decoded;
     request.token = token;
 
 } catch (err) {
