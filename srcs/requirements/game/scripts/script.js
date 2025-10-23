@@ -15,8 +15,8 @@ const player = new Sprite({
 
 const ball = new Sprite({
     velocity: {
-        x: 10,
-        y: 10
+        x: 1.2,
+        y: 1.2
     },
     image: '../assets/Ball.png' 
 })
@@ -83,70 +83,38 @@ async function getData() {
 function inputHandler() {
     if (key.a.pressed){
 
-        if (player.position.y - 15 <= 0)
+        if (player.position.y - 5 <= 0)
             player.position.y = 0
         else
-            player.position.y -=1 * 15
+            player.position.y -=1 * 5
     }
     if (key.d.pressed) {
-        if (player.position.y + 15 + player.image.height >= board.image.height)
+        if (player.position.y + 5 + player.image.height >= board.image.height)
             player.position.y = board.image.height - player.image.height
         else
-            player.position.y +=1 * 15
+            player.position.y +=1 * 5
     }
 }
-
-// function moveBall() {
-//     if (ball.position !== undefined) {
-//         ball.position.x += ball.velocity.x
-//         ball.position.y += ball.velocity.y
-
-//         if  (ball.position.x <= 0)
-//             ball.position = {x: board.image.width / 2, y:board.image.height / 2}
-
-//         if (ball.position.x <= 0 || ball.position.x + ball.image.width >= board.image.width || ball.position.x <= player.image.width && ball.position.y >= player.position.y && ball.position.y <= player.position.y + player.image.height)
-//             ball.velocity.x = -ball.velocity.x
-//         if (ball.position.y <= 0 || ball.position.y + ball.image.height >= board.image.height)
-//             ball.velocity.y = -ball.velocity.y
-
-//         if (ball.position.x <= player.position.x + player.image.width && ball.position.x >= player.position.x && ball.position.y + ball.image.height >= player.position.y && ball.position.y <= player.position.y + player.image.height) {
-//             ball.velocity.x = -ball.velocity.x
-//             ball.position.x = player.position.x + player.image.width
-//         }
-//     }
-// }
 
 function moveBall() {
-    if (!ball.position || !ball.velocity) return
+    if (ball.position !== undefined) {
+        ball.position.x += ball.velocity.x
+        ball.position.y += ball.velocity.y
 
-    ball.position.x += ball.velocity.x
-    ball.position.y += ball.velocity.y
+        if  (ball.position.x <= 0)
+            ball.position = {x: board.image.width / 2, y:board.image.height / 2}
 
-    if (ball.position.y <= 0 || ball.position.y + ball.image.height >= board.image.height) {
-        ball.velocity.y = -ball.velocity.y
-    }
+        if (ball.position.x + ball.image.width >= board.image.width)
+            ball.velocity.x = -ball.velocity.x
+        if (ball.position.y <= 0 || ball.position.y + ball.image.height >= board.image.height)
+            ball.velocity.y = -ball.velocity.y
 
-    const hitPlayer =
-        ball.position.x <= player.position.x + player.image.width &&
-        ball.position.x >= player.position.x &&
-        ball.position.y + ball.image.height >= player.position.y &&
-        ball.position.y <= player.position.y + player.image.height
-
-    if (hitPlayer) {
-        ball.velocity.x = -ball.velocity.x
-        ball.position.x = player.position.x + player.image.width
-    }
-
-    if (ball.position.x + ball.image.width >= board.image.width) {
-        ball.velocity.x = -ball.velocity.x
-    }
-
-    if (ball.position.x + ball.image.width < 0) {
-        ball.position.x = board.image.width / 2 - ball.image.width / 2
-        ball.position.y = board.image.height / 2 - ball.image.height / 2
+        if (ball.position.x <= player.position.x + player.image.width && ball.position.x >= player.position.x && ball.position.y + ball.image.height >= player.position.y && ball.position.y <= player.position.y + player.image.height) {
+            ball.velocity.x = -ball.velocity.x
+            ball.position.x = player.position.x + player.image.width
+        }
     }
 }
-
 
 function gameAnimation() {
     window.requestAnimationFrame(gameAnimation)  
