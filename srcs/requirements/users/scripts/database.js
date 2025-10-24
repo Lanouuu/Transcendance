@@ -12,12 +12,5 @@ export function initDB() {
             secret2FA   TEXT
         )`
     );
-
-    // const insertUser = usersDB.prepare("INSERT INTO users (name, mail, password) VALUES (?, ?, ?)");
-
-    // insertUser.run("Alice", "alice@mail.com", "1234");
-    // insertUser.run("Alyssia", "alyssia@mail.com", "abcd");
-    // insertUser.run("Doudou", "doudou@mail.com", "lol");
-
     return usersDB;
 }

@@ -31,7 +31,7 @@ export default async function routes(fastify, options) {
 
     // signup
     fastify.post("/signup", async (request, reply) => {
-      const { name, mail, password, enable2FA } = request.body;
+      const { userName, mail, password, enable2FA } = request.body;
       if(!mail || !password)
             return reply.code(400).send({error: "Mail and password required"});
     
@@ -51,7 +51,7 @@ export default async function routes(fastify, options) {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
-            name: name,
+            name: userName,
             mail: mail,
             password: hashedPassword,
             enable2FA: enable2FA ? 1 : 0,
@@ -64,7 +64,7 @@ export default async function routes(fastify, options) {
         throw new Error(errData.error || "User creation failed");
       }
 
-      return reply.status(201).send({name, mail, qrcodedata });
+      return reply.status(201).send({userName, mail, qrcodedata });
       } catch (err) {
         fastify.log.error(err, "Error signup");
         return reply.status(400).send({error: "Signup failed"});
