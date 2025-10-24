@@ -1,190 +1,116 @@
-<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Signup / Login</title>
-  <style>
-    body {
-      background: #0f172a;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 2rem;
-      padding: 2rem;
-    }
-    form {
-      background: #1e293b;
-      padding: 1.5rem;
-      border-radius: 10px;
-      width: 280px;
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-    }
-    h2 {
-      margin: 0;
-      color: #38bdf8;
-      font-size: 1.2rem;
-      text-align: center;
-    }
-    label {
-      font-size: 0.9rem;
-    }
-    input {
-      padding: 0.5rem;
-      border-radius: 6px;
-      border: 1px solid #334155;
-      background: #0f172a;
-      color: white;
-    }
-    button {
-      background: #38bdf8;
-      color: #0f172a;
-      padding: 0.6rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    button:hover {
-      background: #0ea5e9;
-    }
-    img.qr {
-      margin-top: 1rem;
-      width: 200px;
-      height: 200px;
-      border-radius: 8px;
-      align-self: center;
-    }
-    .message {
-      text-align: center;
-      font-size: 0.9rem;
-      color: #f87171;
-    }
-  </style>
-</head>
-<body>
+<!DOCTYPE html>
 
-  <!-- SIGNUP -->
-  <form id="signup-form">
-    <h2>Créer un compte</h2>
+<html>
 
-    <label for="signup-name">Nom</label>
-    <input type="text" id="signup-name" name="name" required>
+	<head>
+		<meta charset="utf-8">
+		<link href="../css/style.css" rel="stylesheet">
+		<link href="favicon/favicon.ico" rel="icon">
 
-    <label for="signup-mail">Email</label>
-    <input type="email" id="signup-mail" name="mail" required>
+		<!--Polices importees-->
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Geo:ital@0;1&display=swap" rel="stylesheet">
 
-    <label for="signup-pass">Mot de passe</label>
-    <input type="password" id="signup-pass" name="password" required>
+		<script src="../dist/signup.js" defer></script>
+		<script src="../dist/login.js" defer></script>
 
-    <label>
-      <input type="checkbox" id="signup-2fa" name="enable2FA">
-      Activer la double authentification (2FA)
-    </label>
+		<title>Transcendance</title>
+	</head>
 
-    <button type="submit">Créer</button>
-    <div class="message" id="signup-msg"></div>
-  </form>
+	<body>
 
-  <!-- LOGIN -->
-  <form id="login-form">
-    <h2>Connexion</h2>
+		<header>
+			Pong infinity
+		</header>
 
-    <label for="login-mail">Email</label>
-    <input type="email" id="login-mail" name="mail" required>
+		<nav>
+			<a href="#home">Home</a>
+			<a href="#game">Game</a>
+			<a href="#tournament">Tournament</a>
+			<a href="#friends">Friends</a>
+			<a href="#account">My account</a>
+			<a href="#login">Login</a>
+			<a href="#signUp">Sign up</a>
+		</nav>
 
-    <label for="login-pass">Mot de passe</label>
-    <input type="password" id="login-pass" name="password" required>
+		<main>
 
-    <label for="login-2fa">Code 2FA (si activé)</label>
-    <input type="text" id="login-2fa" name="code2FA" placeholder="123456">
+			<section id="home" class="page">
+				<h1>Accueil</h1>
+			</section>
 
-    <button type="submit">Se connecter</button>
-    <div class="message" id="login-msg"></div>
-  </form>
+			<section id="game" class="page">
+				<h1>Lancer une partie rapide</h1>
+			</section>
 
-  <script>
-    const BASE_URL = "https://localhost:8443/auth_service";
+			<section id="tournament" class="page">
+				<h1>Tournois</h1>
+			</section>
 
-    // --- SIGNUP ---
-    document.getElementById("signup-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
+			<section id="friends" class="page">
+				<h1>Ajouter des amis</h1>
+			</section>
 
-      const name = document.getElementById("signup-name").value;
-      const mail = document.getElementById("signup-mail").value;
-      const password = document.getElementById("signup-pass").value;
-      const enable2FA = document.getElementById("signup-2fa").checked;
+			<section id="account" class="page">
+				<h1>Gerer mon compte</h1>
+			</section>
 
-      try {
-        const res = await fetch(`${BASE_URL}/signup`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, mail, password, enable2FA }),
-        });
+			<section id="login" class="page">
+				<h1>Login</h1>
+				<form id="login-form">
+					<label for="boxMailLogin">Mail</label>
+					<input type="text" name="username" id="boxMailLogin" required>
 
-        const data = await res.json();
-        const msg = document.getElementById("signup-msg");
-        msg.textContent = res.ok ? "Compte créé avec succès !" : (data.error || "Erreur lors de l'inscription");
-        msg.style.color = "lightgreen";
+					<label for="boxPassLogin">Password</label>
+					<input type="password" name="password" id="boxPassLogin" required>
 
-        // Afficher le QR code si 2FA activé
-        if (data.qrcodedata) {
-          let img = document.querySelector("#signup-form img.qr");
-          if (!img) {
-            img = document.createElement("img");
-            img.classList.add("qr");
-            document.getElementById("signup-form").appendChild(img);
-          }
-          img.src = data.qrcodedata;
-          img.alt = "QR Code 2FA";
-        }
-      } catch (err) {
-        console.error(err);
-        document.getElementById("signup-msg").textContent = "Erreur de communication avec le serveur.";
-      }
-    });
+					<label for="box2faLogin">Code 2FA (si activé)</label>
+    				<input type="text" id="box2faLogin" name="code2FA" placeholder="123456">
 
-    // --- LOGIN ---
-    document.getElementById("login-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
+					<button type="submit">Connection</button>
+    				<div class="message" id="login-msg"></div>
+				</form>
+			</section>
 
-      const mail = document.getElementById("login-mail").value;
-      const password = document.getElementById("login-pass").value;
-      const code2FA = document.getElementById("login-2fa").value;
+			<section id="signUp" class="page">
+				<h1>Sign Up</h1>
+				<form id="signup-form">
+					<label for="boxUserNameSignup">Username</label>
+					<input type="text" name="username" id="boxUserNameSignup"" required>
 
-      try {
-        const res = await fetch(`${BASE_URL}/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mail, password, code2FA }),
-        });
+					<label for="boxMailSignup">Email</label>
+					<input type="email" name="mail" id="boxMailSignup" required>
 
-        const data = await res.json();
-        const msg = document.getElementById("login-msg");
-        msg.textContent = res.ok ? "Connexion réussie !" : (data.error || "Erreur de connexion");
-        msg.style.color = "lightgreen";
+					<label for="boxPassSignup">Password</label>
+					<input type="password" name="password" id="boxPassSignup" required>
 
-        if (res.ok && data.token) {
-          localStorage.setItem("jwt", data.token);
+					<label for="box2faSignup">Activer la double authentification</label>
+					<input type="checkbox" name="2fa" id="box2faSignup">
 
-          setTimeout(() => {
-            window.location.href = "profile.html"; 
-          }, 1000);
-        } else {
-          msg.textContent = data.error || "erreur de connexion.";
-          msg.style.color = "red";
-        }
-      } catch (err) {
-        console.error(err);
-        document.getElementById("login-msg").textContent = "Erreur de communication avec le serveur.";
-      }
-    });
-  </script>
+    				<button type="submit">Créer</button>
+    				<div class="message" id="signup-msg"></div>
+				</form>
+			</section>
 
-</body>
+		</main>
+
+		<aside>
+
+		</aside>
+
+		<footer>
+			<p>This website was designed for 42 school Transcendance project</p>
+			Participants:
+			<ul>
+				<li>
+					Tom Lebon
+					<a href="https://fr.linkedin.com"><img src="https://static.licdn.com/aero-v1/sc/h/al2o9zrvru7aqj8e1x2rzsrca"></a>
+					<a href="https://github.com"><img src="https://github.githubassets.com/favicons/favicon.svg"></a>
+				</li>
+			</ul>
+		</footer>
+
+	</body>
+
 </html>

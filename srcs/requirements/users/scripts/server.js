@@ -52,20 +52,6 @@ export function runServer() {
       }
     });
 
-    fastify.get('/:id', function handler (request, reply) {
-        const { id } = request.params;
-
-        try {
-            const stmt = usersDB.prepare('SELECT name FROM users WHERE id = ?');
-            const user = stmt.get(id)
-            if (!user)
-                return reply.status(404).send({ error : "User not find" });
-            return reply.send({ id, name: user.name });
-        } catch (err) {
-            return reply.status(500).send({error : "Internal Server Error: " + err.message});
-        }
-    })
-
     fastify.listen({host: HOST, port: PORT}, (err) => {
         if (err) {
             fastify.log.error(err);

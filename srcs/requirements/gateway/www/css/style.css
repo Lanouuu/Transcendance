@@ -1,0 +1,110 @@
+:root{
+	--color-prim: #3D9AE1;
+	--color-sec: #EB4B98;
+	--color-accent: #BCF4F5;
+	--color-dark: #545454;
+	--color-light: #F3C98B;
+}
+
+
+* {
+	margin: 0;
+}
+
+
+/* #region Header */
+header{
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	height: 8rem;
+
+	background: radial-gradient(circle at bottom, var(--color-sec) 0%, var(--color-light) 50%, var(--color-prim) 100%);
+	font-size: 2em;
+	font-family: "Geo";
+	font-weight: 600;
+	font-style: italic;
+	color: var(--color-dark);
+}
+/* #endregion */
+
+/* #region nav */
+nav{
+
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+
+	padding: 1rem;
+	background: linear-gradient(90deg, var(--color-prim) 0%, var(--color-sec) 50%, var(--color-prim) 100%);
+}
+nav a{
+	font-family: "Geo";
+	font-weight: 600;
+	font-style: normal;
+	font-size: 1.5rem;
+	color: var(--color-accent);
+	text-decoration: none;
+}
+
+nav a:hover{
+	opacity: 80%;
+	text-decoration:underline;
+}
+/* #endregion */
+
+/* #region login */
+#login form{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	gap: 1rem;
+	margin: 1rem;
+	padding: 4rem;
+}
+/* #endregion */
+
+/* #region signUp */
+#signUp form{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	
+	gap: 1rem;
+	margin: 1rem;
+}
+/* #endregion */
+
+.page{
+	display: none;
+}
+
+.page:target{
+	display: block;
+}
+
+
+/* #region Footer */
+footer{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	
+	background: var(--color-dark);
+
+	padding: 1.5rem;
+
+	color: var(--color-light);
+
+}
+
+footer ul a img{
+	width: 1.3rem;
+	height: 1.3rem;
+	margin-left: 0.2rem;
+}
+/* #endregion */
