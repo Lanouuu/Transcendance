@@ -1,10 +1,11 @@
 class Sprite {
-    constructor({position, velocity, image}) {
+    constructor({position, velocity, image, key}) {
         this.image = new Image()
         this.image.src = image
         this.position = position
         this.loaded = false
         this.velocity = velocity
+        this.key = key
     }
 
     draw() {

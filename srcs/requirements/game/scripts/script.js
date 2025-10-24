@@ -11,12 +11,24 @@ const board = new Sprite({
 
 const player = new Sprite({
     image: '../assets/Player.png',
+    key: {
+        up: false,
+        down: false
+    }
+})
+
+const player2 = new Sprite({
+    image: '../assets/Player2.png',
+    key: {
+        up: false,
+        down: false
+    }
 })
 
 const ball = new Sprite({
     velocity: {
-        x: 1.2,
-        y: 1.2
+        x: 9,
+        y: 9
     },
     image: '../assets/Ball.png' 
 })
@@ -24,48 +36,66 @@ const ball = new Sprite({
 board.image.onload = () => {
     board.loaded = true
     player.loaded = true
+    player2.loaded = true
     ball.loaded = true
     player.position = {
         x: 0,
         y: board.image.height / 2 - player.image.height / 2
     }
     
+    player2.position = {
+        x: board.image.width - player2.image.width,
+        y: board.image.height / 2 - player.image.height / 2
+    }
+
     ball.position = {
         x: board.image.width / 2 - ball.image.width / 2,
         y: board.image.height / 2 - ball.image.height / 2
     }
 }
 
-const key = {
-    a: {
-        pressed: false
-    },
-    d: {
-        pressed: false
-    }
-}
+// const key = {
+//     a: {
+//         pressed: false
+//     },
+//     d: {
+//         pressed: false
+//     }
+// }
 
 window.addEventListener('keydown', (e) => {
     switch(e.key) {
         case 'a':
-            key.a.pressed = true
+            player.key.up = true
             break
         case 'd':
-            key.d.pressed = true
+            player.key.down = true
+            break
+        case 'ArrowLeft':
+            player2.key.up = true
+            break
+        case 'ArrowRight':
+            player2.key.down = true
             break
     }
-    console.log(ball.position)
 })
 
 
 window.addEventListener('keyup', (e) => {
     switch(e.key) {
         case 'a':
-            key.a.pressed = false
+            player.key.up = false
             break
         case 'd':
-            key.d.pressed = false
+            player.key.down = false
             break
+        case 'ArrowLeft':
+            player2.key.up = false
+            break
+        case 'ArrowRight':
+            player2.key.down = false
+            break
+            
     }
 })
 
@@ -81,18 +111,34 @@ async function getData() {
 }
 
 function inputHandler() {
-    if (key.a.pressed){
+    // Player 1
+    if (player.key.up){
 
-        if (player.position.y - 5 <= 0)
+        if (player.position.y - 15 <= 0)
             player.position.y = 0
         else
-            player.position.y -=1 * 5
+            player.position.y -=1 * 15
     }
-    if (key.d.pressed) {
-        if (player.position.y + 5 + player.image.height >= board.image.height)
+    if (player.key.down) {
+        if (player.position.y + 15 + player.image.height >= board.image.height)
             player.position.y = board.image.height - player.image.height
         else
-            player.position.y +=1 * 5
+            player.position.y +=1 * 15
+    }
+    // Player 2
+    if (player2.key.up){
+
+        if (player2.position.y - 15 <= 0)
+            player2.position.y = 0
+        else
+            player2.position.y -=1 * 15
+        console.log(player2.position)
+    }
+    if (player2.key.down) {
+        if (player2.position.y + 15 + player2.image.height >= board.image.height)
+            player2.position.y = board.image.height - player2.image.height
+        else
+            player2.position.y +=1 * 15
     }
 }
 
@@ -101,17 +147,22 @@ function moveBall() {
         ball.position.x += ball.velocity.x
         ball.position.y += ball.velocity.y
 
-        if  (ball.position.x <= 0)
+        if (ball.position.x <= 0 || ball.position.x  >= board.image.width)
             ball.position = {x: board.image.width / 2, y:board.image.height / 2}
 
-        if (ball.position.x + ball.image.width >= board.image.width)
-            ball.velocity.x = -ball.velocity.x
+        // if (ball.position.x + ball.image.width >= board.image.width)
+        //     ball.velocity.x = -ball.velocity.x
         if (ball.position.y <= 0 || ball.position.y + ball.image.height >= board.image.height)
             ball.velocity.y = -ball.velocity.y
 
         if (ball.position.x <= player.position.x + player.image.width && ball.position.x >= player.position.x && ball.position.y + ball.image.height >= player.position.y && ball.position.y <= player.position.y + player.image.height) {
             ball.velocity.x = -ball.velocity.x
             ball.position.x = player.position.x + player.image.width
+        }
+
+        if (ball.position.x + ball.image.width >= player2.position.x && ball.position.x <= player2.position.x + player2.image.width && ball.position.y + ball.image.height >= player2.position.y && ball.position.y <= player2.position.y + player2.image.height) {
+            ball.velocity.x = -ball.velocity.x
+            ball.position.x = player2.position.x - ball.image.width
         }
     }
 }
@@ -121,6 +172,7 @@ function gameAnimation() {
     board.draw()
     ball.draw()
     player.draw()
+    player2.draw()
     moveBall()
     inputHandler()
 }
