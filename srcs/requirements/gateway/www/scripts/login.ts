@@ -1,4 +1,4 @@
-function login() {
+export function login() {
 
 	const BASE_URL: string = "https://localhost:8443/auth_service";
 
