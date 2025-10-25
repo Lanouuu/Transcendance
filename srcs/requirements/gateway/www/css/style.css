@@ -11,6 +11,28 @@
 	margin: 0;
 }
 
+body{
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+main {
+	flex-grow: 1;
+	flex-shrink: 1;
+	flex-basis: 0%;
+
+	display:flex;
+	flex-direction: column;
+}
+
+.page {
+	flex-grow: 1;
+	flex-shrink: 1;
+	flex-basis: 0%;
+	min-height: 100%;
+}
+
 
 /* #region Header */
 header{
@@ -55,8 +77,43 @@ nav a:hover{
 }
 /* #endregion */
 
+/* #region BODY */
+
+/* #region home */
+#homePage {
+
+	flex-grow: 1;
+	flex-shrink: 1;
+	flex-basis: 0%;
+
+	background-color: var(--color-dark);
+	color: var(--color-accent);
+}
+
+#homePage h1 {
+	margin: auto;
+}
+/* #endregion */
+
+/* #region game */
+/* #endregion */
+
+/* #region tournament */
+/* #endregion */
+
+/* #region friends */
+/* #endregion */
+
+/* #region account */
+/* #endregion */
+
 /* #region login */
-#login form{
+
+#loginPage {
+	background-color: var(--color-dark);
+}
+
+#loginPage form{
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -67,8 +124,13 @@ nav a:hover{
 }
 /* #endregion */
 
-/* #region signUp */
-#signUp form{
+/* #region signup */
+
+#signupPage {
+	background-color: var(--color-dark);
+}
+
+#signupPage form{
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -78,14 +140,7 @@ nav a:hover{
 }
 /* #endregion */
 
-.page{
-	display: none;
-}
-
-.page:target{
-	display: block;
-}
-
+/* #endregion BODY */
 
 /* #region Footer */
 footer{
