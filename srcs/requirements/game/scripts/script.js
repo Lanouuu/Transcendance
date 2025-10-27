@@ -14,7 +14,8 @@ const player = new Sprite({
     key: {
         up: false,
         down: false
-    }
+    },
+    score: 0
 })
 
 const player2 = new Sprite({
@@ -22,7 +23,8 @@ const player2 = new Sprite({
     key: {
         up: false,
         down: false
-    }
+    },
+    score: 0
 })
 
 const ball = new Sprite({
@@ -31,6 +33,14 @@ const ball = new Sprite({
         y: 9
     },
     image: '../assets/Ball.png' 
+})
+
+const scoreBar = new Sprite({
+    position: {
+        x:0,
+        y:0
+    },
+    image: '../assets/ScoreBar.png'
 })
 
 board.image.onload = () => {
@@ -54,14 +64,9 @@ board.image.onload = () => {
     }
 }
 
-// const key = {
-//     a: {
-//         pressed: false
-//     },
-//     d: {
-//         pressed: false
-//     }
-// }
+scoreBar.image.onload = () => {
+    scoreBar.loaded = true
+}
 
 window.addEventListener('keydown', (e) => {
     switch(e.key) {
@@ -114,8 +119,8 @@ function inputHandler() {
     // Player 1
     if (player.key.up){
 
-        if (player.position.y - 15 <= 0)
-            player.position.y = 0
+        if (player.position.y - 15 <= 0 + scoreBar.image.height)
+            player.position.y = scoreBar.image.height
         else
             player.position.y -=1 * 15
     }
@@ -128,11 +133,10 @@ function inputHandler() {
     // Player 2
     if (player2.key.up){
 
-        if (player2.position.y - 15 <= 0)
-            player2.position.y = 0
+        if (player2.position.y - 15 <= 0 + scoreBar.image.height)
+            player2.position.y = scoreBar.image.height
         else
             player2.position.y -=1 * 15
-        console.log(player2.position)
     }
     if (player2.key.down) {
         if (player2.position.y + 15 + player2.image.height >= board.image.height)
@@ -147,12 +151,16 @@ function moveBall() {
         ball.position.x += ball.velocity.x
         ball.position.y += ball.velocity.y
 
-        if (ball.position.x <= 0 || ball.position.x  >= board.image.width)
+        if (ball.position.x <= 0) {
             ball.position = {x: board.image.width / 2, y:board.image.height / 2}
+            player2.score++
+        }
 
-        // if (ball.position.x + ball.image.width >= board.image.width)
-        //     ball.velocity.x = -ball.velocity.x
-        if (ball.position.y <= 0 || ball.position.y + ball.image.height >= board.image.height)
+        if (ball.position.x >= board.image.width) {
+            ball.position = {x: board.image.width / 2, y:board.image.height / 2}
+            player.score++
+        }
+        if (ball.position.y <= scoreBar.image.height || ball.position.y + ball.image.height >= board.image.height)
             ball.velocity.y = -ball.velocity.y
 
         if (ball.position.x <= player.position.x + player.image.width && ball.position.x >= player.position.x && ball.position.y + ball.image.height >= player.position.y && ball.position.y <= player.position.y + player.image.height) {
@@ -167,14 +175,34 @@ function moveBall() {
     }
 }
 
+canvasContext.fillStyle = 'white'
+canvasContext.font = '30px Arial'
+canvasContext.textAlign = 'center'
+
 function gameAnimation() {
+
+    if (player.score == 5)
+    {
+        canvasContext.fillText("Player 1 wins", board.image.width / 2, board.image.height / 2)
+        return 
+    }
+    if (player2.score == 5)
+    {
+        canvasContext.fillText("Player 2 wins", board.image.width / 2, board.image.height / 2)
+        return 
+    }
     window.requestAnimationFrame(gameAnimation)  
     board.draw()
     ball.draw()
     player.draw()
     player2.draw()
+    canvasContext.fillText(player.score, board.image.width / 2 - 20, scoreBar.image.height / 2)
+    canvasContext.fillText(player2.score, board.image.width / 2 + 20, scoreBar.image.height / 2)
+    // scoreBar.draw()
     moveBall()
     inputHandler()
 }
 
 gameAnimation()
+
+console.log("hello")
