@@ -30,13 +30,18 @@ export function login() {
 				if (res.ok && data.token) {
 					localStorage.setItem("jwt", data.token);
 
-					setTimeout(() => {
-						window.location.href = "profile.html";
+					setTimeout(async () => {
+						const response = await fetch(`/pages/account.html`);
+						if (!response.ok) throw new Error(`Page account not found`);
+						const content = await response.text();
+						(document.querySelector('main') as HTMLElement).innerHTML = content;
 					}, 1000);
 				} else if (msg) {
 					msg.textContent = data.error || "erreur de connexion.";
 					msg.style.color = "red";
+					return ;
 				}
+
 			} catch (err) {
 				console.error(err);
 				(document.getElementById("login-msg") as HTMLInputElement).textContent = "Erreur de communication avec le serveur.";

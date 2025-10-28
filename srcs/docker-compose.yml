@@ -11,6 +11,12 @@ services:
     ports:
       - "8080:8080"
       - "8443:443"
+    # A SUPPRIMER (Pour le dev uniquement)
+    volumes:
+      - "./requirements/gateway/www/pages:/etc/nginx/html/pages"
+      - "./requirements/gateway/www/img:/etc/nginx/html/img"
+      - "./requirements/gateway/www/css:/etc/nginx/html/css"
+    #############
     depends_on:
       - users
       - auth_service

@@ -10,7 +10,7 @@ export function initDB() {
             password    CHAR(150),
             enable2FA   BOOLEAN DEFAULT 0,
             secret2FA   TEXT
-        )`
+        );`
     );
     return usersDB;
 }
