@@ -14,7 +14,7 @@ export function runServer() {
     const dirname = join(filename, '..')
 
     fastify.register(fastifyStatic, {
-    root: join(dirname, '..'),
+        root: join(dirname, '..'),
     })
 
     // A supprimer

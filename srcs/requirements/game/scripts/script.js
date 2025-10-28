@@ -1,72 +1,7 @@
+import { loadSprites } from "./loadImages"
+
 const canvas = document.getElementById("canvas")
 const canvasContext = canvas.getContext('2d')
-
-const board = new Sprite({
-    position: {
-        x: 0,
-        y: 0
-    },
-    image: '../assets/Board.png'
-})
-
-const player = new Sprite({
-    image: '../assets/Player.png',
-    key: {
-        up: false,
-        down: false
-    },
-    score: 0
-})
-
-const player2 = new Sprite({
-    image: '../assets/Player2.png',
-    key: {
-        up: false,
-        down: false
-    },
-    score: 0
-})
-
-const ball = new Sprite({
-    velocity: {
-        x: 9,
-        y: 9
-    },
-    image: '../assets/Ball.png' 
-})
-
-const scoreBar = new Sprite({
-    position: {
-        x:0,
-        y:0
-    },
-    image: '../assets/ScoreBar.png'
-})
-
-board.image.onload = () => {
-    board.loaded = true
-    player.loaded = true
-    player2.loaded = true
-    ball.loaded = true
-    player.position = {
-        x: 0,
-        y: board.image.height / 2 - player.image.height / 2
-    }
-    
-    player2.position = {
-        x: board.image.width - player2.image.width,
-        y: board.image.height / 2 - player.image.height / 2
-    }
-
-    ball.position = {
-        x: board.image.width / 2 - ball.image.width / 2,
-        y: board.image.height / 2 - ball.image.height / 2
-    }
-}
-
-scoreBar.image.onload = () => {
-    scoreBar.loaded = true
-}
 
 window.addEventListener('keydown', (e) => {
     switch(e.key) {
@@ -104,23 +39,23 @@ window.addEventListener('keyup', (e) => {
     }
 })
 
-async function getData() {
+// async function getData() {
 
-    try {
-        const response =  await fetch(`http://localhost:3002/game`)
-        const res = await response.json()
-        console.log(res)
-    }catch(error) {
-        console.log(error.message)
-    }
-}
+//     try {
+//         const response =  await fetch(`http://localhost:3002/game`)
+//         const res = await response.json()
+//         console.log(res)
+//     }catch(error) {
+//         console.log(error.message)
+//     }
+// }
 
 function inputHandler() {
     // Player 1
     if (player.key.up){
 
-        if (player.position.y - 15 <= 0 + scoreBar.image.height)
-            player.position.y = scoreBar.image.height
+        if (player.position.y - 15 <= 0)
+            player.position.y = 0
         else
             player.position.y -=1 * 15
     }
@@ -133,8 +68,8 @@ function inputHandler() {
     // Player 2
     if (player2.key.up){
 
-        if (player2.position.y - 15 <= 0 + scoreBar.image.height)
-            player2.position.y = scoreBar.image.height
+        if (player2.position.y - 15 <= 0)
+            player2.position.y = 0
         else
             player2.position.y -=1 * 15
     }
@@ -160,7 +95,7 @@ function moveBall() {
             ball.position = {x: board.image.width / 2, y:board.image.height / 2}
             player.score++
         }
-        if (ball.position.y <= scoreBar.image.height || ball.position.y + ball.image.height >= board.image.height)
+        if (ball.position.y <= 0 || ball.position.y + ball.image.height >= board.image.height)
             ball.velocity.y = -ball.velocity.y
 
         if (ball.position.x <= player.position.x + player.image.width && ball.position.x >= player.position.x && ball.position.y + ball.image.height >= player.position.y && ball.position.y <= player.position.y + player.image.height) {
@@ -179,30 +114,28 @@ canvasContext.fillStyle = 'white'
 canvasContext.font = '30px Arial'
 canvasContext.textAlign = 'center'
 
-function gameAnimation() {
+async function gameAnimation() {
 
-    if (player.score == 5)
-    {
-        canvasContext.fillText("Player 1 wins", board.image.width / 2, board.image.height / 2)
-        return 
-    }
-    if (player2.score == 5)
-    {
-        canvasContext.fillText("Player 2 wins", board.image.width / 2, board.image.height / 2)
-        return 
-    }
-    window.requestAnimationFrame(gameAnimation)  
+    const [board, player, player2, ball] = await loadSprites()
+    const id = window.requestAnimationFrame(gameAnimation)  
     board.draw()
     ball.draw()
     player.draw()
     player2.draw()
-    canvasContext.fillText(player.score, board.image.width / 2 - 20, scoreBar.image.height / 2)
-    canvasContext.fillText(player2.score, board.image.width / 2 + 20, scoreBar.image.height / 2)
-    // scoreBar.draw()
     moveBall()
     inputHandler()
+    canvasContext.fillText(player.score, board.image.width / 2 - 20, 23.5)
+    canvasContext.fillText(player2.score, board.image.width / 2 + 20, 23.5)
+    if (player.score == 5)
+    {
+        cancelAnimationFrame(id)
+        canvasContext.fillText("Player 1 wins", board.image.width / 2, board.image.height / 2)
+    }
+    if (player2.score == 5)
+    {
+        cancelAnimationFrame(id)
+        canvasContext.fillText("Player 2 wins", board.image.width / 2, board.image.height / 2)
+    }
 }
 
 gameAnimation()
-
-console.log("hello")
