@@ -48,7 +48,7 @@ export function runServer() {
         return reply.send(user);
       } catch (err) {
         console.error("Database error:", err);
-        return reply.status(500).send({ error: "Internal Server Error: " + err.message });
+        return reply.status(400).send({ error: "Internal Server Error: " + err.message });
       }
     });
 

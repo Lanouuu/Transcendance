@@ -32,9 +32,21 @@ export default async function routes(fastify, options) {
     // signup
     fastify.post("/signup", async (request, reply) => {
       const { userName, mail, password, enable2FA } = request.body;
-      if(!mail || !password)
-            return reply.code(400).send({error: "Mail and password required"});
-    
+      if(!userName || !mail || !password)
+        return reply.code(400).send({error: "Username, mail and password required"});
+      
+      let testmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail);
+      if(!testmail)
+        return reply.code(400).send({error: "Wrong mail format"});
+
+      try {
+        const res = await fetch(`http://users:3000/mail/${mail}`);
+        if(res.ok) return reply.status(400).send({ error: "Mail already in use" });
+      } catch (err) {
+        console.error("Erreur de connexion au service user:", err);
+        return reply.status(400).send({error: "User service unavailable" });
+      }
+
       const hashedPassword = await bcrypt.hash(password, 10);
 
       let secret2FA = null;
@@ -65,6 +77,7 @@ export default async function routes(fastify, options) {
       }
 
       return reply.status(201).send({userName, mail, qrcodedata });
+
       } catch (err) {
         fastify.log.error(err, "Error signup");
         return reply.status(400).send({error: "Signup failed"});
@@ -74,10 +87,17 @@ export default async function routes(fastify, options) {
     // connexion
     fastify.post("/login", async (request, reply) => {
       const { mail, password, code2FA } = request.body;
+      
+      let user;
 
-      const res = await fetch(`http://users:3000/mail/${mail}`);
-      if(!res.ok) return reply.status(400).send({ error: "User not found (in auth)" });
-      const user = await res.json();
+      try {
+        const res = await fetch(`http://users:3000/mail/${mail}`);
+        if(!res.ok) return reply.status(400).send({ error: "User not found" });
+        user = await res.json();
+      } catch (err) {
+        console.error("Erreur de connexion au service user:", err);
+        return reply.status(400).send({error: "User service unavailable" });
+      }
       
       const isValid = await bcrypt.compare(password, user.password); 
       if (!isValid) return reply.status(401).send({ error: "Invalid password"});
