@@ -6,8 +6,8 @@
     "type": "module",
     "dependencies": {
         "@fastify/cors": "^11.1.0",
-        "@fastify/multipart": "^7.7.0",
         "fastify": "^5.6.0",
+        "@fastify/multipart": "^9.2.1",
         "better-sqlite3": "^9.0.0",
         "bcryptjs": "^2.4.3",
         "otplib": "^12.0.1",
