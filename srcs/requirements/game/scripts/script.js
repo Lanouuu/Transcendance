@@ -1,6 +1,6 @@
 import { loadSprites } from "./loadimages.js"
 
-export const canvas = document.getElementById("canvas")
+const canvas = document.getElementById("canvas")
 export const canvasContext = canvas.getContext('2d')
 const [board, player, player2, ball] = await loadSprites()
 window.addEventListener('keydown', (e) => {

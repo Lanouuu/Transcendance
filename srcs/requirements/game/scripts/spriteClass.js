@@ -1,4 +1,4 @@
-import {canvas, canvasContext} from './script.js'
+import { canvasContext } from './script.js'
 
 export class Sprite {
     constructor({position, velocity, image, key, score}) {

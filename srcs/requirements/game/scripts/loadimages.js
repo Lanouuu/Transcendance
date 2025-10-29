@@ -1,4 +1,4 @@
-import {Sprite} from './spriteClass.js'
+import { Sprite } from './spriteClass.js'
 
 async function loadImage(imagePath, velocity, key, score) {
     return new Promise((resolve, reject) => {
