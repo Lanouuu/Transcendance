@@ -9,8 +9,9 @@ export function initDB() {
             mail        TEXT NOT NULL UNIQUE,
             password    TEXT NOT NULL,
             enable2FA   BOOLEAN DEFAULT 0,
-            secret2FA   TEXT
-        );`
+            secret2FA   TEXT,
+            avatar_path TEXT NOT NULL DEFAULT 'default.png'
+        )`
     );
     return usersDB;
 }

@@ -14,6 +14,7 @@ RUN cd www && npx tsc
 
 FROM nginx:stable-alpine
 
+#supprimer bash une fois le projet termine !!!
 RUN apk add --no-cache bash openssl
 
 RUN rm /etc/nginx/conf.d/default.conf
@@ -21,7 +22,6 @@ COPY ./conf/nginx.conf /etc/nginx/nginx.conf
 
 COPY --from=builder /app/www/ /etc/nginx/html/
 
-# Génération du SSL
 RUN mkdir -p /etc/nginx/ssl
 ARG DOMAIN_NAME
 ARG ADMIN_NAME
