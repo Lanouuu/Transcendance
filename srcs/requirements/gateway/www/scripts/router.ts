@@ -1,6 +1,7 @@
 class Router {
 
 	private mainContent: HTMLElement;
+	private BASE_URL: string = "https://localhost:8443/auth_service";
 
 	constructor() {
 		// Selects the part of the html doc we want to update (?)
@@ -14,6 +15,14 @@ class Router {
 
 		// First load (supposed to launch main i guess)
 		this.handleRoute();
+
+		// A SUPPRIMER --> Permet de creer un user test
+		const res = fetch(`${this.BASE_URL}/signup`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ userName:'test', mail:'test@test.fr', password:'test', enable2FA:false})
+		});
+		////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		window.addEventListener('hashchange', () => this.handleRoute());
 	}
