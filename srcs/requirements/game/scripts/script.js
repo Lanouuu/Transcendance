@@ -1,8 +1,8 @@
-import { loadSprites } from "./loadImages"
+import { loadSprites } from "./loadimages.js"
 
-const canvas = document.getElementById("canvas")
-const canvasContext = canvas.getContext('2d')
-
+export const canvas = document.getElementById("canvas")
+export const canvasContext = canvas.getContext('2d')
+const [board, player, player2, ball] = await loadSprites()
 window.addEventListener('keydown', (e) => {
     switch(e.key) {
         case 'a':
@@ -115,8 +115,6 @@ canvasContext.font = '30px Arial'
 canvasContext.textAlign = 'center'
 
 async function gameAnimation() {
-
-    const [board, player, player2, ball] = await loadSprites()
     const id = window.requestAnimationFrame(gameAnimation)  
     board.draw()
     ball.draw()

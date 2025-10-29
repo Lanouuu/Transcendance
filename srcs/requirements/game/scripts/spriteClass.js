@@ -1,4 +1,6 @@
-class Sprite {
+import {canvas, canvasContext} from './script.js'
+
+export class Sprite {
     constructor({position, velocity, image, key, score}) {
         this.image = new Image()
         this.image.src = image
