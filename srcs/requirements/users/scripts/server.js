@@ -125,7 +125,7 @@ export function runServer() {
 
       try {
 
-        const stmt = usersDB.prepare("SELECT id, name, mail FROM users WHERE id = ?");
+        const stmt = usersDB.prepare("SELECT id, name, mail, wins, losses, created_at FROM users WHERE id = ?");
         const user = stmt.get(id);
         if (!user) {
           return reply.status(400).send({ error: "User not found" });
@@ -134,7 +134,10 @@ export function runServer() {
         const sanitizedUser = {
           id: user.id,
           name: user.name,
-          mail: user.mail
+          mail: user.mail,
+          wins: user.wins,
+          losses: user.losses,
+          createdAt: user.created_at
         };
 
         reply.send(sanitizedUser);
