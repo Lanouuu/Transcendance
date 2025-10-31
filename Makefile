@@ -9,6 +9,8 @@ up_test: build_test
 build_test:
 	docker compose -f ./srcs/docker-compose_test.yml build
 
+ret: clean up_test
+
 ######################################################
 
 

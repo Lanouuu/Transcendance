@@ -10,7 +10,6 @@ class Router {
 		this.initRouter();
 	}
 
-	// Gets called each time the hash (#) changes (?)
 	private initRouter(): void {
 
 		// First load (supposed to launch main i guess)
@@ -27,6 +26,7 @@ class Router {
 		window.addEventListener('hashchange', () => this.handleRoute());
 	}
 
+	// Gets called each time the hash (#) changes (?)
 	// Get the name of the page clean and call loadPage
 	private handleRoute(): void {
 		
@@ -52,25 +52,32 @@ class Router {
 				// Loads the scripts corresponding the the page loaded
 				switch(page) {
 					case 'home':
-						await import('./home.js');
+						const homeScript = await import('./home.js');
+						if (homeScript.home) homeScript.home();
 						break;
 					case 'game':
-						await import('./game.js');
+						const gameScript = await import('./game.js');
+						// if (gameScript.game) gameScript.game();
 						break;
 					case 'tournament':
-						await import('./tournament.js');
-						break;
-					case 'friends':
-						await import('./friends.js');
+						const tournamentScript = await import('./tournament.js');
+						// if (tournamentScript.tournament) tournamentScript.tournament();
 						break;
 					case 'account':
-						await import('./account.js');
-						break;
-					case 'login':
-						await import('./login.js');
+						const accountScript = await import('./account.js');
+						if (accountScript.displayAccountPage) accountScript.displayAccountPage();
 						break;
 					case 'signup':
-						await import('./signup.js');
+						const signupScript = await import('./signup.js');
+						if (signupScript.signup) signupScript.signup();
+						break;
+					case 'login':
+						const loginScript = await import('./login.js');
+						if (loginScript.login) loginScript.login();
+						break;
+					case 'logout':
+						const logoutScript = await import('./logout.js');
+						if (logoutScript.logout) logoutScript.logout();
 						break;
 					default:
 						break;
@@ -82,6 +89,14 @@ class Router {
 	}
 }
 
+
+
 document.addEventListener('DOMContentLoaded', () => {
+
+	if (!localStorage.getItem("jwt"))
+		document.body.classList.remove("loggedIn");
+	else
+		document.body.classList.add("loggedIn");
+	console.log(document.body.classList);
 	new Router();
 });

@@ -29,12 +29,12 @@ export function login() {
 
 				if (res.ok && data.token) {
 					localStorage.setItem("jwt", data.token);
+					localStorage.setItem("userId", data.id);
+
+					document.body.classList.add("loggedIn");
 
 					setTimeout(async () => {
-						const response = await fetch(`/pages/account.html`);
-						if (!response.ok) throw new Error(`Page account not found`);
-						const content = await response.text();
-						(document.querySelector('main') as HTMLElement).innerHTML = content;
+						window.location.hash = '#account';
 					}, 1000);
 				} else if (msg) {
 					msg.textContent = data.error || "erreur de connexion.";
@@ -49,5 +49,3 @@ export function login() {
 		});
 	}
 }
-
-login();
