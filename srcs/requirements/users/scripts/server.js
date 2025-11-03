@@ -1,9 +1,10 @@
 import Fastify from "fastify";
-import * as db from "./database.js";
 import cors from "@fastify/cors";
+import * as db from "./database.js";
 import multipart from "@fastify/multipart";
 import fs from "fs";
 import path from "path";
+import { pipeline } from 'stream/promises';
 
 export function runServer() {
     
@@ -55,16 +56,14 @@ export function runServer() {
       try {
         const stmt = usersDB.prepare("SELECT * FROM users WHERE mail = ?");
         const user = stmt.get(req.params.mail);
-        console.log(user);
-
         if (!user) {
           return reply.status(404).send({ error: "User not found (in users)" });
         }
 
         return reply.send(user);
       } catch (err) {
-        console.error("Database error:", err);
-        return reply.status(400).send({ error: "Internal Server Error: " + err.message });
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error: " + err.message });
       }
     });
 
@@ -78,7 +77,6 @@ export function runServer() {
 
     fastify.post("/upload-avatar", async (req, reply) => {
       try {
-
         const data = await req.file();
         if (!data) {
           return reply.status(400).send({ error: "No file uploaded" });
@@ -96,22 +94,21 @@ export function runServer() {
   
         const extension = data.mimetype === "image/png" ? ".png" : ".jpg";
         const fileName = `${id}${extension}`;
-        const filePath = `/data/avatars/${fileName}`;
-        const fullPath = path.join(process.cwd(), filePath);
+        const avatarsDir = path.join(process.cwd(), "data", "avatars");
+        await fs.promises.mkdir(avatarsDir, { recursive: true });
+        const fullPath = path.join(avatarsDir, fileName);
   
-        const stream = fs.createWriteStream(fullPath);
-        await data.file.pipe(stream);
+        const writeStream = fs.createWriteStream(fullPath);
+        await pipeline(data.file, writeStream);
   
         const stmt = usersDB.prepare("UPDATE users SET avatar_path = ? WHERE id = ?");
         stmt.run(fileName, id);
   
         reply.send({ success: true, avatar:fileName});
-
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
       }
-
     });
 
     fastify.get("/get-avatar/:id", async (req, reply) => {
@@ -121,7 +118,6 @@ export function runServer() {
       }
 
       try {
-
         const stmt = usersDB.prepare("SELECT avatar_path FROM users WHERE id = ?");
         const user = stmt.get(id);
         if (!user || !user.avatar_path) {
@@ -134,7 +130,6 @@ export function runServer() {
         }
 
         return reply.type(`image/${path.extname(user.avatar_path).slice(1)}`).send(fs.createReadStream(filePath));
-
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -156,7 +151,6 @@ export function runServer() {
       }
 
       try {
-
         const stmt = usersDB.prepare("SELECT id, name, mail, wins, losses, created_at FROM users WHERE id = ?");
         const user = stmt.get(id);
         if (!user) {
@@ -173,12 +167,10 @@ export function runServer() {
         };
 
         reply.send(sanitizedUser);
-
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
       }
-
     });
     
     //#endregion get_users_data
@@ -228,7 +220,10 @@ export function runServer() {
     fastify.post("/accept-invit", async (req, reply) => {
       try {
         const { userID, friendID } = req.body;
-  
+        if (!userID || !friendID) {
+          return reply.status(400).send({ error: "Missing parameters" });
+        }
+        
         const pendingStmt = usersDB.prepare("SELECT * FROM friends WHERE user_id = ? AND friend_id = ? AND status = 'pending'");
         const isPending = pendingStmt.get(friendID, userID);
         if (!isPending) {
@@ -246,24 +241,32 @@ export function runServer() {
     });
 
     fastify.get("/friends-list/:id", async (req, reply) => {
-      const userID = req.params.id;
-      if (!userID) {
-        return reply.status(400).send({ error: "ID required" });
-      }
+      try {
+        const userID = req.params.id;
+        if (!userID) {
+          return reply.status(400).send({ error: "ID required" });
+        }
+  
+        const listStmt = usersDB.prepare(`
+          SELECT
+            f.friend_id AS id, u.name, u.wins, u.losses
+          FROM friends f
+          JOIN users u ON f.friend_id = u.id
+          WHERE f.user_id = ? AND f.status = 'accepted'
+          UNION
+          SELECT
+            f.user_id AS id, u.name, u.wins, u.losses
+          FROM friends f
+          JOIN users u ON f.user_id = u.id
+          WHERE f.friend_id = ? AND f.status = 'accepted'
+        `);
+        const friendsList = listStmt.all(userID, userID);
 
-      listStmt = usersDB.prepare(`'
-        SELECT
-          f.friends_id AS id, u.name, u.wins, u.losses
-        FROM friends f
-        JOIN users u ON f.friend_id = u.id
-        WHERE f.user_id = ? AND f.status = 'accepted'
-        UNION
-        SELECT
-          f.user_id AS id, u.name, u.wins, u.losses
-        FROM friends f
-        JOIN users u ON f.user_id = u.id
-        WHERE f.friend_id = ? AND f.status = 'accepted`
-      );
+        reply.send({ friendsList });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
     });
 
     //#endregion friends_management
