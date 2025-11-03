@@ -1,4 +1,4 @@
-import { loadSprites } from "./loadimages.js"
+import { loadSprites } from "./loadImages.js"
 
 const canvas = document.getElementById("canvas")
 const canvasContext = canvas.getContext('2d')
@@ -12,18 +12,24 @@ fetch(`http://localhost:3002/state/${game.game.id}`, {
     body: JSON.stringify({game})
 })
 
-const ws = new WebSocket(`ws://localhost:3002/ws`)
+const ws = new WebSocket("ws://localhost:3002/ws")
 
 ws.addEventListener('open', (event) => {
     console.log("Connected to WebSocket server")
+    ws.send(JSON.stringify("Hello"))
 })
 
+ws.addEventListener('message', (message) => {
+  console.log(`Server: ${message}`);
+});
+
 ws.addEventListener('message', (event) => {
-    const serverGame = JSON.parse(event.data)
-    game.board = serverGame.board
-    game.player1 = serverGame.player1
-    game.player2 = serverGame.player2
-    game.ball = serverGame.ball
+    // const serverGame = JSON.parse(event.data)
+    // game.board = serverGame.board
+    // game.player1 = serverGame.player1
+    // game.player2 = serverGame.player2
+    // game.ball = serverGame.ball
+    console.log("Message reçu:", event.data)
 })
 
 window.addEventListener('keydown', (e) => {

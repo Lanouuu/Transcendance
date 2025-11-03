@@ -28,6 +28,7 @@ fastify.register(fastifyWebsocket)
 
 fastify.get('/ws', { websocket: true }, (connection, req) => {
     console.log("CLIENT CONNECTER")
+    // connection.send({ msg: 'Bienvenue sur le serveur WebSocket !' })
     connection.socket.on('message', message => {
         const input = JSON.parse(message.toString())
         console.log("Input reçu:", input)
