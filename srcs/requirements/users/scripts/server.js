@@ -75,16 +75,20 @@ export function runServer() {
 
     //#region avatar_management
 
-    fastify.post("/upload-avatar", async (req, reply) => {
+    fastify.post("/upload-avatar/:id", async (req, reply) => {
       try {
         const data = await req.file();
         if (!data) {
           return reply.status(400).send({ error: "No file uploaded" });
         }
   
-        const { id } = data.fields;
+        const { id } = req.params;
         if (!id) {
           return reply.status(400).send({ error: "ID required" });
+        }
+        const reqID = req.headers["x-user-id"];
+        if (id !== reqID) {
+          return reply.status(403).send({ error: "Can only modify your own avatar" });
         }
   
         const allowedTypes = ["image/jpeg", "image/png"];
@@ -196,6 +200,10 @@ export function runServer() {
         } else if (!friendName) {
           return reply.status(400).send({ error: "friend name required" });
         }
+        const reqID = req.headers["x-user-id"];
+        if (userID !== reqID) {
+          return reply.status(403).send({ error: "Can only send invitations for yourself" });
+        }
   
         const getStmt = usersDB.prepare("SELECT id FROM users WHERE name = ?");
         const row = getStmt.get(friendName);
@@ -251,6 +259,10 @@ export function runServer() {
         const userID = req.params.id;
         if (!userID) {
           return reply.status(400).send({ error: "ID required" });
+        }
+        const reqID = req.headers["x-user-id"];
+        if (userID !== reqID) {
+          return reply.status(403).send({ error: "Can only view your own friends list" });
         }
   
         const listStmt = usersDB.prepare(`
