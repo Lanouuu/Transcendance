@@ -3,8 +3,8 @@ import fastifyStatic from '@fastify/static'
 import { join } from 'path'
 import { fileURLToPath } from 'url'
 import { Game } from './gameClass.js'
-import fastifyWebsocket from '@fastify/websocket'
 import cors from '@fastify/cors'
+import {WebSocketServer} from 'ws'
 
 const fastify = Fastify({ logger: true })
 const PORT = parseInt(process.env.GAME_PORT, 10)
@@ -24,21 +24,27 @@ fastify.register(fastifyStatic, {
   root: join(dirname, '..'),
 })
 
-fastify.register(fastifyWebsocket)
-
-fastify.get('/ws', { websocket: true }, (connection, req) => {
-    console.log("CLIENT CONNECTER")
-    // connection.send({ msg: 'Bienvenue sur le serveur WebSocket !' })
-    connection.socket.on('message', message => {
-        const input = JSON.parse(message.toString())
-        console.log("Input reçu:", input)
-    })
-})
-
 // A supprimer
 fastify.get('/', (request, reply) => {
     reply.sendFile('scripts/index.html')
 })
+
+
+const wss = new WebSocketServer({ port: 8081 });
+
+wss.on('listening', () => {
+  console.log("WebSocket server running on ws://localhost:8081")
+})
+
+wss.on('connection', function connection(ws) {
+  ws.on('error', console.error);
+
+  ws.on('message', function message(data) {
+    console.log('received: %s', data);
+  });
+
+  ws.send('WELCOME TO THE WEBSOCKET SERVER');
+});
 
 fastify.get("/local", async (request, reply) => {
     try {
@@ -73,7 +79,8 @@ fastify.post("/state/:id", async (request, reply) => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: PORT, host: HOST })
+    const server = await fastify.listen({ port: PORT, host: HOST })
+    console.log(`Server listening at ${server}`)
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)
