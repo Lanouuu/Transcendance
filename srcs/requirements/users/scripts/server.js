@@ -35,8 +35,8 @@ export function runServer() {
 
     //#region create_user
 
-    fastify.post("/create_user", async (request, reply) => {
-      const { name, mail, password, enable2FA, secret2FA } = request.body;
+    fastify.post("/create_user", async (req, reply) => {
+      const { name, mail, password, enable2FA, secret2FA } = req.body;
 
       try {
         const stmt = usersDB.prepare(`
@@ -191,7 +191,6 @@ export function runServer() {
 
     fastify.post("/send-invit/:id/:friendName", async (req, reply) => {
       try {
-        
         const userID = req.params.id;
         const friendName = req.params.friendName;
         if (!userID) {
@@ -220,11 +219,51 @@ export function runServer() {
         insertStmt.run(userID, friendID);
 
         return reply.status(201).send({ success: true });
-
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
       }
+    });
+
+    fastify.post("/accept-invit", async (req, reply) => {
+      try {
+        const { userID, friendID } = req.body;
+  
+        const pendingStmt = usersDB.prepare("SELECT * FROM friends WHERE user_id = ? AND friend_id = ? AND status = 'pending'");
+        const isPending = pendingStmt.get(friendID, userID);
+        if (!isPending) {
+          return reply.status(400).send({ error: "No pending invitation found" });
+        }
+  
+        const acceptStmt = usersDB.prepare("UPDATE friends SET status = 'accepted' WHERE user_id = ? AND friend_id = ?");
+        acceptStmt.run(friendID, userID);
+
+        reply.send({ success: true, message: "Invitation accepted" });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    fastify.get("/friends-list/:id", async (req, reply) => {
+      const userID = req.params.id;
+      if (!userID) {
+        return reply.status(400).send({ error: "ID required" });
+      }
+
+      listStmt = usersDB.prepare(`'
+        SELECT
+          f.friends_id AS id, u.name, u.wins, u.losses
+        FROM friends f
+        JOIN users u ON f.friend_id = u.id
+        WHERE f.user_id = ? AND f.status = 'accepted'
+        UNION
+        SELECT
+          f.user_id AS id, u.name, u.wins, u.losses
+        FROM friends f
+        JOIN users u ON f.user_id = u.id
+        WHERE f.friend_id = ? AND f.status = 'accepted`
+      );
     });
 
     //#endregion friends_management
