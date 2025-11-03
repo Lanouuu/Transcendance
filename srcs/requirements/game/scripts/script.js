@@ -1,51 +1,69 @@
 import { loadSprites } from "./loadimages.js"
 
 const canvas = document.getElementById("canvas")
-export const canvasContext = canvas.getContext('2d')
-export const [board, player, player2, ball] = await loadSprites()
+const canvasContext = canvas.getContext('2d')
+const res = await fetch(`http://localhost:3002/local`)
+const game = await res.json()
+await loadSprites(game)
+
+fetch(`http://localhost:3002/state/${game.game.id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({game})
+})
+
+const ws = new WebSocket(`ws://localhost:3002/ws`)
+
+ws.addEventListener('open', (event) => {
+    console.log("Connected to WebSocket server")
+})
+
+ws.addEventListener('message', (event) => {
+    const serverGame = JSON.parse(event.data)
+    game.board = serverGame.board
+    game.player1 = serverGame.player1
+    game.player2 = serverGame.player2
+    game.ball = serverGame.ball
+})
 
 window.addEventListener('keydown', (e) => {
-    switch(e.key) {
-        case 'a':
-            player.key.up = true
-            break
-        case 'd':
-            player.key.down = true
-            break
-        case 'ArrowLeft':
-            player2.key.up = true
-            break
-        case 'ArrowRight':
-            player2.key.down = true
-            break
+    const body = {
+        id: game.game.id,
+        key: e.key,
+        state: true
     }
+    if (ws.readyState === WebSocket.OPEN)
+        ws.send(JSON.stringify(body))
+    else
+        console.error("WebSocket is not open")
 })
 
 
-window.addEventListener('keyup', (e) => {
-    switch(e.key) {
-        case 'a':
-            player.key.up = false
-            break
-        case 'd':
-            player.key.down = false
-            break
-        case 'ArrowLeft':
-            player2.key.up = false
-            break
-        case 'ArrowRight':
-            player2.key.down = false
-            break
+// window.addEventListener('keyup', (e) => {
+//     switch(e.key) {
+//         case 'a':
+//             game.player1.key.up = false
+//             break
+//         case 'd':
+//             game.player1.key.down = false
+//             break
+//         case 'ArrowLeft':
+//             game.player2.key.up = false
+//             break
+//         case 'ArrowRight':
+//             game.player2.key.down = false
+//             break
             
-    }
-})
+//     }
+// })
 
-// async function getData() {
+// async function getState() {
 
 //     try {
-//         const response =  await fetch(`http://localhost:3002/game`)
+//         const response =  await fetch(`http://localhost:3002/state/:125`)
 //         const res = await response.json()
 //         console.log(res)
+//         return res
 //     }catch(error) {
 //         console.log(error.message)
 //     }
@@ -53,60 +71,60 @@ window.addEventListener('keyup', (e) => {
 
 function inputHandler() {
     // Player 1
-    if (player.key.up){
+    if (game.player1.key.up){
 
-        if (player.position.y - 15 <= 0)
-            player.position.y = 0
+        if (game.player1.position.y - 15 <= 0)
+            game.player1.position.y = 0
         else
-            player.position.y -=1 * 15
+            game.player1.position.y -=1 * 15
     }
-    if (player.key.down) {
-        if (player.position.y + 15 + player.image.height >= board.image.height)
-            player.position.y = board.image.height - player.image.height
+    if (game.player1.key.down) {
+        if (game.player1.position.y + 15 + game.player1.image.height >= game.board.image.height)
+            game.player1.position.y = game.board.image.height - game.player1.image.height
         else
-            player.position.y +=1 * 15
+            game.player1.position.y +=1 * 15
     }
     // Player 2
-    if (player2.key.up){
+    if (game.player2.key.up){
 
-        if (player2.position.y - 15 <= 0)
-            player2.position.y = 0
+        if (game.player2.position.y - 15 <= 0)
+            game.player2.position.y = 0
         else
-            player2.position.y -=1 * 15
+            game.player2.position.y -=1 * 15
     }
-    if (player2.key.down) {
-        if (player2.position.y + 15 + player2.image.height >= board.image.height)
-            player2.position.y = board.image.height - player2.image.height
+    if (game.player2.key.down) {
+        if (game.player2.position.y + 15 + game.player2.image.height >= game.board.image.height)
+            game.player2.position.y = game.board.image.height - game.player2.image.height
         else
-            player2.position.y +=1 * 15
+            game.player2.position.y +=1 * 15
     }
 }
 
 function moveBall() {
-    if (ball.position !== undefined) {
-        ball.position.x += ball.velocity.x
-        ball.position.y += ball.velocity.y
+    if (game.ball.position !== undefined) {
+        game.ball.position.x += game.ball.velocity.x
+        game.ball.position.y += game.ball.velocity.y
 
-        if (ball.position.x <= 0) {
-            ball.position = {x: board.image.width / 2, y:board.image.height / 2}
-            player2.score++
+        if (game.ball.position.x <= 0) {
+            game.ball.position = {x: game.board.image.width / 2, y:game.board.image.height / 2}
+            game.player2.score++
         }
 
-        if (ball.position.x >= board.image.width) {
-            ball.position = {x: board.image.width / 2, y:board.image.height / 2}
-            player.score++
+        if (game.ball.position.x >= game.board.image.width) {
+            game.ball.position = {x: game.board.image.width / 2, y:game.board.image.height / 2}
+            game.player1.score++
         }
-        if (ball.position.y <= 0 || ball.position.y + ball.image.height >= board.image.height)
-            ball.velocity.y = -ball.velocity.y
+        if (game.ball.position.y <= 0 || game.ball.position.y + game.ball.image.height >= game.board.image.height)
+            game.ball.velocity.y = -game.ball.velocity.y
 
-        if (ball.position.x <= player.position.x + player.image.width && ball.position.x >= player.position.x && ball.position.y + ball.image.height >= player.position.y && ball.position.y <= player.position.y + player.image.height) {
-            ball.velocity.x = -ball.velocity.x
-            ball.position.x = player.position.x + player.image.width
+        if (game.ball.position.x <= game.player1.position.x + game.player1.image.width && game.ball.position.x >= game.player1.position.x && game.ball.position.y + game.ball.image.height >= game.player1.position.y && game.ball.position.y <= game.player1.position.y + game.player1.image.height) {
+            game.ball.velocity.x = -game.ball.velocity.x
+            game.ball.position.x = game.player1.position.x + game.player1.image.width
         }
 
-        if (ball.position.x + ball.image.width >= player2.position.x && ball.position.x <= player2.position.x + player2.image.width && ball.position.y + ball.image.height >= player2.position.y && ball.position.y <= player2.position.y + player2.image.height) {
-            ball.velocity.x = -ball.velocity.x
-            ball.position.x = player2.position.x - ball.image.width
+        if (game.ball.position.x + game.ball.image.width >= game.player2.position.x && game.ball.position.x <= game.player2.position.x + game.player2.image.width && game.ball.position.y + game.ball.image.height >= game.player2.position.y && game.ball.position.y <= game.player2.position.y + game.player2.image.height) {
+            game.ball.velocity.x = -game.ball.velocity.x
+            game.ball.position.x = game.player2.position.x - game.ball.image.width
         }
     }
 }
@@ -115,25 +133,29 @@ canvasContext.fillStyle = 'white'
 canvasContext.font = '30px Arial'
 canvasContext.textAlign = 'center'
 
+
+
+
 async function gameAnimation() {
-    const id = window.requestAnimationFrame(gameAnimation)  
-    board.draw()
-    ball.draw()
-    player.draw()
-    player2.draw()
+    // const state = await getState()
+    const id = window.requestAnimationFrame(gameAnimation)
+    canvasContext.drawImage(game.board.image, game.board.position.x, game.board.position.y)
+    canvasContext.drawImage(game.player1.image, game.player1.position.x, game.player1.position.y)
+    canvasContext.drawImage(game.player2.image, game.player2.position.x, game.player2.position.y)
+    canvasContext.drawImage(game.ball.image, game.ball.position.x, game.ball.position.y)
     moveBall()
     inputHandler()
-    canvasContext.fillText(player.score, board.image.width / 2 - 20, 23.5)
-    canvasContext.fillText(player2.score, board.image.width / 2 + 20, 23.5)
-    if (player.score == 5)
+    canvasContext.fillText(game.player1.score, game.board.image.width / 2 - 20, 23.5)
+    canvasContext.fillText(game.player2.score, game.board.image.width / 2 + 20, 23.5)
+    if (game.player1.score == 500)
     {
         cancelAnimationFrame(id)
-        canvasContext.fillText("Player 1 wins", board.image.width / 2, board.image.height / 2)
+        canvasContext.fillText("Player 1 wins", game.board.image.width / 2, game.board.image.height / 2)
     }
-    if (player2.score == 5)
+    if (game.player2.score == 500)
     {
         cancelAnimationFrame(id)
-        canvasContext.fillText("Player 2 wins", board.image.width / 2, board.image.height / 2)
+        canvasContext.fillText("Player 2 wins", game.board.image.width / 2, game.board.image.height / 2)
     }
 }
 

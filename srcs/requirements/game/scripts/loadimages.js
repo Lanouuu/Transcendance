@@ -13,38 +13,47 @@ async function loadImage(imagePath, velocity, key, score) {
     })
 }
 
-export async function loadSprites() {
-    try {
-        const [board, player, player2, ball] = await Promise.all([
-            loadImage('../assets/Board.png', {x:0, y:0}, {up: undefined, down: undefined}, undefined),
-            loadImage('../assets/Player.png', {x:0, y:0}, {up: false, down: false}, 0),
-            loadImage('../assets/Player2.png', {x:0, y:0}, {up: false, down: false}, 0),
-            loadImage('../assets/Ball.png', {x:9, y:9}, {up: undefined, down: undefined}, undefined)])
-
+function initSprite(board, player1, player2, ball) {
         board.loaded = true
-        player.loaded = true
+        player1.loaded = true
         player2.loaded = true
         ball.loaded = true
         board.position = {
             x: 0,
             y: 0
         }
-        player.position = {
+        player1.position = {
             x: 0,
-            y: board.image.height / 2 - player.image.height / 2
+            y: board.image.height / 2 - player1.image.height / 2
         }
         
         player2.position = {
             x: board.image.width - player2.image.width,
-            y: board.image.height / 2 - player.image.height / 2
+            y: board.image.height / 2 - player2.image.height / 2
         }
         
         ball.position = {
             x: board.image.width / 2 - ball.image.width / 2,
             y: board.image.height / 2 - ball.image.height / 2
         }
-        return [board, player, player2, ball]
+}
+
+export async function loadSprites(game) {
+    try {
+        const [board, player1, player2, ball] = await Promise.all([
+            loadImage('../assets/Board.png', {x:0, y:0}, {up: undefined, down: undefined}, undefined),
+            loadImage('../assets/Player.png', {x:0, y:0}, {up: false, down: false}, 0),
+            loadImage('../assets/Player2.png', {x:0, y:0}, {up: false, down: false}, 0),
+            loadImage('../assets/Ball.png', {x:9, y:9}, {up: undefined, down: undefined}, undefined)]
+        )
+        initSprite(board, player1, player2, ball)
+        game.board = board
+        game.player1 = player1
+        game.player2 = player2
+        game.ball = ball
+        // return [board, player, player2, ball]
     }catch(e) {
+        console.log("ERREUR CHARGEMENT IMAGES")
         console.log(e.message)
         return []
     }

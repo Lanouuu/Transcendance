@@ -1,4 +1,4 @@
-import { canvasContext } from './script.js'
+// import { canvasContext } from './script.js'
 
 export class Sprite {
     constructor({position, velocity, image, key, score}) {
@@ -11,12 +11,12 @@ export class Sprite {
         this.score = score
     }
 
-    draw() {
-        if (onload)
-            this.loaded = true
+    // draw() {
+    //     if (onload)
+    //         this.loaded = true
 
-        if (this.loaded) {
-            canvasContext.drawImage(this.image, this.position.x, this.position.y)
-        }
-    }
+    //     if (this.loaded) {
+    //         canvasContext.drawImage(this.image, this.position.x, this.position.y)
+    //     }
+    // }
 }
