@@ -26,7 +26,9 @@ export async function displayAccountPage() {
 	try {
 		const res = await fetch(`${BASE_URL}/get-user/${userId}`, {
 			method: "GET",
-			headers: { "authorization": `Bearer ${token}` },
+			headers: { 
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId},
 		});
 
 		const data = await res.json();

@@ -149,9 +149,15 @@ export function runServer() {
       if (!id) {
         return reply.status(400).send({ error: "ID required" });
       }
+      const reqID = req.headers["x-user-id"];
 
       try {
-        const stmt = usersDB.prepare("SELECT id, name, mail, wins, losses, created_at FROM users WHERE id = ?");
+        let stmt = null;
+        if (reqID !== id) {
+          stmt = usersDB.prepare("SELECT id, name, wins, losses FROM users WHERE id = ?");
+        } else {
+          stmt = usersDB.prepare("SELECT id, name, mail, wins, losses, created_at FROM users WHERE id = ?");
+        }
         const user = stmt.get(id);
         if (!user) {
           return reply.status(400).send({ error: "User not found" });
@@ -160,10 +166,10 @@ export function runServer() {
         const sanitizedUser = {
           id: user.id,
           name: user.name,
-          mail: user.mail,
+          mail: reqID === id ? user.mail : undefined,
           wins: user.wins,
           losses: user.losses,
-          createdAt: user.created_at
+          createdAt: reqID === id ? user.created_at : undefined
         };
 
         reply.send(sanitizedUser);
