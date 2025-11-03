@@ -28,7 +28,7 @@ export async function displayAccountPage() {
 			method: "GET",
 			headers: { 
 				"authorization": `Bearer ${token}`,
-				"x-user-id": userId},
+				"x-user-id": userId },
 		});
 
 		const data = await res.json();
@@ -40,7 +40,9 @@ export async function displayAccountPage() {
 
 		const resImg = await fetch(`${BASE_URL}/get-avatar/${userId}`, {
 			method: "GET",
-			headers: { "authorization": `Bearer ${token}` },
+			headers: { 
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId },
 		});
 
 		if (resImg.ok) {
