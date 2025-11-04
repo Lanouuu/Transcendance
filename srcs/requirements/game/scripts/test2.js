@@ -15,28 +15,42 @@ fetch(`http://localhost:3002/state/${game.game.id}`, {
 const ws = new WebSocket(`ws://localhost:8081/`)
 
 ws.addEventListener('open', (event) => {
-    console.log("Connected to WebSocket server")
+    console.log('Connected to WebSocket server')
 })
 
 ws.addEventListener('message', (event) => {
-    const serverGame = JSON.parse(event.data)
-    game.player1.position.y = serverGame.player1.position.y
-    game.player2.position.y = serverGame.player2.position.y
-    game.ball.position.x = serverGame.ball.position.x
-    game.ball.position.y = serverGame.ball.position.y
+    // server sends { game }
+    try {
+        const payload = JSON.parse(event.data)
+        const serverGame = payload.game || payload
+        if (serverGame.player1) {
+            game.player1.position.y = serverGame.player1.position.y
+            game.player2.position.y = serverGame.player2.position.y
+            game.ball.position.x = serverGame.ball.position.x
+            game.ball.position.y = serverGame.ball.position.y
+        }
+    } catch (e) {
+        console.error('ws message parse', e)
+    }
 })
 
-setInterval( window.addEventListener('keydown', (e) => {
-    const body = {
-        id: game.game.id,
-        key: e.key,
-        state: true
-    }
-    if (ws.readyState === WebSocket.OPEN)
-        ws.send(JSON.stringify(body))
-    else
-        console.error("WebSocket is not open")
-}), 30)
+// Send inputs only when they change (keydown / keyup). Avoid adding listeners repeatedly
+const keysDown = {}
+function sendInput(key, state) {
+    const body = { id: game.game.id, type: 'key', key, state }
+    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(body))
+}
+
+window.addEventListener('keydown', (e) => {
+    if (keysDown[e.key]) return // ignore auto-repeat
+    keysDown[e.key] = true
+    sendInput(e.key, true)
+})
+
+window.addEventListener('keyup', (e) => {
+    keysDown[e.key] = false
+    sendInput(e.key, false)
+})
 
 
 

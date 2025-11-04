@@ -40,7 +40,20 @@ wss.on('connection', function connection(ws) {
   ws.on('error', console.error);
 
   ws.on('message', function message(data) {
-    console.log('received: %s', data);
+    console.log("MESSAGE RECU")
+    const res = JSON.parse(data.toString())
+
+    if (!games.has(res.id)) {
+      return reply.status(404).send({ error: "Game not found" });
+    }
+    const game = games.get(res.id)
+    if (res.key === 'a') {
+      game.player1.position.y -= 15
+    }
+    if (res.key === 'd') {
+      game.player1.position.y += 15
+    }
+    ws.send(JSON.stringify(game))
   });
 
   ws.send('WELCOME TO THE WEBSOCKET SERVER');
