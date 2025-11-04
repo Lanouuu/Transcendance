@@ -18,24 +18,34 @@ function initSprite(board, player1, player2, ball) {
         player1.loaded = true
         player2.loaded = true
         ball.loaded = true
+        
         board.position = {
             x: 0,
             y: 0
         }
+        board.height = board.image.height
+        board.width = board.image.width
+
         player1.position = {
             x: 0,
             y: board.image.height / 2 - player1.image.height / 2
         }
-        
+        player1.height = player1.image.height
+        player1.width = player1.image.width
+
         player2.position = {
             x: board.image.width - player2.image.width,
             y: board.image.height / 2 - player2.image.height / 2
         }
+        player2.height = player2.image.height
+        player2.width = player2.image.width
         
         ball.position = {
             x: board.image.width / 2 - ball.image.width / 2,
             y: board.image.height / 2 - ball.image.height / 2
         }
+        ball.height = ball.image.height
+        ball.width = ball.image.width
 }
 
 export async function loadSprites(game) {
