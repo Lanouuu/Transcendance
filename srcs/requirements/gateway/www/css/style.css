@@ -176,9 +176,6 @@ body.loggedIn #signupNavLink {
 /* #region tournament */
 /* #endregion */
 
-/* #region friends */
-/* #endregion */
-
 /* #region account */
 #accountPage {
 	display: flex;
@@ -332,9 +329,26 @@ body.loggedIn #signupNavLink {
 }
 
 #loginPage form button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	height: 9%;
+	max-height: 9%;
+	width: 80%;
+	max-width: 80%;
+
+	padding: 2.5rem;
+	margin-top: auto;
+	border-radius: 15px;
+
+
+
 	font-family: "Geo";
 	font-size: larger;
-	margin-top: auto;
+	color: white;
+
+	background: linear-gradient(to top, var(--color-dark) 15%, var(--color-prim));
 }
 
 /* #endregion */
@@ -342,7 +356,18 @@ body.loggedIn #signupNavLink {
 /* #region signup */
 
 #signupPage {
-	background-color: var(--color-light);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+
+	gap: 2rem;
+
+	font-family: "Geo";
+	font-size: 3rem;
+	color: white;
+
+	background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%);
 }
 
 #signupPage form {
@@ -354,6 +379,23 @@ body.loggedIn #signupNavLink {
 	margin: 1rem;
 }
 
+/* #endregion */
+
+/* #region logout */
+#logoutPage {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	font-family: "Geo";
+	font-size: 5rem;
+	color: var(--color-dark);
+	background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%);
+}
+
+#logoutPage b {
+	color: white;
+}
 /* #endregion */
 
 /* #endregion BODY */
