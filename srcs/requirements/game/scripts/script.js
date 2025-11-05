@@ -4,8 +4,10 @@ const canvas = document.getElementById("canvas")
 const canvasContext = canvas.getContext('2d')
 const res = await fetch(`http://localhost:3002/local`)
 const game = await res.json()
+console.log("BEFORE ", game)
 await loadSprites(game)
 
+console.log("AFTER ", game)
 fetch(`http://localhost:3002/state/${game.game.id}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -36,6 +38,7 @@ ws.addEventListener('open', (event) => {
         key: key
     }
     console.log("Connected to WebSocket server")
+    game.game.socket.push(ws)
     if (ws.readyState === WebSocket.OPEN)
         ws.send(JSON.stringify(body))
 })

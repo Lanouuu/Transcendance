@@ -46,7 +46,10 @@ wss.on('connection', function connection(ws) {
       return reply.status(404).send({ error: "Game not found" });
     }
     const game = games.get(res.id)
-    game.socket = ws
+    // // if (game.mode === 'local')
+    game.socket = [ws]
+    // // else
+    // //     game.socket.push(ws)
     game.player1.key.up = res.key.a.pressed
     game.player1.key.down = res.key.d.pressed
     game.player2.key.up = res.key.up.pressed
@@ -57,7 +60,11 @@ wss.on('connection', function connection(ws) {
 setInterval(() => {
     for (const game of games.values()) {
         if (game.board === undefined || game.socket === undefined)
+        {
+            // if (game.socket === undefined)
+            //     console.log("SOCKET IS UNDEFINED")
             continue;
+        }
         // Player 1
         if (game.player1.key.up) {
 
@@ -114,9 +121,11 @@ setInterval(() => {
                 game.ball.position.x = game.player2.position.x - game.ball.width
             }
         }
-        if (game.socket.readyState === 1) {
-            game.socket.send(JSON.stringify(game));
-        }
+        game.socket.forEach(socket => {
+            if (socket.readyState === 1) {
+                socket.send(JSON.stringify(game));
+            }
+        });
     } 
 }, 16)
 
@@ -124,7 +133,10 @@ fastify.get("/local", async (request, reply) => {
     try {
         const game = new Game({
             id: gameId++,
+            socket: [],
+            mode: 'local'
         })
+        console.log("MODE = ", game.mode)
         games.set(game.id, game)
         console.log("Local game created with id:", game.id)
         reply.send({game})
@@ -143,6 +155,7 @@ fastify.post("/state/:id", async (request, reply) => {
             return reply.status(404).send({ error: "Game not found" });
         }
         const game = request.body.game
+        console.log(game)
         games.set(id, game)
         reply.send({ status: 'Ok' })
     } catch (e) {
