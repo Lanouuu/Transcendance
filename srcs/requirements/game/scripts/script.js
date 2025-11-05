@@ -31,7 +31,13 @@ const key = {
 const ws = new WebSocket(`ws://localhost:8081/`)
 
 ws.addEventListener('open', (event) => {
+        const body = {
+        id: game.game.id,
+        key: key
+    }
     console.log("Connected to WebSocket server")
+    if (ws.readyState === WebSocket.OPEN)
+        ws.send(JSON.stringify(body))
 })
 
 ws.addEventListener('message', (event) => {
@@ -108,74 +114,12 @@ window.addEventListener('keyup', (e) => {
 //     }
 // }
 
-// function inputHandler() {
-//     // Player 1
-//     if (game.player1.key.up){
-
-//         if (game.player1.position.y - 15 <= 0)
-//             game.player1.position.y = 0
-//         else
-//             game.player1.position.y -=1 * 15
-//     }
-//     if (game.player1.key.down) {
-//         if (game.player1.position.y + 15 + game.player1.image.height >= game.board.image.height)
-//             game.player1.position.y = game.board.image.height - game.player1.image.height
-//         else
-//             game.player1.position.y +=1 * 15
-//     }
-//     // Player 2
-//     if (game.player2.key.up){
-
-//         if (game.player2.position.y - 15 <= 0)
-//             game.player2.position.y = 0
-//         else
-//             game.player2.position.y -=1 * 15
-//     }
-//     if (game.player2.key.down) {
-//         if (game.player2.position.y + 15 + game.player2.image.height >= game.board.image.height)
-//             game.player2.position.y = game.board.image.height - game.player2.image.height
-//         else
-//             game.player2.position.y +=1 * 15
-//     }
-// }
-
-// function moveBall() {
-//     if (game.ball.position !== undefined) {
-//         game.ball.position.x += game.ball.velocity.x
-//         game.ball.position.y += game.ball.velocity.y
-
-//         if (game.ball.position.x <= 0) {
-//             game.ball.position = {x: game.board.image.width / 2, y:game.board.image.height / 2}
-//             game.player2.score++
-//         }
-
-//         if (game.ball.position.x >= game.board.image.width) {
-//             game.ball.position = {x: game.board.image.width / 2, y:game.board.image.height / 2}
-//             game.player1.score++
-//         }
-//         if (game.ball.position.y <= 0 || game.ball.position.y + game.ball.image.height >= game.board.image.height)
-//             game.ball.velocity.y = -game.ball.velocity.y
-
-//         if (game.ball.position.x <= game.player1.position.x + game.player1.image.width && game.ball.position.x >= game.player1.position.x && game.ball.position.y + game.ball.image.height >= game.player1.position.y && game.ball.position.y <= game.player1.position.y + game.player1.image.height) {
-//             game.ball.velocity.x = -game.ball.velocity.x
-//             game.ball.position.x = game.player1.position.x + game.player1.image.width
-//         }
-
-//         if (game.ball.position.x + game.ball.image.width >= game.player2.position.x && game.ball.position.x <= game.player2.position.x + game.player2.image.width && game.ball.position.y + game.ball.image.height >= game.player2.position.y && game.ball.position.y <= game.player2.position.y + game.player2.image.height) {
-//             game.ball.velocity.x = -game.ball.velocity.x
-//             game.ball.position.x = game.player2.position.x - game.ball.image.width
-//         }
-//     }
-// }
-
 canvasContext.fillStyle = 'white'
 canvasContext.font = '30px Arial'
 canvasContext.textAlign = 'center'
 
 async function gameAnimation() {
-    // const state = await getState()
     const id = window.requestAnimationFrame(gameAnimation)
-    // canvasContext.clearRect(0, 0, game.board.image.width, game.board.image.height)
     canvasContext.drawImage(game.board.image, game.board.position.x, game.board.position.y)
     canvasContext.drawImage(game.player1.image, game.player1.position.x, game.player1.position.y)
     canvasContext.drawImage(game.player2.image, game.player2.position.x, game.player2.position.y)

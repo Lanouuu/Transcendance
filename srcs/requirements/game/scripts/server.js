@@ -40,90 +40,84 @@ wss.on('connection', function connection(ws) {
   ws.on('error', console.error);
 
   ws.on('message', function message(data) {
-    console.log("MESSAGE RECU")
     const res = JSON.parse(data.toString())
 
     if (!games.has(res.id)) {
       return reply.status(404).send({ error: "Game not found" });
     }
     const game = games.get(res.id)
+    game.socket = ws
     game.player1.key.up = res.key.a.pressed
     game.player1.key.down = res.key.d.pressed
     game.player2.key.up = res.key.up.pressed
     game.player2.key.down = res.key.down.pressed
-    // ws.send(JSON.stringify(game))
   });
-
-  ws.send('WELCOME TO THE WEBSOCKET SERVER');
 });
 
 setInterval(() => {
-  for (const game of games.values()) {
-    if (game.board === undefined)
-      continue;
-      // Player 1
-    if (game.player1.key.up){
+    for (const game of games.values()) {
+        if (game.board === undefined || game.socket === undefined)
+            continue;
+        // Player 1
+        if (game.player1.key.up) {
 
-        if (game.player1.position.y - 15 <= 0)
-            game.player1.position.y = 0
-        else
-            game.player1.position.y -=1 * 15
-    }
-    if (game.player1.key.down) {
-        if (game.player1.position.y + 15 + game.player1.height >= game.board.height)
-            game.player1.position.y = game.board.height - game.player1.height
-        else
-            game.player1.position.y +=1 * 15
-    }
-    // Player 2
-    if (game.player2.key.up){
+            if (game.player1.position.y - 15 <= 0)
+                game.player1.position.y = 0
+            else
+                game.player1.position.y -=1 * 15
+        }
+        if (game.player1.key.down) {
+            if (game.player1.position.y + 15 + game.player1.height >= game.board.height)
+                game.player1.position.y = game.board.height - game.player1.height
+            else
+                game.player1.position.y +=1 * 15
+        }
+        // Player 2
+        if (game.player2.key.up) {
 
-        if (game.player2.position.y - 15 <= 0)
-            game.player2.position.y = 0
-        else
-            game.player2.position.y -=1 * 15
-    }
-    if (game.player2.key.down) {
-        if (game.player2.position.y + 15 + game.player2.height >= game.board.height)
-            game.player2.position.y = game.board.height - game.player2.height
-        else
-            game.player2.position.y +=1 * 15
-    }
-
-    // Move Ball
-    if (game.ball.position !== undefined) {
-        game.ball.position.x += game.ball.velocity.x
-        game.ball.position.y += game.ball.velocity.y
-
-        if (game.ball.position.x <= 0) {
-            game.ball.position = {x: game.board.width / 2, y:game.board.height / 2}
-            game.player2.score++
+            if (game.player2.position.y - 15 <= 0)
+                game.player2.position.y = 0
+            else
+                game.player2.position.y -=1 * 15
+        }
+        if (game.player2.key.down) {
+            if (game.player2.position.y + 15 + game.player2.height >= game.board.height)
+                game.player2.position.y = game.board.height - game.player2.height
+            else
+                game.player2.position.y +=1 * 15
         }
 
-        if (game.ball.position.x >= game.board.width) {
-            game.ball.position = {x: game.board.width / 2, y:game.board.height / 2}
-            game.player1.score++
-        }
-        if (game.ball.position.y <= 0 || game.ball.position.y + game.ball.height >= game.board.height)
-            game.ball.velocity.y = -game.ball.velocity.y
+        // Move Ball
+        if (game.ball.position !== undefined) {
+            game.ball.position.x += game.ball.velocity.x
+            game.ball.position.y += game.ball.velocity.y
 
-        if (game.ball.position.x <= game.player1.position.x + game.player1.width && game.ball.position.x >= game.player1.position.x && game.ball.position.y + game.ball.height >= game.player1.position.y && game.ball.position.y <= game.player1.position.y + game.player1.height) {
-            game.ball.velocity.x = -game.ball.velocity.x
-            game.ball.position.x = game.player1.position.x + game.player1.width
-        }
+            if (game.ball.position.x <= 0) {
+                game.ball.position = {x: game.board.width / 2, y:game.board.height / 2}
+                game.player2.score++
+            }
 
-        if (game.ball.position.x + game.ball.width >= game.player2.position.x && game.ball.position.x <= game.player2.position.x + game.player2.width && game.ball.position.y + game.ball.height >= game.player2.position.y && game.ball.position.y <= game.player2.position.y + game.player2.height) {
-            game.ball.velocity.x = -game.ball.velocity.x
-            game.ball.position.x = game.player2.position.x - game.ball.width
+            if (game.ball.position.x >= game.board.width) {
+                game.ball.position = {x: game.board.width / 2, y:game.board.height / 2}
+                game.player1.score++
+            }
+            if (game.ball.position.y <= 0 || game.ball.position.y + game.ball.height >= game.board.height)
+                game.ball.velocity.y = -game.ball.velocity.y
+
+            if (game.ball.position.x <= game.player1.position.x + game.player1.width && game.ball.position.x >= game.player1.position.x && game.ball.position.y + game.ball.height >= game.player1.position.y && game.ball.position.y <= game.player1.position.y + game.player1.height) {
+                game.ball.velocity.x = -game.ball.velocity.x
+                game.ball.position.x = game.player1.position.x + game.player1.width
+            }
+
+            if (game.ball.position.x + game.ball.width >= game.player2.position.x && game.ball.position.x <= game.player2.position.x + game.player2.width && game.ball.position.y + game.ball.height >= game.player2.position.y && game.ball.position.y <= game.player2.position.y + game.player2.height) {
+                game.ball.velocity.x = -game.ball.velocity.x
+                game.ball.position.x = game.player2.position.x - game.ball.width
+            }
         }
-    }
-    // ws.send(JSON.stringify(game))
-    wss.clients.forEach((client) => {
-        if (client.readyState === 1) {
-          client.send(JSON.stringify(game));
+        if (game.socket.readyState === 1) {
+            game.socket.send(JSON.stringify(game));
         }
-      });
-} 
+    } 
 }, 16)
 
 fastify.get("/local", async (request, reply) => {
@@ -150,7 +144,6 @@ fastify.post("/state/:id", async (request, reply) => {
         }
         const game = request.body.game
         games.set(id, game)
-        console.log(game)
         reply.send({ status: 'Ok' })
     } catch (e) {
         console.log(e.message)
