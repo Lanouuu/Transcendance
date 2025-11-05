@@ -191,17 +191,17 @@ export function runServer() {
 
     //#region friends_management
 
-    fastify.post("/send-invit/:id/:friendName", async (req, reply) => {
+    fastify.post("/send-invit/:id", async (req, reply) => {
       try {
         const userID = req.params.id;
-        const friendName = req.params.friendName;
+        const { friendName } = req.body;
         if (!userID) {
           return reply.status(400).send({ error: "ID required" });
         } else if (!friendName) {
           return reply.status(400).send({ error: "friend name required" });
         }
         const reqID = req.headers["x-user-id"];
-        if (userID !== reqID) {
+        if (userID === reqID) {
           return reply.status(403).send({ error: "Can only send invitations for yourself" });
         }
   

@@ -1,7 +1,5 @@
-// export {};
 export async function displayAccountPage() {
 
-	console.error("Debut");
 	const BASE_URL: string = "https://localhost:8443/users";
 	const userId: string | null = localStorage.getItem("userId");
 	const token: string | null = localStorage.getItem("jwt");
@@ -47,15 +45,29 @@ export async function displayAccountPage() {
 
 		if (resImg.ok) {
 			const imgBlob = await resImg.blob();
-			const imgURL = URL.createObjectURL(imgBlob);
+			const imgUrl = URL.createObjectURL(imgBlob);
 
-			profilePic.src = imgURL;
+			profilePic.src = imgUrl;
 		} else {
 			profilePic.src = "./img/cristal_profile_base.jpg";
 			console.log("Salut");
 		}
 
-
+		// Ajout d'ami
+		const friendList :HTMLElement= document.getElementById("accountFriendList") as HTMLElement;
+		if (friendList){
+			const res = await fetch(`${BASE_URL}/friends-list/${userId}`, {
+				method: "GET",
+				headers: {
+					"authorization": `Bearer ${token}`,
+					"x-user-id": userId },
+			});
+			if (!res.ok) throw new Error(`Friend list not found`);
+			// option 1: parentheses
+			const data = (await res.json()).friendsList[0].name;
+			friendList.innerHTML = data;
+		}
+		else throw new Error("No friendList fetched");
 	} catch (error) {
 		console.error(error);
 		// Faire qqch pour informer 

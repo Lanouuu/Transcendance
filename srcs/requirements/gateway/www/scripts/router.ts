@@ -10,17 +10,15 @@ class Router {
 		this.initRouter();
 	}
 
-	private initRouter(): void {
+	private async initRouter(): Promise<void> {
 
 		// First load (supposed to launch main i guess)
 		this.handleRoute();
 
-		// A SUPPRIMER --> Permet de creer un user test
-		const res = fetch(`${this.BASE_URL}/signup`, {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ userName:'test', mail:'test@test.fr', password:'test', enable2FA:false})
-		});
+		// A SUPPRIMER (TESTS) /////////////////////////////////////////////////////////////////////////////////
+		const addFriendsModule = await import('./addFriends.js');
+		if (addFriendsModule.initTest) addFriendsModule.initTest();
+		else console.log("CA MARCHE PO");
 		////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		window.addEventListener('hashchange', () => this.handleRoute());
