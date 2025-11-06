@@ -13,6 +13,7 @@ export function runServer() {
     /****************************************************************************/
 
     //#region init_users_server
+
     const fastify = Fastify({ logger: true });
     const PORT = parseInt(process.env.USERS_PORT, 10);
     const HOST = process.env.USERS_HOST;
@@ -108,7 +109,7 @@ export function runServer() {
         const stmt = usersDB.prepare("UPDATE users SET avatar_path = ? WHERE id = ?");
         stmt.run(fileName, id);
   
-        reply.send({ success: true, avatar:fileName});
+        reply.send({ success: true, avatar:fileName });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -190,7 +191,7 @@ export function runServer() {
       }
       const reqID = req.headers["x-user-id"];
       if (reqID !== id) {
-        return reply.status(400).send({ error: "Can only change your name"});
+        return reply.status(400).send({ error: "Can only change your name" });
       }
 
       try {
@@ -222,7 +223,7 @@ export function runServer() {
       }
       const reqID = req.headers["x-user-id"];
       if (reqID !== id) {
-        return reply.status(400).send({ error: "Can only change your mail"});
+        return reply.status(400).send({ error: "Can only change your mail" });
       }
 
       try {
@@ -231,11 +232,21 @@ export function runServer() {
           return reply.status(400).send({ error: "New mail required" });
         }
 
-        const checkStmt = usersDB.prepare("SELECT * FROM users WHERE name = ?");
-        const checkName = checkStmt.get(newName);
-        if (checkName) {
-          return reply.status(400).send({ error: "Name already in use" });
+        const checkStmt = usersDB.prepare("SELECT * FROM users WHERE mail = ?");
+        const checkMail = checkStmt.get(newMail);
+        if (checkMail) {
+          return reply.status(400).send({ error: "Mail already in use" });
         }
+
+        let testmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newMail);
+        if(!testmail) {
+          return reply.code(400).send({ error: "Wrong mail format" });
+        }
+
+        const changeStmt = usersDB.prepare("UPDATE users SET mail = ? WHERE id = ?");
+        changeStmt.run(newMail, id);
+
+        return reply.status(201).send({ success: true });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
