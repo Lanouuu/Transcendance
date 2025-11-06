@@ -41,24 +41,29 @@ wss.on('connection', function connection(ws) {
 
   ws.on('message', function message(data) {
     const res = JSON.parse(data.toString())
-    console.log("DATA RECEIVED IN WS CONNECTION = ", res)
+    // console.log("DATA RECEIVED IN WS CONNECTION = ", res)
     if (!games.has(parseInt(res.id, 10))) {
         ws.send(JSON.stringify({ error: "Game not found" }))
         return;
     }
     let game = games.get(res.id)
-    console.log("GAME AT WS CONNECTION = ", game)
     // // if (game.mode === 'local')
-    game.socket= [ws]
+    // console.log("GAME AT WS CONNECTION = ", game)
     // // // else
-    // // //     game.socket.push(ws)
-    // game.player1.key.up = res.key.a.pressed
-    // game.player1.key.down = res.key.d.pressed
-    // game.player2.key.up = res.key.up.pressed
-    // game.player2.key.down = res.key.down.pressed
-    game = res
-    // games.set(game.id, game)
-    console.log("GAME AFTER SET IN WS CONNECTION = ", game)
+        // // //     game.socket.push(ws)
+    if (res.message == "Init")
+    {
+        game = res
+        game.socket.push(ws)
+    }
+    else {
+        game.player1.key.up = res.player1.key.up
+        game.player1.key.down = res.player1.key.down
+        game.player2.key.up = res.player2.key.up
+        game.player2.key.down = res.player2.key.down
+    }
+    games.set(game.id, game)
+    // console.log("GAME AFTER SET IN WS CONNECTION = ", game)
   });
 });
 
@@ -140,75 +145,6 @@ fastify.get("/local", async (request, reply) => {
           id: gameId++,
           socket: [],
           mode: 'local',
-          // player1: {
-          //   position: {
-          //     x: undefined,
-          //     y: undefined
-          //   },
-          //   velocity: {
-          //     x:undefined, 
-          //     y:undefined
-          //   },
-          //   score: 0,
-          //   key: {
-          //     up: false, 
-          //     down: false
-          //   },
-          //   width: undefined,
-          //   height: undefined
-          // },
-
-          // player2: {
-          //   position: {
-          //     x: undefined,
-          //     y: undefined
-          //   },
-          //   velocity: {
-          //     x:undefined, 
-          //     y:undefined
-          //   },
-          //   score: 0,
-          //   key: {
-          //     up: false, 
-          //     down: false
-          //   },
-          //   width: undefined,
-          //   height: undefined
-          // },
-          // ball: {
-          //   position: {
-          //     x: undefined,
-          //     y: undefined
-          //   },
-          //   velocity: {
-          //     x:undefined, 
-          //     y:undefined
-          //   },
-          //   score: 0,
-          //   key: {
-          //     up: false, 
-          //     down: false
-          //   },
-          //   width: undefined,
-          //   height: undefined
-          // },
-          // board: {
-          //   position: {
-          //     x: undefined,
-          //     y: undefined
-          //   },
-          //   velocity: {
-          //     x:undefined, 
-          //     y:undefined
-          //   },
-          //   score: 0,
-          //   key: {
-          //     up: false, 
-          //     down: false
-          //   },
-          //   width: undefined,
-          //   height: undefined
-          // }
         })
 
         console.log("GAME AT CREATION = ", game)
