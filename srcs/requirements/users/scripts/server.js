@@ -143,10 +143,10 @@ export function runServer() {
     //#endregion avatar_management
  
     /****************************************************************************/
-    /*                           Get Users Data                                 */
+    /*                           Users Data Management                          */
     /****************************************************************************/
 
-    //#region get_users_data
+    //#region users_data_management
 
     fastify.get("/get-user/:id", async (req, reply) => {
       const { id } = req.params;
@@ -182,8 +182,67 @@ export function runServer() {
         return reply.status(500).send({ error: "Internal Server Error" });
       }
     });
+
+    fastify.post("/update-name/:id", async (req, reply) => {
+      const { id } = req.params;
+      if (!id) {
+        return reply.status(400).send({ error: "ID required" });
+      }
+      const reqID = req.headers["x-user-id"];
+      if (reqID !== id) {
+        return reply.status(400).send({ error: "Can only change your name"});
+      }
+
+      try {
+        const { newName } = req.body;
+        if (!newName) {
+          return reply.status(400).send({ error: "New name required" });
+        }
+
+        const checkStmt = usersDB.prepare("SELECT * FROM users WHERE name = ?");
+        const checkName = checkStmt.get(newName);
+        if (checkName) {
+          return reply.status(400).send({ error: "Name already in use" });
+        }
+
+        const changeStmt = usersDB.prepare("UPDATE users SET name = ? WHERE id = ?");
+        changeStmt.run(newName, id);
+
+        return reply.status(201).send({ success: true });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    fastify.post("/update-mail/:id", async (req, reply) => {
+      const { id } = req.params;
+      if (!id) {
+        return reply.status(400).send({ error: "ID required" });
+      }
+      const reqID = req.headers["x-user-id"];
+      if (reqID !== id) {
+        return reply.status(400).send({ error: "Can only change your mail"});
+      }
+
+      try {
+        const { newMail } = req.body;
+        if (!newMail) {
+          return reply.status(400).send({ error: "New mail required" });
+        }
+
+        const checkStmt = usersDB.prepare("SELECT * FROM users WHERE name = ?");
+        const checkName = checkStmt.get(newName);
+        if (checkName) {
+          return reply.status(400).send({ error: "Name already in use" });
+        }
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
     
-    //#endregion get_users_data
+    //#endregion users_data_management
 
     /****************************************************************************/
     /*                       Users Friends Management                           */
