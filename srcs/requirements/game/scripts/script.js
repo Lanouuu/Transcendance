@@ -4,15 +4,15 @@ const canvas = document.getElementById("canvas")
 const canvasContext = canvas.getContext('2d')
 const res = await fetch(`http://localhost:3002/local`)
 const game = await res.json()
-console.log("BEFORE ", game)
+// console.log("BEFORE ", game)
 await loadSprites(game)
 
-console.log("AFTER ", game)
-fetch(`http://localhost:3002/state/${game.game.id}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({game})
-})
+// console.log("AFTER ", game)
+// fetch(`http://localhost:3002/state/${game.game.id}`, {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify({game})
+// })
 
 
 const key = {
@@ -33,18 +33,20 @@ const key = {
 const ws = new WebSocket(`ws://localhost:8081/`)
 
 ws.addEventListener('open', (event) => {
-        const body = {
-        id: game.game.id,
-        key: key
-    }
+    //     const body = {
+    //     id: game.game.id,
+    //     key: key
+    // }
+    game.key = key
+    console.log("GAME IN OPEN ", game)
     console.log("Connected to WebSocket server")
-    game.game.socket.push(ws)
     if (ws.readyState === WebSocket.OPEN)
-        ws.send(JSON.stringify(body))
+        ws.send(JSON.stringify(game))
 })
 
 ws.addEventListener('message', (event) => {
     const serverGame = JSON.parse(event.data)
+    console.log("GAME IN MESSAGE ", serverGame)
     game.player1.position.y = serverGame.player1.position.y
     game.player2.position.y = serverGame.player2.position.y
     game.ball.position.x = serverGame.ball.position.x
@@ -56,24 +58,24 @@ ws.addEventListener('message', (event) => {
 window.addEventListener('keydown', (e) => {
     switch(e.key) {
         case 'a':
-            key.a.pressed = true
+            game.player1.key.left = true
             break
         case 'd':
-            key.d.pressed = true
+            game.player1.key.right = true
             break
         case 'ArrowLeft':
-            key.up.pressed = true
+            game.player2.key.left = true
             break
         case 'ArrowRight':
-            key.down.pressed = true
+            game.player2.key.right = true
             break
     }
-    const body = {
-        id: game.game.id,
-        key: key
-    }
+    // const body = {
+    //     id: game.game.id,
+    //     key: key
+    // }
     if (ws.readyState === WebSocket.OPEN)
-        ws.send(JSON.stringify(body))
+        ws.send(JSON.stringify(game))
     else
         console.error("WebSocket is not open")
 })
@@ -83,24 +85,24 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => {
     switch(e.key) {
         case 'a':
-            key.a.pressed = false
+            game.player1.key.left = false
             break
         case 'd':
-            key.d.pressed = false
+            game.player1.key.right = false
             break
         case 'ArrowLeft':
-            key.up.pressed = false
+            game.player2.key.left = false
             break
         case 'ArrowRight':
-            key.down.pressed = false
+            game.player2.key.right = false
             break
     }
-    const body = {
-        id: game.game.id,
-        key: key
-    }
+    // const body = {
+    //     id: game.game.id,
+    //     key: key
+    // }
     if (ws.readyState === WebSocket.OPEN)
-        ws.send(JSON.stringify(body))
+        ws.send(JSON.stringify(game))
     else
         console.error("WebSocket is not open")
 })
