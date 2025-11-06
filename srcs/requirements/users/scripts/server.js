@@ -57,7 +57,22 @@ export function runServer() {
         const stmt = usersDB.prepare("SELECT * FROM users WHERE mail = ?");
         const user = stmt.get(req.params.mail);
         if (!user) {
-          return reply.status(404).send({ error: "User not found (in users)" });
+          return reply.status(404).send({ error: "User not found" });
+        }
+
+        return reply.send(user);
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error: " + err.message });
+      }
+    });
+
+    fastify.get("/name/:name", (req, reply) => {
+      try {
+        const stmt = usersDB.prepare("SELECT * FROM users WHERE name = ?");
+        const user = stmt.get(req.params.name);
+        if (!user) {
+          return reply.status(404).send({ error: "User not found" });
         }
 
         return reply.send(user);

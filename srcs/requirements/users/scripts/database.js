@@ -5,7 +5,7 @@ export function initDB() {
     usersDB.exec(
         `CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name        TEXT NOT NULL,
+            name        TEXT NOT NULL UNIQUE,
             mail        TEXT NOT NULL UNIQUE,
             password    TEXT NOT NULL,
             enable2FA   BOOLEAN DEFAULT 0,

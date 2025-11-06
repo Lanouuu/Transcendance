@@ -42,6 +42,8 @@ export default async function routes(fastify, options) {
       try {
         const res = await fetch(`http://users:3000/mail/${mail}`);
         if(res.ok) return reply.status(400).send({ error: "Mail already in use" });
+        const rez = await fetch(`http://users:3000/name/${userName}`);
+        if(rez.ok) return reply.status(400).send({ error: "User name already in use" });
       } catch (err) {
         console.error("Erreur de connexion au service user:", err);
         return reply.status(400).send({error: "User service unavailable" });
