@@ -47,10 +47,6 @@ wss.on('connection', function connection(ws) {
         return;
     }
     let game = games.get(res.id)
-    // // if (game.mode === 'local')
-    // console.log("GAME AT WS CONNECTION = ", game)
-    // // // else
-        // // //     game.socket.push(ws)
     if (res.message == "Init")
     {
         game = res
@@ -69,10 +65,7 @@ wss.on('connection', function connection(ws) {
 
 setInterval(() => {
     for (const game of games.values()) {
-        if (game.board === undefined || game.socket === undefined)
-        {
-            // if (game.socket === undefined)
-            //     console.log("SOCKET IS UNDEFINED")
+        if (game.board === undefined || game.socket === undefined) {
             continue;
         }
         // Player 1
@@ -103,7 +96,6 @@ setInterval(() => {
             else
                 game.player2.position.y +=1 * 15
         }
-
         // Move Ball
         if (game.ball.position !== undefined) {
             game.ball.position.x += game.ball.velocity.x
@@ -131,6 +123,17 @@ setInterval(() => {
                 game.ball.position.x = game.player2.position.x - game.ball.width
             }
         }
+        game.message = "Playing"
+        if (game.player1.score === 5) {
+            game.message = "END"
+            game.winner = "Player1"
+            game.displayWinner = "Player 1 wins"
+        }
+        else if (game.player2.score === 5) {
+            game.message = "END"
+            game.winner = "Player2"
+            game.displayWinner = "Player 2 wins"
+        }
         game.socket.forEach(socket => {
             if (socket.readyState === 1) {
                 socket.send(JSON.stringify(game));
@@ -146,8 +149,7 @@ fastify.get("/local", async (request, reply) => {
           socket: [],
           mode: 'local',
         })
-
-        console.log("GAME AT CREATION = ", game)
+        // console.log("GAME AT CREATION = ", game)
         games.set(game.id, game)
         console.log("Local game created with id:", game.id)
         reply.send(game)
@@ -159,21 +161,36 @@ fastify.get("/local", async (request, reply) => {
     }
 })
 
-fastify.post("/state/:id", async (request, reply) => {
+
+fastify.get("/state/:id", async (request, reply) => {
     try {
         const id = parseInt(request.params.id, 10)
         if (!games.has(id)) {
             return reply.status(404).send({ error: "Game not found" });
         }
-        const game = request.body.game
-        console.log("GAME AFTER FRONT POST = ", game)
-        games.set(id, game)
-        reply.send({ status: 'Ok' })
-    } catch (e) {
-        console.log(e.message)
-        reply.send({ status: 'Not ok' })
+        const game = games.get(id)
+        console.log("GAME FOUND")
+        reply.send(JSON.stringify(game));
+    }catch(e) {
+        reply.status(404).send({ error: e.message })
     }
-})
+});
+
+// fastify.post("/state/:id", async (request, reply) => {
+//     try {
+//         const id = parseInt(request.params.id, 10)
+//         if (!games.has(id)) {
+//             return reply.status(404).send({ error: "Game not found" });
+//         }
+//         const game = request.body.game
+//         console.log("GAME AFTER FRONT POST = ", game)
+//         games.set(id, game)
+//         reply.send({ status: 'Ok' })
+//     } catch (e) {
+//         console.log(e.message)
+//         reply.send({ status: 'Not ok' })
+//     }
+// })
 
 const start = async () => {
   try {

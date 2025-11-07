@@ -19,7 +19,6 @@ const ws = new WebSocket(`ws://localhost:8081/`)
 ws.addEventListener('open', (event) => {
     game.message = "Init"
     // console.log("GAME IN OPEN ", game)
-    // console.log("Connected to WebSocket server")
     if (ws.readyState === WebSocket.OPEN)
         ws.send(JSON.stringify(game))
 })
@@ -33,6 +32,12 @@ ws.addEventListener('message', (event) => {
     game.ball.position.y = serverGame.ball.position.y
     game.player1.score = serverGame.player1.score
     game.player2.score = serverGame.player2.score
+    game.message = serverGame.message
+    if (game.message === "END")
+    {
+        game.winner = serverGame.winner
+        game.displayWinner = serverGame.displayWinner
+    }
 })
 
 window.addEventListener('keydown', (e) => {
@@ -98,22 +103,19 @@ canvasContext.font = '30px Arial'
 canvasContext.textAlign = 'center'
 
 async function gameAnimation() {
-    const id = window.requestAnimationFrame(gameAnimation)
+    const id = window.requestAnimationFrame(gameAnimation)  
     canvasContext.drawImage(game.board.image, game.board.position.x, game.board.position.y)
     canvasContext.drawImage(game.player1.image, game.player1.position.x, game.player1.position.y)
     canvasContext.drawImage(game.player2.image, game.player2.position.x, game.player2.position.y)
     canvasContext.drawImage(game.ball.image, game.ball.position.x, game.ball.position.y)
     canvasContext.fillText(game.player1.score, game.board.image.width / 2 - 20, 23.5)
     canvasContext.fillText(game.player2.score, game.board.image.width / 2 + 20, 23.5)
-    if (game.player1.score == 5)
-    {
+    // const response = await fetch(`http://localhost:3002/state/${game.id}`)
+    // const state = await response.json()
+    // console.log("GAME STATE = ", state)
+    if (game.message === "END") {
         cancelAnimationFrame(id)
-        canvasContext.fillText("Player 1 wins", game.board.image.width / 2, game.board.image.height / 2)
-    }
-    if (game.player2.score == 5)
-    {
-        cancelAnimationFrame(id)
-        canvasContext.fillText("Player 2 wins", game.board.image.width / 2, game.board.image.height / 2)
+        canvasContext.fillText(game.displayWinner, game.board.image.width / 2, game.board.image.height / 2)
     }
 }
 
