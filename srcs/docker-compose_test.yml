@@ -55,6 +55,14 @@ services:
       - pong_app
     restart: always
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    expose: ["6379"]
+    networks:
+      - pong_app
+    restart: always
+
 networks:
   pong_app:
     name: pong_app

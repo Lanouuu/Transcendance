@@ -117,6 +117,8 @@ export default async function routes(fastify, options) {
       const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(token).digest("hex");
       await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
 
+      
+
       reply.code(200).send({
         token,
         id: user.id});
