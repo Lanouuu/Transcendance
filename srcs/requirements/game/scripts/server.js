@@ -161,6 +161,36 @@ fastify.get("/local", async (request, reply) => {
     }
 })
 
+// fastify.get("/remote", async (request, reply) => {
+//     try {
+//         const game = new Game({
+//           id: gameId++,
+//           socket: [],
+//           mode: 'remote',
+//         })
+//         games.set(game.id, game)
+//         console.log("Local game created with id:", game.id)
+//         reply.send(game)
+//     } catch (e) {
+//         console.log(e.message)
+//         // a supprimer
+//         console.log("Error creating local game")
+//         reply.send([])
+//     }
+// })
+
+// fastify.post("/input", async (request, reply) => {
+//     try {
+//         const id = parseInt()
+//         reply.send(game)
+//     } catch (e) {
+//         console.log(e.message)
+//         // a supprimer
+//         console.log("Error creating local game")
+//         reply.send([])
+//     }
+// })
+
 
 fastify.get("/state/:id", async (request, reply) => {
     try {
