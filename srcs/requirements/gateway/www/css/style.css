@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
 	--color-prim: #22A8AA;
 	--color-sec: #E196BB;
