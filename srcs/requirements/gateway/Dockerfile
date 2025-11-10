@@ -2,13 +2,20 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-COPY ./conf/package*.json ./www/
-COPY ./conf/tsconfig.json ./www/
-RUN cd www && npm install
-
 COPY ./www ./www
 
+COPY ./conf/package*.json ./www/
+COPY ./conf/tsconfig.json ./www/
+COPY ./conf/tailwind.config.js ./www/
+
+RUN cd www && npm install
 RUN cd www && npx tsc
+
+# Installation, initialisation et compilation du css avec tailwind
+RUN cd www && npx tailwindcss -i ./css/style.css -o ./css/output.css --minify
+
+# Vérification que output.css a bien été créé
+RUN test -f /app/www/css/output.css || (echo "ERROR: output.css not generated!" && exit 1)
 
 #-------------------------
 
@@ -16,6 +23,11 @@ FROM nginx:stable-alpine
 
 #supprimer bash une fois le projet termine !!!
 RUN apk add --no-cache bash openssl
+
+# A SUPPRIMER | Seulement pour le dev
+RUN apk add --no-cache npm
+RUN npm install -g typescript tailwindcss
+#####################################
 
 RUN rm /etc/nginx/conf.d/default.conf
 COPY ./conf/nginx.conf /etc/nginx/nginx.conf
@@ -37,4 +49,13 @@ RUN openssl req -x509 -nodes -days 365 \
 
 EXPOSE 8080 443
 
-CMD ["nginx", "-g", "daemon off;"]
+# CMD de base a decommenter
+# CMD ["nginx", "-g", "daemon off;"]
+
+# A SUPPRIMER ##################################################
+# Copie du script de demarage pour le hot reload
+COPY conf/start_debug.sh /etc/nginx/html/conf/start_debug.sh
+RUN chmod +x /etc/nginx/html/conf/start_debug.sh
+# CMD pour la prod 
+CMD ["/etc/nginx/html/conf/start_debug.sh"]
+# A SUPPRIMER ##################################################
