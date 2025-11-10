@@ -7,7 +7,7 @@ export function initDB() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name        TEXT NOT NULL UNIQUE,
             mail        TEXT NOT NULL UNIQUE,
-            password    TEXT NOT NULL,
+            password    TEXT,
             enable2FA   BOOLEAN DEFAULT 0,
             secret2FA   TEXT,
             avatar_path TEXT NOT NULL DEFAULT 'default.png',

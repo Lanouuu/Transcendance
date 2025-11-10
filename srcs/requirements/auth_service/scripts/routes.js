@@ -9,9 +9,74 @@ import { verifyToken } from "./auth_utils.js";
 const SECRET_HMAC = process.env.HMAC_SECRET;
 
 export default async function routes(fastify, options) {
-    // const db = await options.db;
     const db = await initDB();
     
+    fastify.get("/login/42/callback", async function (request, reply) {
+      try {
+        const token = await this.fortyTwoOauth2.getAccessTokenFromAuthorizationCodeFlow(request);
+        // console.log("Token reçu :", token);
+        // console.log("access Token :", token.token.access_token);
+
+        const userInfo = await fetch("https://api.intra.42.fr/v2/me", {
+        headers: { Authorization: `Bearer ${token.token.access_token}`,
+        },
+      });
+
+      // console.log("Réponse API 42 status :", userInfo.status);
+
+      if (!userInfo.ok) {
+         console.error("Erreur 42 API status:", userInfo.status, await userInfo.text());
+        return reply.code(400).send({ error: "Cannot fetch 42 profile" });
+      }
+
+      const profile = await userInfo.json();
+
+      const checkRes = await fetch(`http://users:3000/mail/${profile.email}`);
+      let user;
+      if(checkRes.ok) {
+        user = await checkRes.json();
+      }
+      else {
+        const createUser = await fetch("http://users:3000/create_user", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            name: profile.login,
+            mail: profile.email,
+            password: null,
+            enable2FA: 0,
+            secret2FA: null,
+          }),
+        });
+
+        if(!createUser.ok) {
+          const text = await createUser.text();
+          console.error("Error while creating user :", text);
+          return reply.code(400).send({error: "User creation failed"})
+        }
+      }
+
+      const userRes = await fetch(`http://users:3000/mail/${profile.email}`);
+      user = await userRes.json();
+
+      if(!user || !user.id) {
+        console.error("User not found after creation");
+        return reply.code(400).send({ error: "User not found after creation"})
+      }
+
+      const jwt = fastify.jwt.sign({id: user.id, mail: user.mail });
+      
+      const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(jwt).digest("hex");
+      await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
+      
+      reply.code(200).send({ token:jwt, id: user.id });
+
+      } catch (err) {
+        console.error("OAuth 42 error:", err);
+        reply.code(500).send({ error: "OAuth 42 callback failed" });
+      }
+    });
+
     fastify.get("/verify", async (req, reply) => {
       try {
 
@@ -117,9 +182,7 @@ export default async function routes(fastify, options) {
       const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(token).digest("hex");
       await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
 
-      reply.code(200).send({
-        token,
-        id: user.id});
+      reply.code(200).send({token, id: user.id});
     });
 
     // creation du code

@@ -4,10 +4,31 @@ import { initDB } from "./database.js";
 import authRoutes from "./routes.js";
 import cors from "@fastify/cors";
 import { verifyToken } from "./auth_utils.js";
+import fastifyOauth2 from "@fastify/oauth2";
+
 
 const fastify = Fastify({ logger: true });
 const PORT = parseInt(process.env.AUTH_PORT, 10);
 const HOST = process.env.AUTH_HOST;
+
+fastify.register(fastifyOauth2, {
+    name: "fortyTwoOauth2",
+    credentials: {
+        client: {
+            id: process.env.CLIENT_ID,
+            secret: process.env.CLIENT_SECRET,
+        },
+        auth: {
+            authorizeHost: "https://api.intra.42.fr",
+            authorizePath: process.env.APP_URI,
+            tokenHost: "https://api.intra.42.fr",
+            tokenPath: "/oauth/token",
+        },
+    },
+    scope: ["public"],
+    startRedirectPath: "/login/42",
+    callbackUri: "https://localhost:8443/auth_service/login/42/callback",
+});
 
 fastify.register(jwt, { secret: process.env.JWT_SECRET });
 

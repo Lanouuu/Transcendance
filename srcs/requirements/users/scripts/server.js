@@ -40,6 +40,9 @@ export function runServer() {
     fastify.post("/create_user", async (req, reply) => {
       const { name, mail, password, enable2FA, secret2FA } = req.body;
 
+      if (!name || !mail)
+        return reply.code(400).send({ error: "Missing name or mail" });
+
       try {
         const stmt = usersDB.prepare(`
           INSERT INTO users (name, mail, password, enable2FA, secret2FA)

@@ -1,7 +1,6 @@
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 
-// Ouvrir la base SQLite
 let db;
 
 export async function initDB() {
@@ -11,7 +10,6 @@ export async function initDB() {
             driver: sqlite3.Database,
         });
     
-    // Créer la table users si elle n'existe pas
     await db.exec(`
         CREATE TABLE IF NOT EXISTS sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
