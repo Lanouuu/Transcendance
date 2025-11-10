@@ -15,7 +15,7 @@ RUN cd www && npx tsc
 RUN cd www && npx tailwindcss -i ./css/style.css -o ./css/output.css --minify
 
 # Vérification que output.css a bien été créé
-RUN test -f /app/www/css/output.css || (echo "ERROR: output.css not generated!" && exit 1)
+RUN cd www && test -f /app/www/css/output.css || (echo "ERROR: output.css not generated!" && exit 1)
 
 #-------------------------
 

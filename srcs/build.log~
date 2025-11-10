@@ -1,0 +1,150 @@
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.80kB done
+#1 DONE 0.0s
+
+#2 [auth] library/nginx:pull token for registry-1.docker.io
+#2 DONE 0.0s
+
+#3 [auth] library/node:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 [internal] load metadata for docker.io/library/node:18-alpine
+#4 DONE 0.6s
+
+#5 [internal] load metadata for docker.io/library/nginx:stable-alpine
+#5 DONE 0.6s
+
+#6 [internal] load .dockerignore
+#6 transferring context: 2B done
+#6 DONE 0.0s
+
+#7 [builder  1/10] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+#7 DONE 0.0s
+
+#8 [builder  2/10] WORKDIR /app
+#8 CACHED
+
+#9 [stage-1  1/11] FROM docker.io/library/nginx:stable-alpine@sha256:30f1c0d78e0ad60901648be663a710bdadf19e4c10ac6782c235200619158284
+#9 CACHED
+
+#10 [internal] load build context
+#10 transferring context: 1.42MB done
+#10 DONE 0.0s
+
+#11 [builder  3/10] COPY ./www ./www
+#11 DONE 0.0s
+
+#12 [builder  4/10] COPY ./conf/package*.json ./www/
+#12 DONE 0.0s
+
+#13 [builder  5/10] COPY ./conf/tsconfig.json ./www/
+#13 DONE 0.0s
+
+#14 [builder  6/10] COPY ./conf/tailwind.config.js ./www/
+#14 DONE 0.0s
+
+#15 [stage-1  2/11] RUN apk add --no-cache bash openssl
+#15 0.113 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/main/x86_64/APKINDEX.tar.gz
+#15 0.177 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/community/x86_64/APKINDEX.tar.gz
+#15 0.326 (1/3) Installing readline (8.2.13-r0)
+#15 0.336 (2/3) Installing bash (5.2.37-r0)
+#15 0.348 Executing bash-5.2.37-r0.post-install
+#15 0.350 (3/3) Installing openssl (3.3.5-r0)
+#15 0.385 Executing busybox-1.37.0-r13.trigger
+#15 0.389 OK: 47 MiB in 71 packages
+#15 DONE 0.4s
+
+#16 [builder  7/10] RUN cd www && npm install
+#16 ...
+
+#17 [stage-1  3/11] RUN apk add --no-cache npm
+#0 0.121 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/main/x86_64/APKINDEX.tar.gz
+#0 0.163 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/community/x86_64/APKINDEX.tar.gz
+#0 0.312 (1/10) Installing libgcc (14.2.0-r4)
+#0 0.329 (2/10) Installing libstdc++ (14.2.0-r4)
+#0 0.345 (3/10) Installing ada-libs (2.9.2-r1)
+#0 0.355 (4/10) Installing icu-data-en (74.2-r1)
+#0 0.392 Executing icu-data-en-74.2-r1.post-install
+#0 0.394 *
+#0 0.394 * If you need ICU with non-English locales and legacy charset support, install
+#0 0.394 * package icu-data-full.
+#0 0.394 *
+#0 0.394 (5/10) Installing icu-libs (74.2-r1)
+#0 0.417 (6/10) Installing simdjson (3.10.1-r0)
+#0 0.427 (7/10) Installing simdutf (5.6.3-r0)
+#0 0.449 (8/10) Installing sqlite-libs (3.48.0-r4)
+#0 0.461 (9/10) Installing nodejs (22.15.1-r0)
+#0 0.975 (10/10) Installing npm (10.9.1-r0)
+#0 1.161 Executing busybox-1.37.0-r13.trigger
+#0 1.173 OK: 117 MiB in 81 packages
+#17 DONE 1.2s
+
+#18 [stage-1  4/11] RUN npm install -g typescript tailwindcss
+#18 0.971 
+#18 0.971 added 2 packages in 787ms
+#18 DONE 1.0s
+
+#16 [builder  7/10] RUN cd www && npm install
+#16 ...
+
+#19 [stage-1  5/11] RUN rm /etc/nginx/conf.d/default.conf
+#19 DONE 0.2s
+
+#20 [stage-1  6/11] COPY ./conf/nginx.conf /etc/nginx/nginx.conf
+#20 DONE 0.0s
+
+#16 [builder  7/10] RUN cd www && npm install
+#16 2.974 
+#16 2.974 added 111 packages, and audited 112 packages in 3s
+#16 2.974 
+#16 2.974 29 packages are looking for funding
+#16 2.974   run `npm fund` for details
+#16 2.974 
+#16 2.974 found 0 vulnerabilities
+#16 2.975 npm notice
+#16 2.975 npm notice New major version of npm available! 10.8.2 -> 11.6.2
+#16 2.975 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.2
+#16 2.975 npm notice To update run: npm install -g npm@11.6.2
+#16 2.975 npm notice
+#16 DONE 3.0s
+
+#21 [builder  8/10] RUN cd www && npx tsc
+#21 DONE 1.0s
+
+#22 [builder  9/10] RUN cd www && npx tailwindcss -i ./css/style.css -o ./css/output.css --minify
+#22 0.514 Browserslist: caniuse-lite is outdated. Please run:
+#22 0.514   npx update-browserslist-db@latest
+#22 0.514   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+#22 0.577 
+#22 0.577 Rebuilding...
+#22 0.697 
+#22 0.697 Done in 144ms.
+#22 DONE 0.7s
+
+#23 [builder 10/10] RUN cd www && test -f /app/www/css/output.css || (echo "ERROR: output.css not generated!" && exit 1)
+#23 DONE 0.2s
+
+#24 [stage-1  7/11] COPY --from=builder /app/www/ /etc/nginx/html/
+#24 DONE 0.1s
+
+#25 [stage-1  8/11] RUN mkdir -p /etc/nginx/ssl
+#25 DONE 0.1s
+
+#26 [stage-1  9/11] RUN openssl req -x509 -nodes -days 365     -subj "/C=FR/ST=IDF/L=Paris/O=42/OU=42/CN=pong.42.com/UID=team42"     -addext "subjectAltName=DNS:pong.42.com"     -newkey rsa:2048 -keyout /etc/nginx/ssl/transcendence.key     -out /etc/nginx/ssl/transcendence.crt
+#0 0.114 .+...+..+++++++++++++++++++++++++++++++++++++++*.+...+.....+.+.........+++++++++++++++++++++++++++++++++++++++*..+......+...+.......+........+....+..+.+...+.........+..+....+..............+.+...........+.+..+.+............+........+.........+............+......+...+......+.+..+.......+...+......+.....+.+......+...++++++
+#26 0.125 ...........+++++++++++++++++++++++++++++++++++++++*.+.+...+......+...+..+....+..+...+....+.....+......+.+...+...+...+++++++++++++++++++++++++++++++++++++++*.....+..........................+.+.........+.....+...............+.+......+..+......+....+..+..........+.....+.+........+.......+.....+....+.....+...+...+...............+...+.+.....+.+..+.+......+......+...............+...............+...+.....+..........+........................+.....+.+............+..+.+...........+...+...+.......+..+.+.........+...+..+......+..........+..+.+..+.......+...........+.......+.....+...+.+...+...+.........+.........+..+...+.+...+..+.+........+......+.+..............+....+..+............+.+..+....+...+......+.........+.....+.+.....+......+...+......+.+...............+......+........+....+...+..+................+.....+....+...+.....+.......+..................+..+...+....+.....+..........+.........+..+...+....+.....+.++++++
+#26 0.154 -----
+#26 DONE 0.2s
+
+#27 [stage-1 10/11] COPY conf/start_debug.sh /etc/nginx/html/conf/start_debug.sh
+#27 DONE 0.0s
+
+#28 [stage-1 11/11] RUN chmod +x /etc/nginx/html/conf/start_debug.sh
+#28 DONE 0.1s
+
+#29 exporting to image
+#29 exporting layers
+#29 exporting layers 0.2s done
+#29 writing image sha256:2bc50d6d85677a152854bd5dcb5bd5941e4f6a993bb6e8eea6597aafdb99aff4 done
+#29 naming to docker.io/library/gateway:user done
+#29 DONE 0.2s
