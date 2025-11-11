@@ -1,12 +1,13 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import jwt from "@fastify/jwt";
 import { initDB } from "./database.js";
 import { authenticator } from "otplib";
 import QRCode from "qrcode";
 import { verifyToken } from "./auth_utils.js";
+import Redis from "ioredis";
 
 const SECRET_HMAC = process.env.HMAC_SECRET;
+const redis = new Redis({ host: "redis", port: 6379 });
 
 export default async function routes(fastify, options) {
     const db = await initDB();
@@ -111,7 +112,7 @@ export default async function routes(fastify, options) {
         if(rez.ok) return reply.status(400).send({ error: "User name already in use" });
       } catch (err) {
         console.error("Erreur de connexion au service user:", err);
-        return reply.status(400).send({error: "User service unavailable" });
+        return reply.status(400).send({ error: "User service unavailable" });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -182,7 +183,11 @@ export default async function routes(fastify, options) {
       const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(token).digest("hex");
       await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
 
-      reply.code(200).send({token, id: user.id});
+      await redis.set(`user:${user.id}:online`, 1);
+
+      reply.code(200).send({
+        token,
+        id: user.id});
     });
 
     // creation du code
@@ -218,10 +223,11 @@ export default async function routes(fastify, options) {
 
     // deconnexion
     fastify.post("/logout", { preHandler: [fastify.authenticate] }, async (req, reply) => {
-      const tokenHash = await bcrypt.hash(request.token,10);
+      const tokenHash = await bcrypt.hash(req.token,10);
       await db.run("DELETE FROM sessions WHERE token_hash = ?", [tokenHash]);
 
+      const userID = req.user.id;
+      await redis.set(`user:${userID}`, 0);
       reply.send({ message: "Logged out" });
     });
-
 }
