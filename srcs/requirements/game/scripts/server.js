@@ -43,7 +43,7 @@ wss.on('connection', function connection(ws) {
     const res = JSON.parse(data.toString())
     // console.log("DATA RECEIVED IN WS CONNECTION = ", res)
     if (!games.has(parseInt(res.id, 10))) {
-        ws.send(JSON.stringify({ error: "Game not found" }))
+        ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
         return;
     }
     let game = games.get(res.id)
