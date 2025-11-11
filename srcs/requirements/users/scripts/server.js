@@ -4,7 +4,7 @@ import * as db from "./database.js";
 import multipart from "@fastify/multipart";
 import fs from "fs";
 import path from "path";
-import { pipeline } from 'stream/promises';
+import { pipeline } from "stream/promises";
 
 export function runServer() {
     
@@ -227,7 +227,7 @@ export function runServer() {
         const changeStmt = usersDB.prepare("UPDATE users SET name = ? WHERE id = ?");
         changeStmt.run(newName, id);
 
-        return reply.status(201).send({ success: true });
+        return reply.status(201).send({ success: true, message: "Name updated" });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -264,7 +264,7 @@ export function runServer() {
         const changeStmt = usersDB.prepare("UPDATE users SET mail = ? WHERE id = ?");
         changeStmt.run(newMail, id);
 
-        return reply.status(201).send({ success: true });
+        return reply.status(201).send({ success: true, message: "Mail updated" });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -279,20 +279,16 @@ export function runServer() {
 
     //#region friends_management
 
-    fastify.post("/send-invit/:id", async (req, reply) => {
+    fastify.post("/send-invit", async (req, reply) => {
       try {
-        const userID = req.params.id;
+        const userID = req.headers["x-user-id"];
         const { friendName } = req.body;
         if (!userID) {
           return reply.status(400).send({ error: "ID required" });
         } else if (!friendName) {
           return reply.status(400).send({ error: "friend name required" });
         }
-        const reqID = req.headers["x-user-id"];
-        if (userID === reqID) {
-          return reply.status(403).send({ error: "Can only send invitations for yourself" });
-        }
-  
+
         const getStmt = usersDB.prepare("SELECT id FROM users WHERE name = ?");
         const row = getStmt.get(friendName);
         if (!row) {
@@ -302,9 +298,28 @@ export function runServer() {
         if (Number(userID) === friendID) {
           return reply.status(400).send({ error: "You cannot invite yourself" });
         }
-  
-        const checkStmt = usersDB.prepare(`SELECT status FROM friends WHERE user_id = ? AND friend_id = ?`);
-        const existing = checkStmt.get(userID, friendID);
+
+        const blockedStmt = usersDB.prepare(`
+          SELECT * FROM friends
+          WHERE status = 'blocked'
+          AND (
+            (user_id = ? AND friend_id = ?)
+            OR
+            (user_id = ? AND friend_id = ?) 
+          );`
+        );
+        const checkBlocked = blockedStmt.get(userID, friendID, friendID, userID);
+        if (checkBlocked) {
+          return reply.status(403).send({ error: "User blocked" });
+        }
+
+        const checkStmt = usersDB.prepare(`
+          SELECT * FROM friends
+          WHERE (user_id = ? AND friend_id = ?) 
+          OR 
+          (user_id = ? AND friend_id = ?)`
+        );
+        const existing = checkStmt.get(userID, friendID, friendID, userID);
         if (existing) {
           return reply.status(409).send({ message: "Invitation already sent" });
         }
@@ -312,7 +327,7 @@ export function runServer() {
         const insertStmt = usersDB.prepare("INSERT INTO friends (user_id, friend_id, status, created_at) VALUES (?, ?, 'pending', datetime('now'))");
         insertStmt.run(userID, friendID);
 
-        return reply.status(201).send({ success: true });
+        return reply.status(201).send({ success: true, message: "Invitation send to friend" });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -321,7 +336,8 @@ export function runServer() {
 
     fastify.post("/accept-invit", async (req, reply) => {
       try {
-        const { userID, friendID } = req.body;
+        const userID = req.headers["x-user-id"];
+        const { friendID } = req.body;
         if (!userID || !friendID) {
           return reply.status(400).send({ error: "Missing parameters" });
         }
@@ -336,6 +352,65 @@ export function runServer() {
         acceptStmt.run(friendID, userID);
 
         reply.send({ success: true, message: "Invitation accepted" });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    fastify.post("/delete-friend", async (req, reply) => {
+      try {
+        const userID = req.headers["x-user-id"];
+        const { friendID } = req.body;
+        if (!userID || !friendID) {
+          return reply.status(400).send({ error: "Missing parameters" });
+        }
+
+        deleteStmt = usersDB.prepare(`
+          DELETE FROM friends
+          WHERE status = 'accepted'
+          AND (
+            (user_id = ? AND friend_id = ?)
+            OR
+            (user_id = ? AND friend_id = ?) 
+          );`
+        );
+        const deleteResult = deleteStmt.run(userID, friendID, friendID, userID);
+        if (deleteResult.changes === 0) {
+          return reply.status(404).send({ error: "No friendship found to delete" });
+        }
+
+        return reply.send({ success: true, message: "Friend deleted"});
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    fastify.post("/block-friend", async (req, reply) => {
+      try {
+        const userID = req.headers["x-user-id"];
+        const { friendID } = req.body;
+        if (!userID || !friendID) {
+          return reply.status(400).send({ error: "Missing parameters" });
+        }
+
+        blockStmt = usersDB.prepare(`
+          UPDATE friends
+          SET status = 'blocked'
+          WHERE status = 'accepted'
+          AND (
+            (user_id = ? AND friend_id = ?)
+            OR
+            (user_id = ? AND friend_id = ?) 
+          );`
+        );
+        const blockResult = blockStmt.run(userID, friendID, friendID, userID);
+        if (blockResult.changes === 0) {
+          return reply.status(404).send({ error: "No friendship found to block" });
+        }
+
+        return reply.send({ success: true, message: "Friend blocked"});
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
