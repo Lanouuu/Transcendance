@@ -45,6 +45,10 @@ services:
     container_name: game
     build: ./requirements/game
     expose: ["3002"]
+    # A supprimer [ports]
+    ports:
+      - "3002:3002"
+      - "8081:8081"
     env_file:
       - .env
     networks:

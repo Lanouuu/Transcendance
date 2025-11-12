@@ -2,11 +2,13 @@ FROM node:slim
 
 RUN mkdir -p /app/public/assets
 
-#WORKDIR /app/public/assets
+RUN mkdir -p /app/public/scripts
 
-#COPY assets/* .
+WORKDIR /app/public/assets
 
-WORKDIR /app
+COPY assets/* ./
+
+WORKDIR /app/public
 
 COPY ./conf/package*.json ./
 
@@ -14,14 +16,10 @@ COPY --chown=node:node ./scripts/ ./scripts/
 
 RUN npm install
 
-#COPY index.html ./public
+COPY index.html ./scripts/
 
-#COPY style.css ./public
-
-#COPY script.js ./public
-
-#COPY spriteClass.js ./public
-
-CMD ["node", "./scripts/server.js"]
+COPY style.css ./scripts/
 
 EXPOSE 3002
+
+CMD ["node", "./scripts/server.js"]
