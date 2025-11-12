@@ -5,6 +5,7 @@ import multipart from "@fastify/multipart";
 import fs from "fs";
 import path from "path";
 import { pipeline } from 'stream/promises';
+import bcrypt from "bcryptjs";
 
 export function runServer() {
     
@@ -271,6 +272,34 @@ export function runServer() {
       }
     });
     
+    fastify.post("/update-password/:id", async (req, reply) => {
+      const { id } = req.params;
+      if (!id) {
+        return reply.status(400).send({ error: "ID required" });
+      }
+      const reqID = req.headers["x-user-id"];
+      if (reqID !== id) {
+        return reply.status(400).send({ error: "Can only change your name" });
+      }
+
+      try {
+        const { newPassword } = req.body;
+        if (!newPassword) {
+          return reply.status(400).send({ error: "New password required" });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        const changeStmt = usersDB.prepare("UPDATE users SET password = ? WHERE id = ?");
+        changeStmt.run(hashedPassword, id);
+
+        return reply.status(201).send({ success: true });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
     //#endregion users_data_management
 
     /****************************************************************************/
