@@ -16,6 +16,10 @@ services:
       - auth_service
     env_file:
       - .env
+    #TEST
+    volumes:
+      - ssl_certifs:/etc/nginx/ssl
+    ###############################
     networks:
       - pong_app
     restart: always
@@ -51,6 +55,12 @@ services:
       - "8081:8081"
     env_file:
       - .env
+    # TEST
+    volumes:
+      - ssl_certifs:/etc/ssl:ro
+    depends_on:
+      - gateway
+    ###############################3
     networks:
       - pong_app
     restart: always
@@ -66,3 +76,7 @@ services:
 networks:
   pong_app:
     name: pong_app
+
+#TEST  
+volumes:
+  ssl_certifs:

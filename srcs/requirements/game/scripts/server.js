@@ -5,8 +5,15 @@ import { fileURLToPath } from 'url'
 import { Game } from './gameClass.js'
 import cors from '@fastify/cors'
 import {WebSocketServer} from 'ws'
+import fs from 'fs'
 
-const fastify = Fastify({ logger: true })
+const fastify = Fastify({
+    logger: true,
+    https: {
+        key: fs.readFileSync('/etc/ssl/transcendence.key'),
+        cert: fs.readFileSync('/etc/ssl/transcendence.crt') 
+    }
+ })
 const PORT = parseInt(process.env.GAME_PORT, 10)
 const HOST = process.env.GAME_HOST
 const games = new Map()
@@ -30,7 +37,10 @@ fastify.get('/', (request, reply) => {
 })
 
 
-const wss = new WebSocketServer({ port: 8081 });
+const wss = new WebSocketServer({ 
+    host: '0.0.0.0',
+    port: 8081,
+});
 
 wss.on('listening', () => {
   console.log("WebSocket server running on ws://localhost:8081")
