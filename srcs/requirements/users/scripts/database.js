@@ -21,6 +21,7 @@ export function initDB() {
             friend_id   INTEGER NOT NULL,
             status      TEXT NOT NULL DEFAULT 'pending',
             created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+            blocked_by  INTEGER DEFAULT 0
             UNIQUE(user_id, friend_id)
         );`
     );

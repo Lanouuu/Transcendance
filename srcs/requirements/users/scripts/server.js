@@ -395,9 +395,9 @@ export function runServer() {
           return reply.status(400).send({ error: "Missing parameters" });
         }
 
-        blockStmt = usersDB.prepare(`
+        const blockStmt = usersDB.prepare(`
           UPDATE friends
-          SET status = 'blocked'
+          SET status = 'blocked', blocked_by = ?
           WHERE status = 'accepted'
           AND (
             (user_id = ? AND friend_id = ?)
@@ -405,7 +405,7 @@ export function runServer() {
             (user_id = ? AND friend_id = ?) 
           );`
         );
-        const blockResult = blockStmt.run(userID, friendID, friendID, userID);
+        const blockResult = blockStmt.run(userID, userID, friendID, friendID, userID);
         if (blockResult.changes === 0) {
           return reply.status(404).send({ error: "No friendship found to block" });
         }
@@ -444,6 +444,33 @@ export function runServer() {
         const friendsList = listStmt.all(userID, userID);
 
         reply.send({ friendsList });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    fastify.get("/blocked-user/:id", async (req, reply) => {
+      try {
+        const userID = req.params.id;
+        if (!userID) {
+          return reply.status(400).send({ error: "ID required" });
+        }
+        const reqID = req.headers["x-user-id"];
+        if (userID !== reqID) {
+          return reply.status(403).send({ error: "Can only view your own blocked list" });
+        }
+
+        const blockedStmt = usersDB.prepare(`
+          SELECT f.friends_id AS id, u.name
+          FROM friends f
+          JOIN users ON
+            (u.id = f.friend_id OR u.id = f.user_id)
+          WHERE f.blocked_by = ?`
+        );
+        const blockedUsers = blockedStmt.all(userID);
+
+        reply.send({ blockedUsers });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
