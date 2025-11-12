@@ -450,7 +450,7 @@ export function runServer() {
       }
     });
 
-    fastify.get("/blocked-user/:id", async (req, reply) => {
+    fastify.get("/blocked-users/:id", async (req, reply) => {
       try {
         const userID = req.params.id;
         if (!userID) {
