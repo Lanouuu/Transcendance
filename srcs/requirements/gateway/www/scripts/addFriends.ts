@@ -10,8 +10,8 @@ interface User {
 }
 
 const users: User[] = [
-  { name: "alice", mail: "a@test.fr", password: "test" },
-  { name: "bob", mail: "b@test.fr", password: "test" }
+  { name: "Thomas-Lebon", mail: "a@test.fr", password: "test" },
+  { name: "Lebon-Thomas", mail: "b@test.fr", password: "test" }
 ];
 
 async function createUser(user: User): Promise<Response> {
