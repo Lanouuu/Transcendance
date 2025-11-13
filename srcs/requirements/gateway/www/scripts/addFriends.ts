@@ -37,18 +37,22 @@ async function login(user: User): Promise<LoginResponse> {
   return res.json();
 }
 
-async function sendInvite(fromId: number | string, friendName: string, token: string): Promise<Response> {
-  return fetch(`${USERS_URL}/send-invit/${fromId}`, {
+async function sendInvite(fromId: string, friendName: string, token: string): Promise<Response> {
+  return fetch(`${USERS_URL}/send-invit`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "authorization": `Bearer ${token}` },
+    headers: { "Content-Type": "application/json", 
+      "authorization": `Bearer ${token}`,
+      "x-user-id": fromId  },
     body: JSON.stringify({ friendName })
   });
 }
 
-async function acceptInvite(body: { userID: number | string; friendID: number | string }, token: string): Promise<Response> {
+async function acceptInvite(userID: string, body: { friendID: number | string }, token: string): Promise<Response> {
   return fetch(`${USERS_URL}/accept-invit`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "authorization": `Bearer ${token}` },
+    headers: { "Content-Type": "application/json", 
+      "authorization": `Bearer ${token}`,
+      "x-user-id": userID  },
     body: JSON.stringify(body)
   });
 }
@@ -73,8 +77,8 @@ export async function initTest(): Promise<void> {
       console.log(`${u.name} token:`, tokens[u.name]);
     }
 
-    await sendInvite(1, "bob", tokens["alice"]);
-    await acceptInvite({ userID: 2, friendID: 1 }, tokens["bob"]);
+    await sendInvite("1", "bob", tokens["alice"]);
+    await acceptInvite("2", { friendID: 1 }, tokens["bob"]);
 
     console.log("Seed complete");
   } catch (err) {
