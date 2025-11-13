@@ -311,46 +311,6 @@ export function runServer() {
         return reply.status(500).send({ error: "Internal Server Error" });
       }
     });
-    
-    fastify.post("/update-password/:id", async (req, reply) => {
-      const { id } = req.params;
-      if (!id) {
-        return reply.status(400).send({ error: "ID required" });
-      }
-      const reqID = req.headers["x-user-id"];
-      if (!reqID) {
-        return reply.status(400).send({ error: "Id missing in header" });
-      }
-      if (reqID !== id) {
-        return reply.status(400).send({ error: "Id mismatch" });
-      }
-
-      const user_auth_type = usersDB.prepare("SELECT auth_type FROM users WHERE id = ?");
-      const user = user_auth_type.get(id);
-      if (!user) {
-        return reply.status(404).send({ error: "User not found" });
-      }
-      if(user.auth_type === "oauth42") {
-        return reply.status(403).send({ error: "Password modification is disabled for OAuth accounts." });
-      }
-
-      try {
-        const { newPassword } = req.body;
-        if (!newPassword) {
-          return reply.status(400).send({ error: "New password required" });
-        }
-
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        const changeStmt = usersDB.prepare("UPDATE users SET password = ? WHERE id = ?");
-        changeStmt.run(hashedPassword, id);
-
-        return reply.status(201).send({ success: true });
-      } catch (err) {
-        fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
-      }
-    });
 
     //#endregion users_data_management
 
