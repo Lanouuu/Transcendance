@@ -5,8 +5,15 @@ import { fileURLToPath } from 'url'
 import { Game } from './gameClass.js'
 import cors from '@fastify/cors'
 import {WebSocketServer} from 'ws'
+import fs from 'fs'
 
-const fastify = Fastify({ logger: true })
+const fastify = Fastify({
+    logger: true,
+    https: {
+        key: fs.readFileSync('/etc/ssl/transcendence.key'),
+        cert: fs.readFileSync('/etc/ssl/transcendence.crt') 
+    }
+ })
 const PORT = parseInt(process.env.GAME_PORT, 10)
 const HOST = process.env.GAME_HOST
 const games = new Map()
@@ -30,7 +37,10 @@ fastify.get('/', (request, reply) => {
 })
 
 
-const wss = new WebSocketServer({ port: 8081 });
+const wss = new WebSocketServer({ 
+    server: fastify.server,
+    path: '/ws'
+});
 
 wss.on('listening', () => {
   console.log("WebSocket server running on ws://localhost:8081")
@@ -77,8 +87,8 @@ setInterval(() => {
                 game.player1.position.y -=1 * 15
         }
         if (game.player1.key.down) {
-            if (game.player1.position.y + 15 + game.player1.height >= game.board.height)
-                game.player1.position.y = game.board.height - game.player1.height
+            if (game.player1.position.y + 15 + game.player1.imgSize.height >= game.board.imgSize.height)
+                game.player1.position.y = game.board.imgSize.height - game.player1.imgSize.height
             else
                 game.player1.position.y +=1 * 15
         }
@@ -91,8 +101,8 @@ setInterval(() => {
                 game.player2.position.y -=1 * 15
         }
         if (game.player2.key.down) {
-            if (game.player2.position.y + 15 + game.player2.height >= game.board.height)
-                game.player2.position.y = game.board.height - game.player2.height
+            if (game.player2.position.y + 15 + game.player2.imgSize.height >= game.board.imgSize.height)
+                game.player2.position.y = game.board.imgSize.height - game.player2.imgSize.height
             else
                 game.player2.position.y +=1 * 15
         }
@@ -102,27 +112,28 @@ setInterval(() => {
             game.ball.position.y += game.ball.velocity.y
 
             if (game.ball.position.x <= 0) {
-                game.ball.position = {x: game.board.width / 2, y:game.board.height / 2}
+                game.ball.position = {x: game.board.imgSize.width / 2, y:game.board.imgSize.height / 2}
                 game.player2.score++
             }
 
-            if (game.ball.position.x >= game.board.width) {
-                game.ball.position = {x: game.board.width / 2, y:game.board.height / 2}
+            if (game.ball.position.x >= game.board.imgSize.width) {
+                game.ball.position = {x: game.board.imgSize.width / 2, y:game.board.imgSize.height / 2}
                 game.player1.score++
             }
-            if (game.ball.position.y <= 0 || game.ball.position.y + game.ball.height >= game.board.height)
+            if (game.ball.position.y <= 0 || game.ball.position.y + game.ball.imgSize.height >= game.board.imgSize.height)
                 game.ball.velocity.y = -game.ball.velocity.y
 
-            if (game.ball.position.x <= game.player1.position.x + game.player1.width && game.ball.position.x >= game.player1.position.x && game.ball.position.y + game.ball.height >= game.player1.position.y && game.ball.position.y <= game.player1.position.y + game.player1.height) {
+            if (game.ball.position.x <= game.player1.position.x + game.player1.imgSize.width && game.ball.position.x >= game.player1.position.x && game.ball.position.y + game.ball.imgSize.height >= game.player1.position.y && game.ball.position.y <= game.player1.position.y + game.player1.imgSize.height) {
                 game.ball.velocity.x = -game.ball.velocity.x
-                game.ball.position.x = game.player1.position.x + game.player1.width
+                game.ball.position.x = game.player1.position.x + game.player1.imgSize.width
             }
 
-            if (game.ball.position.x + game.ball.width >= game.player2.position.x && game.ball.position.x <= game.player2.position.x + game.player2.width && game.ball.position.y + game.ball.height >= game.player2.position.y && game.ball.position.y <= game.player2.position.y + game.player2.height) {
+            if (game.ball.position.x + game.ball.imgSize.width >= game.player2.position.x && game.ball.position.x <= game.player2.position.x + game.player2.imgSize.witdh && game.ball.position.y + game.ball.imgSize.height >= game.player2.position.y && game.ball.position.y <= game.player2.position.y + game.player2.imgSize.height) {
                 game.ball.velocity.x = -game.ball.velocity.x
-                game.ball.position.x = game.player2.position.x - game.ball.width
+                game.ball.position.x = game.player2.position.x - game.ball.imgSize.width
             }
         }
+        console.log("player2 = ", game.player2)
         game.message = "Playing"
         if (game.player1.score === 5) {
             game.message = "END"

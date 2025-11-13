@@ -50,12 +50,21 @@ class Router {
 				// Loads the scripts corresponding the the page loaded
 				switch(page) {
 					case 'home':
-						const homeScript = await import('./home.js');
+						const homeScript = await import('./home.js'); // on peut mettre ca en haut
 						if (homeScript.home) homeScript.home();
 						break;
 					case 'game':
-						const gameScript = await import('./game.js');
-						// if (gameScript.game) gameScript.game();
+						const localButtonScript = await import('./game.js')
+						const localButton = document.getElementById('gameLocalGameButton');
+						if (localButton && localButtonScript.launchLocalGame) {
+							localButton.addEventListener('click', async () => {
+								try {
+									await localButtonScript.launchLocalGame();
+								} catch (error) {
+									console.error('Error launching the game:', error);
+								}
+							})
+						}
 						break;
 					case 'tournament':
 						const tournamentScript = await import('./tournament.js');
