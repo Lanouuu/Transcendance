@@ -1,6 +1,6 @@
 import { Game, Sprite, Vector2D, KeyBind, ImgSize } from "./gameClass.js"
 
-const route: string = "https://localhost:8443/game";
+const route: string = "://localhost:8443/game";
 
 export async function launchLocalGame() {
 
@@ -13,7 +13,7 @@ export async function launchLocalGame() {
 	}
 
 	try {
-		const res = await fetch(`${route}/local`, {
+		const res = await fetch(`https${route}/local`, {
 			method: "GET",
 			headers: {
 				"authorization": `Bearer ${token}`,
@@ -44,7 +44,7 @@ export async function gameLoop(game: Game) { // BIZARRE LE TYPE
 
 	try {
 		await loadSprites(game);
-		const ws = new WebSocket(`wss:${route}`); // A MODIFIER
+		const ws = new WebSocket(`wss${route}/ws`); // A MODIFIER
 
 		ws.addEventListener('open', (event) => {
 			game.message = "Init"
@@ -209,7 +209,7 @@ export async function loadSprites(game: Game) {
             loadImage('../assets/Board.png', {x:0, y:0}, {up: undefined, down: undefined}, undefined),
             loadImage('../assets/Player.png', {x:0, y:0}, {up: false, down: false}, 0),
             loadImage('../assets/Player2.png', {x:0, y:0}, {up: false, down: false}, 0),
-            loadImage('../assets/Ball.png', {x:9, y:9}, {up: undefined, down: undefined}, undefined)]
+            loadImage('../assets/Ball.png', {x:-9, y:9}, {up: undefined, down: undefined}, undefined)]
         )
         initSprite(board, player1, player2, ball)
         game.board = board;
