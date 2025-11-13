@@ -4,7 +4,7 @@ export function initDB() {
     const usersDB = new Database('./data/usersDB.db');
     usersDB.exec(
         `CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
             name        TEXT NOT NULL UNIQUE,
             mail        TEXT NOT NULL UNIQUE,
             password    TEXT,
@@ -21,7 +21,7 @@ export function initDB() {
             friend_id   INTEGER NOT NULL,
             status      TEXT NOT NULL DEFAULT 'pending',
             created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-            blocked_by  INTEGER DEFAULT 0
+            blocked_by  INTEGER DEFAULT 0,
             UNIQUE(user_id, friend_id)
         );`
     );

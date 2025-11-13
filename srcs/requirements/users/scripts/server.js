@@ -300,7 +300,7 @@ export function runServer() {
         }
 
         const blockedStmt = usersDB.prepare(`
-          SELECT * FROM friends
+          SELECT blocked_by FROM friends
           WHERE status = 'blocked'
           AND (
             (user_id = ? AND friend_id = ?)
@@ -310,7 +310,11 @@ export function runServer() {
         );
         const checkBlocked = blockedStmt.get(userID, friendID, friendID, userID);
         if (checkBlocked) {
-          return reply.status(403).send({ error: "User blocked" });
+          if (checkBlocked.blocked_by === Number(userID)) {
+            return reply.status(403).send({ error: "You have blocked this user" });
+          } else {
+              return reply.status(403).send({ error: "You are blocked by this user" });
+          }
         }
 
         const checkStmt = usersDB.prepare(`
@@ -411,6 +415,35 @@ export function runServer() {
         }
 
         return reply.send({ success: true, message: "Friend blocked"});
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    fastify.post("/unblock-user", async (req, reply) => {
+      try {
+        const userID = req.headers["x-user-id"];
+        const { friendID } = req.body;
+        if (!userID || !friendID) {
+          return reply.status(400).send({ error: "Missing parameters" });
+        }
+
+        const unblockStmt = usersDB.prepare(`
+          UPDATE friends
+          SET status = 'accepted', blocked_by = 0
+          WHERE status = 'blocked' AND blocked_by = ?
+          AND (
+            (user_id = ? AND friend_id = ?)
+            OR
+            (user_id = ? AND friend_id = ?) 
+          );`
+        );
+        const unblockResult = unblockStmt.run(userID, userID, friendID, friendID, userID);
+        if (unblockResult.changes === 0) {
+          return reply.status(404).send({ error: "No friendship found to unblock" });
+        }
+        return reply.send({ success: true, message: "Friend unblocked"});
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
