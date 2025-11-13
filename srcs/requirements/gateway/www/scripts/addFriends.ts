@@ -77,8 +77,8 @@ export async function initTest(): Promise<void> {
       console.log(`${u.name} token:`, tokens[u.name]);
     }
 
-    await sendInvite("1", "bob", tokens["alice"]);
-    await acceptInvite("2", { friendID: 1 }, tokens["bob"]);
+    await sendInvite("1", "Lebon-Thomas", tokens["Thomas-Lebon"]);
+    await acceptInvite("2", { friendID: 1 }, tokens["Lebon-Thomas"]);
 
     console.log("Seed complete");
   } catch (err) {
