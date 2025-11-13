@@ -39,17 +39,17 @@ export function runServer() {
     //#region create_user
 
     fastify.post("/create_user", async (req, reply) => {
-      const { name, mail, password, enable2FA, secret2FA } = req.body;
+      const { name, mail, password, enable2FA, secret2FA, auth_type } = req.body;
 
       if (!name || !mail)
         return reply.code(400).send({ error: "Missing name or mail" });
 
       try {
         const stmt = usersDB.prepare(`
-          INSERT INTO users (name, mail, password, enable2FA, secret2FA)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT INTO users (name, mail, password, enable2FA, secret2FA, auth_type)
+          VALUES (?, ?, ?, ?, ?, ?)
         `);
-        stmt.run(name, mail, password, enable2FA, secret2FA || null);
+        stmt.run(name, mail, password, enable2FA, secret2FA || null, auth_type);
         return reply.status(201).send({ success: true });
       } catch (err) {
         fastify.log.error(err);
@@ -278,8 +278,20 @@ export function runServer() {
         return reply.status(400).send({ error: "ID required" });
       }
       const reqID = req.headers["x-user-id"];
+      if (!reqID) {
+        return reply.status(400).send({ error: "Id missing in header" });
+      }
       if (reqID !== id) {
-        return reply.status(400).send({ error: "Can only change your name" });
+        return reply.status(400).send({ error: "Id mismatch" });
+      }
+
+      const user_auth_type = usersDB.prepare("SELECT auth_type FROM users WHERE id = ?");
+      const user = user_auth_type.get(id);
+      if (!user) {
+        return reply.status(404).send({ error: "User not found" });
+      }
+      if(user.auth_type === "oauth42") {
+        return reply.status(403).send({ error: "Password modification is disabled for OAuth accounts." });
       }
 
       try {

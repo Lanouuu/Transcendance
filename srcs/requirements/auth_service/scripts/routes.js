@@ -26,7 +26,7 @@ export default async function routes(fastify, options) {
       // console.log("Réponse API 42 status :", userInfo.status);
 
       if (!userInfo.ok) {
-         console.error("Erreur 42 API status:", userInfo.status, await userInfo.text());
+        console.error("Erreur 42 API status:", userInfo.status, await userInfo.text());
         return reply.code(400).send({ error: "Cannot fetch 42 profile" });
       }
 
@@ -38,15 +38,17 @@ export default async function routes(fastify, options) {
         user = await checkRes.json();
       }
       else {
+        const randomPass = crypto.randomBytes(10).toString("base64").slice(0, 10).replace(/\//g, "_").replace(/\+/g, "-");
         const createUser = await fetch("http://users:3000/create_user", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
             name: profile.login,
             mail: profile.email,
-            password: null,
+            password: randomPass,
             enable2FA: 0,
             secret2FA: null,
+            auth_type: "oauth42",
           }),
         });
 
