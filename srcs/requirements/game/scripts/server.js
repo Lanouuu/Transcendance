@@ -111,12 +111,12 @@ setInterval(() => {
             game.ball.position.x += game.ball.velocity.x
             game.ball.position.y += game.ball.velocity.y
 
-            if (game.ball.position.x <= 0) {
+            if (game.ball.position.x + game.ball.imgSize.width < 0) {
                 game.ball.position = {x: game.board.imgSize.width / 2, y:game.board.imgSize.height / 2}
                 game.player2.score++
             }
 
-            if (game.ball.position.x >= game.board.imgSize.width) {
+            if (game.ball.position.x - game.ball.imgSize.width > game.board.imgSize.width) {
                 game.ball.position = {x: game.board.imgSize.width / 2, y:game.board.imgSize.height / 2}
                 game.player1.score++
             }
@@ -128,12 +128,12 @@ setInterval(() => {
                 game.ball.position.x = game.player1.position.x + game.player1.imgSize.width
             }
 
-            if (game.ball.position.x + game.ball.imgSize.width >= game.player2.position.x && game.ball.position.x <= game.player2.position.x + game.player2.imgSize.witdh && game.ball.position.y + game.ball.imgSize.height >= game.player2.position.y && game.ball.position.y <= game.player2.position.y + game.player2.imgSize.height) {
+            if (game.ball.position.x + game.ball.imgSize.width >= game.player2.position.x && game.ball.position.x <= game.player2.position.x + game.player2.imgSize.width && game.ball.position.y + game.ball.imgSize.height >= game.player2.position.y && game.ball.position.y <= game.player2.position.y + game.player2.imgSize.height) {
                 game.ball.velocity.x = -game.ball.velocity.x
                 game.ball.position.x = game.player2.position.x - game.ball.imgSize.width
             }
         }
-        console.log("player2 = ", game.player2)
+        console.log("game = ", game)
         game.message = "Playing"
         if (game.player1.score === 5) {
             game.message = "END"
