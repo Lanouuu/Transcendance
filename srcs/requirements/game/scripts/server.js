@@ -14,12 +14,14 @@ const fastify = Fastify({
         cert: fs.readFileSync('/etc/ssl/transcendence.crt') 
     }
  })
+
 const PORT = parseInt(process.env.GAME_PORT, 10)
 const HOST = process.env.GAME_HOST
 const games = new Map()
 let gameId = 0
 const filename = fileURLToPath(import.meta.url)
 const dirname = join(filename, '..')
+// const queue = []
 
 fastify.register(cors, { 
     origin: "*",
@@ -43,7 +45,7 @@ const wss = new WebSocketServer({
 });
 
 wss.on('listening', () => {
-  console.log("WebSocket server running on ws://localhost:8081")
+    console.log("WebSocket server running on ws://localhost:8081")
 })
 
 wss.on('connection', function connection(ws) {
@@ -133,7 +135,7 @@ setInterval(() => {
                 game.ball.position.x = game.player2.position.x - game.ball.imgSize.width
             }
         }
-        console.log("game = ", game)
+
         game.message = "Playing"
         if (game.player1.score === 5) {
             game.message = "END"
@@ -174,14 +176,18 @@ fastify.get("/local", async (request, reply) => {
 
 // fastify.get("/remote", async (request, reply) => {
 //     try {
-//         const game = new Game({
-//           id: gameId++,
-//           socket: [],
-//           mode: 'remote',
-//         })
-//         games.set(game.id, game)
-//         console.log("Local game created with id:", game.id)
-//         reply.send(game)
+//         queue.push()
+//         if (queue.length % 2 === 0) {
+
+//         }
+//         // const game = new Game({
+//         //   id: gameId++,
+//         //   socket: [],
+//         //   mode: 'remote',
+//         // })
+//         // games.set(game.id, game)
+//         // console.log("Local game created with id:", game.id)
+//         // reply.send(game)
 //     } catch (e) {
 //         console.log(e.message)
 //         // a supprimer
