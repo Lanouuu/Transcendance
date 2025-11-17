@@ -34,9 +34,9 @@ fastify.register(fastifyStatic, {
 })
 
 // A supprimer
-fastify.get('/', (request, reply) => {
-    reply.sendFile('scripts/index.html')
-})
+// fastify.get('/', (request, reply) => {
+//     reply.sendFile('scripts/index.html')
+// })
 
 
 const wss = new WebSocketServer({ 
