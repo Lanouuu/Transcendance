@@ -185,7 +185,7 @@ export default async function routes(fastify, options) {
       const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(token).digest("hex");
       await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
 
-      await redis.set(`user:${user.id}:online`, 1);
+      await redis.set(`user:${user.id}:online`, "1", "EX", 30);
 
       reply.code(200).send({
         token,
@@ -229,7 +229,7 @@ export default async function routes(fastify, options) {
       await db.run("DELETE FROM sessions WHERE token_hash = ?", [tokenHash]);
 
       const userID = req.user.id;
-      await redis.set(`user:${userID}`, 0);
+      await redis.del(`user:${userID}:online`);
       reply.send({ message: "Logged out" });
     });
 }

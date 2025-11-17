@@ -11,7 +11,8 @@
         "better-sqlite3": "^9.0.0",
         "bcryptjs": "^2.4.3",
         "otplib": "^12.0.1",
-        "qrcode": "^1.5.3"
+        "qrcode": "^1.5.3",
+        "ioredis": "^5.4.1"
     },
     "author": "ade-fran",
     "license": "42"

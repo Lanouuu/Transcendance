@@ -6,6 +6,7 @@ import fs from "fs";
 import path from "path";
 import { pipeline } from 'stream/promises';
 import bcrypt from "bcryptjs";
+import Redis from "ioredis";
 
 export function runServer() {
     
@@ -19,6 +20,8 @@ export function runServer() {
     const PORT = parseInt(process.env.USERS_PORT, 10);
     const HOST = process.env.USERS_HOST;
     const usersDB = db.initDB();
+
+    const redis = new Redis({ host: "redis", port: 6379 });
     
     fastify.register(cors, { 
       origin: "*",
@@ -167,6 +170,27 @@ export function runServer() {
     /****************************************************************************/
 
     //#region users_data_management
+
+    fastify.get("/is-online/:id", async (req, reply) => {
+      try {
+        const { id } = req.params;
+        const isOnline = await redis.exists(`user:${id}:online`);
+        return reply.send({ online: isOnline === 1});
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    fastify.post("/heartbeat", async (req, reply) => {
+      const userID = req.headers["x-user-id"];
+      if (!userID) { 
+        return reply.status(400).send({ error: "Missing user" });
+      }
+
+      await redis.set(`user:${userID}:online`, "1", "EX", 30);
+      return reply.send({ success: true });
+    });
 
     fastify.get("/get-user/:id", async (req, reply) => {
       const { id } = req.params;
