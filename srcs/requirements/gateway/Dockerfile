@@ -25,8 +25,8 @@ FROM nginx:stable-alpine
 RUN apk add --no-cache bash openssl
 
 # A SUPPRIMER | Seulement pour le dev
-RUN apk add --no-cache npm
-RUN npm install -g typescript tailwindcss
+RUN apk add --no-cache npm inotify-tools
+RUN npm install -g typescript nodemon tailwindcss@3.4.18
 #####################################
 
 RUN rm /etc/nginx/conf.d/default.conf
@@ -55,7 +55,8 @@ EXPOSE 8080 443
 # A SUPPRIMER ##################################################
 # Copie du script de demarage pour le hot reload
 COPY conf/start_debug.sh /etc/nginx/html/conf/start_debug.sh
-RUN chmod +x /etc/nginx/html/conf/start_debug.sh
-# CMD pour la prod 
+COPY conf/watch-content.sh /etc/nginx/html/conf/watch-content.sh
+RUN chmod +x /etc/nginx/html/conf/start_debug.sh /etc/nginx/html/conf/watch-content.sh
+# CMD pour le dev 
 CMD ["/etc/nginx/html/conf/start_debug.sh"]
 # A SUPPRIMER ##################################################
