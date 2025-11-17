@@ -274,6 +274,10 @@ export function runServer() {
         if (!newMail) {
           return reply.status(400).send({ error: "New mail required" });
         }
+        const { confirmMail } = req.body;
+        if (!confirmMail) {
+          return reply.status(400).send({ error: "Mail confirmation required" });
+        }
 
         const checkStmt = usersDB.prepare("SELECT * FROM users WHERE mail = ?");
         const checkMail = checkStmt.get(newMail);
@@ -284,6 +288,10 @@ export function runServer() {
         let testmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newMail);
         if(!testmail) {
           return reply.code(400).send({ error: "Wrong mail format" });
+        }
+
+        if (newMail !== confirmMail) {
+          return reply.status(400).send({ error: "Email confirmation does not match" });
         }
 
         const changeStmt = usersDB.prepare("UPDATE users SET mail = ? WHERE id = ?");
@@ -309,7 +317,7 @@ export function runServer() {
         return reply.status(400).send({ error: "Id mismatch" });
       }
 
-      const user_auth_type = usersDB.prepare("SELECT auth_type FROM users WHERE id = ?");
+      const user_auth_type = usersDB.prepare("SELECT auth_type, password FROM users WHERE id = ?");
       const user = user_auth_type.get(id);
       if (!user) {
         return reply.status(404).send({ error: "User not found" });
@@ -319,9 +327,31 @@ export function runServer() {
       }
 
       try {
+        const { currentPassword } = req.body;
+        if (!currentPassword) {
+          return reply.status(400).send({ error: "current password required" });
+        }
         const { newPassword } = req.body;
         if (!newPassword) {
           return reply.status(400).send({ error: "New password required" });
+        }
+        const { confirmPassword } = req.body;
+        if (!confirmPassword) {
+          return reply.status(400).send({ error: "Password confirmation required" });
+        }
+
+        const isValid = await bcrypt.compare(currentPassword, user.password); 
+        if (!isValid) {
+          return reply.status(401).send({ error: "Invalid current password"});
+        }
+
+        const checkNewPass = await bcrypt.compare(newPassword, user.password);
+        if (checkNewPass) {
+          return reply.status(400).send({ error: "New password must be different from the current one"});
+        }
+
+        if (newPassword !== confirmPassword) {
+          return reply.status(400).send({ error: "Password confirmation does not match"});
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -329,7 +359,7 @@ export function runServer() {
         const changeStmt = usersDB.prepare("UPDATE users SET password = ? WHERE id = ?");
         changeStmt.run(hashedPassword, id);
 
-        return reply.status(201).send({ success: true, message: "Mail updated" });
+        return reply.status(201).send({ success: true, message: "Password updated" });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });

@@ -74,6 +74,10 @@ class Router {
 						const accountScript = await import('./account.js');
 						if (accountScript.displayAccountPage) accountScript.displayAccountPage();
 						break;
+					case 'editProfile':
+						const editProfileScript = await import('./editProfile.js');
+						if (editProfileScript.editProfile) editProfileScript.editProfile();
+						break;
 					case 'signup':
 						const signupScript = await import('./signup.js');
 						if (signupScript.signup) signupScript.signup();

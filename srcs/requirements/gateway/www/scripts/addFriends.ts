@@ -10,8 +10,8 @@ interface User {
 }
 
 const users: User[] = [
-  { name: "Thomas-Lebon", mail: "a@test.fr", password: "test" },
-  { name: "Lebon-Thomas", mail: "b@test.fr", password: "test" }
+  { name: "alice", mail: "a@test.fr", password: "test" },
+  { name: "bob", mail: "b@test.fr", password: "test" }
 ];
 
 async function createUser(user: User): Promise<Response> {
@@ -77,8 +77,8 @@ export async function initTest(): Promise<void> {
       console.log(`${u.name} token:`, tokens[u.name]);
     }
 
-    await sendInvite("1", "Lebon-Thomas", tokens["Thomas-Lebon"]);
-    await acceptInvite("2", { friendID: 1 }, tokens["Lebon-Thomas"]);
+    await sendInvite("1", "bob", tokens["alice"]);
+    await acceptInvite("2", { friendID: 1 }, tokens["bob"]);
 
     console.log("Seed complete");
   } catch (err) {

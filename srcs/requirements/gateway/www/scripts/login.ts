@@ -21,8 +21,7 @@ export function login() {
 
 				const data = await res.json();
 				const msg = document.getElementById("login-msg");
-				if (msg)
-				{
+				if (msg) {
 					msg.textContent = res.ok ? "Connexion réussie !" : (data.error || "Erreur de connexion");
 					msg.style.color = "lightgreen";
 				}
