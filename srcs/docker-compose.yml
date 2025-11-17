@@ -60,7 +60,7 @@ services:
       - ssl_certifs:/etc/ssl:ro
     depends_on:
       - gateway
-    ###############################3
+    ###############################
     networks:
       - pong_app
     restart: always

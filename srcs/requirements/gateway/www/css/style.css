@@ -180,6 +180,7 @@ body.loggedIn #signupNavLink {
 /* #region tournament */
 /* #endregion */
 
+/* #region account */
 #accountPage {
 	display: flex;
 	flex-direction: column;
@@ -290,7 +291,7 @@ body.loggedIn #signupNavLink {
 #accountFriendList {
 	outline: solid 5px red;
 }
-
+/* #endregion */
 
 /* #region login */
 
@@ -393,6 +394,10 @@ body.loggedIn #signupNavLink {
 
 	gap: 1rem;
 	margin: 1rem;
+}
+
+#signupPage form input {
+	color: black;
 }
 
 /* #endregion */

@@ -7,7 +7,7 @@ up_test: build_test
 	docker compose -f ./srcs/docker-compose_test.yml up -d
 
 build_test:
-	docker compose -f ./srcs/docker-compose_test.yml build
+	docker compose -f ./srcs/docker-compose_test.yml build --no-cache
 
 ret: clean up_test
 

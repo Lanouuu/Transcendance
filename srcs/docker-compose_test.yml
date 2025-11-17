@@ -16,6 +16,7 @@ services:
       - "./requirements/gateway/www/img:/etc/nginx/html/img"
       - "./requirements/gateway/www/css:/etc/nginx/html/css"
       - "./requirements/gateway/www/scripts:/etc/nginx/html/scripts"
+      - ssl_certifs:/etc/nginx/ssl
     depends_on:
       - users
       - auth_service
@@ -52,6 +53,12 @@ services:
     expose: ["3002"]
     env_file:
       - .env
+    # TEST
+    volumes:
+      - ssl_certifs:/etc/ssl:ro
+    depends_on:
+      - gateway
+    ###############################
     networks:
       - pong_app
     restart: always
@@ -67,3 +74,6 @@ services:
 networks:
   pong_app:
     name: pong_app
+
+volumes:
+  ssl_certifs:
