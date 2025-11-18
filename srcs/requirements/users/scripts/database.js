@@ -24,6 +24,16 @@ export function initDB() {
             created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
             blocked_by  INTEGER DEFAULT 0,
             UNIQUE(user_id, friend_id)
+        );
+        CREATE TABLE IF NOT EXISTS matches (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            player1_id  INTEGER NOT NULL,
+            player2_id  INTEGER NOT NULL,
+            winner_id   INTEGER NOT NULL,
+            score_p1    INTEGER NOT NULL,
+            score_p2    INTEGER NOT NULL,
+            match_type  TEXT NOT NULL,
+            played_at   DATETIME DEFAULT CURRENT_TIMESTAMP
         );`
     );
     return usersDB;
