@@ -571,7 +571,7 @@ export function runServer() {
         `);
         const friendsList = listStmt.all(userID, userID);
 
-        reply.send({ friendsList });
+        return reply.status(201).send({ friendsList });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -606,6 +606,60 @@ export function runServer() {
     });
 
     //#endregion friends_management
+
+    /****************************************************************************/
+    /*                           Matches Management                             */
+    /****************************************************************************/
+
+    //#region matches_management
+
+    fastify.post("/save-match", async (req, reply) => {
+      const { player1ID, player2ID, winnerID, scoreP1, scoreP2, matchType } = req.body;
+
+      try {
+        const saveStmt = usersDB.prepare(`
+          INSERT INTO matches 
+            (player1_id, player2_id, winner_id, score_p1, score_p2, match_type)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        saveStmt.run(player1ID, player2ID, winnerID, scoreP1, scoreP2, matchType);
+
+        return reply.status(201).send({ success: true, message: "Match saved" });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    fastify.get("/get-matches/:id", async (req, reply) => {
+      const userID = req.params.id;
+      if (!userID) {
+          return reply.status(400).send({ error: "userID required" });
+        }
+      const reqID  = req.headers["x-user-id"];
+      if (!reqID) {
+          return reply.status(400).send({ error: "reqID required" });
+        }
+      if (userID !== reqID) {
+        return reply.status(400).send({ error: "Can only view your own matches list" });
+      }
+
+      try {
+        const getStmt = usersDB.prepare(`
+          SELECT * FROM matches 
+          WHERE player1_id = ? OR player2_id = ? 
+          ORDER BY played_at DESC
+        `); 
+        const macthList = getStmt.all(userID, userID);
+      
+        return reply.status(201).send({ macthList });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    //#endregion matches_management
 
     fastify.listen({host: HOST, port: PORT}, (err) => {
       if (err) {
