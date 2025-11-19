@@ -14,7 +14,13 @@ module.exports = {
         		'accent': '#CDC5F6',
         		'light': '#BDD2CA',
         		'dark': '#0C0F38',
+				'other': '#dd5b5b',
 			}
+		},
+
+		fontFamily: {
+			'geo': ['"Geo"', 'sans-serif'],
+			'sans': ['system-ui', 'sans-serif'],
 		}
 	},
 	plugins: [],

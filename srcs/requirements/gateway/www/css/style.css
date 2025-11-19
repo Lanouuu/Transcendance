@@ -11,30 +11,21 @@
 	--color-other: #dd5b5b;
 }
 
-
-* {
-	margin: 0;
-	padding: 0;
-}
-
-main {
-	flex-grow: 1;
-	flex-shrink: 1;
-	flex-basis: 0%;
-
-	display: flex;
-	flex-direction: column;
-}
-
 .page {
-	flex-grow: 1;
-	flex-shrink: 1;
-	flex-basis: 0%;
-	min-height: 100%;
+	@apply grow min-h-full;
 }
 
-/* #region Header */
-header {
+/* #region header */
+
+/* Manque le background et la police */
+.headerLayout {
+	@apply	flex items-center content-center justify-center
+			h-32 w-screen
+			text-5xl text-white font-semibold italic font-geo
+			bg-accent;
+}
+
+/* header {
 
 	display: flex;
 	align-items: center;
@@ -48,9 +39,9 @@ header {
 	font-weight: 600;
 	font-style: italic;
 	color: white;
-}
+} */
 
-/* #endregion */
+/* #endregion header */
 
 /* #region nav */
 nav {
@@ -95,86 +86,12 @@ body.loggedIn #signupNavLink {
 	display: none;
 }
 
-/* #endregion */
+/* #endregion nav */
 
 /* #region BODY */
 
-/* #region home */
-
-#homePage {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-
-	gap: 5rem;
-
-	background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%);
-}
-
-#homePageSteleInfo {
-
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	grid-template-rows: 2fr 10fr;
-
-	height: 50vh;
-	width: 13vw;
-	padding: 2rem;
-	gap: 2rem;
-
-	border-radius: 5%;
-	border-bottom-right-radius: 15%;
-	border: none;
-
-
-
-
-	background: linear-gradient(to bottom, var(--color-dark) 15%, var(--color-prim));
-
-	font-family: "Geo";
-	color: var(--color-light);
-}
-
-#homePageSteleInfo:hover {
-	outline: 1px solid var(--color-accent);
-	box-shadow: 0px -15px 50px var(--color-accent);
-	color: white;
-}
-
-#homePageSteleInfo h1 {
-	text-align: center;
-	grid-column: 1/3;
-	grid-row: 1/2;
-}
-
-#homePageSteleInfo p {
-	grid-row: 2/3;
-	font-size: 0.9em;
-}
-
-#homePageSteleInfoText {
-	grid-column: 1/2;
-	grid-row: 2/3;
-	text-align: left;
-}
-
-#homePageSteleInfoGlyphs {
-	grid-column: 2/3;
-	grid-row: 2/3;
-	text-align: right;
-}
-
-
-/* #endregion */
-
-/* #region game */
-/* #endregion */
-
-/* #region tournament */
-/* #endregion */
-
 /* #region account */
+
 #accountPage {
 	display: flex;
 	flex-direction: column;
@@ -285,7 +202,96 @@ body.loggedIn #signupNavLink {
 #accountFriendList {
 	outline: solid 5px red;
 }
-/* #endregion */
+
+/* #endregion account */
+
+/* #region editProfile */
+
+.editProfileLayout {
+	@apply	flex flex-row items-center justify-evenly
+			bg-gray-500;
+}
+
+.editProfileForm {
+	@apply flex flex-col items-center gap-2;
+}
+
+.editProfileFormButton {
+	@apply outline-1 outline-other;
+}
+
+/* #endregion editProfile */
+
+/* #region game */
+/* #endregion game */
+
+/* #region home */
+
+#homePage {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+
+	gap: 5rem;
+
+	background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%);
+}
+
+#homePageSteleInfo {
+
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: 2fr 10fr;
+
+	height: 50vh;
+	width: 13vw;
+	padding: 2rem;
+	gap: 2rem;
+
+	border-radius: 5%;
+	border-bottom-right-radius: 15%;
+	border: none;
+
+
+
+
+	background: linear-gradient(to bottom, var(--color-dark) 15%, var(--color-prim));
+
+	font-family: "Geo";
+	color: var(--color-light);
+}
+
+#homePageSteleInfo:hover {
+	outline: 1px solid var(--color-accent);
+	box-shadow: 0px -15px 50px var(--color-accent);
+	color: white;
+}
+
+#homePageSteleInfo h1 {
+	text-align: center;
+	grid-column: 1/3;
+	grid-row: 1/2;
+}
+
+#homePageSteleInfo p {
+	grid-row: 2/3;
+	font-size: 0.9em;
+}
+
+#homePageSteleInfoText {
+	grid-column: 1/2;
+	grid-row: 2/3;
+	text-align: left;
+}
+
+#homePageSteleInfoGlyphs {
+	grid-column: 2/3;
+	grid-row: 2/3;
+	text-align: right;
+}
+
+/* #endregion home */
 
 /* #region login */
 
@@ -362,7 +368,25 @@ body.loggedIn #signupNavLink {
 	background: linear-gradient(to top, var(--color-dark) 15%, var(--color-prim));
 }
 
-/* #endregion */
+/* #endregion login */
+
+/* #region logout */
+
+#logoutPage {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	font-family: "Geo";
+	font-size: 5rem;
+	color: var(--color-dark);
+	background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%);
+}
+
+#logoutPage b {
+	color: white;
+}
+/* #endregion logout */
 
 /* #region signup */
 
@@ -394,28 +418,15 @@ body.loggedIn #signupNavLink {
 	color: black;
 }
 
-/* #endregion */
+/* #endregion signup */
 
-/* #region logout */
-#logoutPage {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	font-family: "Geo";
-	font-size: 5rem;
-	color: var(--color-dark);
-	background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%);
-}
-
-#logoutPage b {
-	color: white;
-}
-/* #endregion */
+/* #region tournament */
+/* #endregion tournament */
 
 /* #endregion BODY */
 
-/* #region Footer */
+/* #region footer */
+
 footer {
 	display: flex;
 	flex-direction: column;
@@ -436,4 +447,4 @@ footer ul a img {
 	margin-left: 0.2rem;
 }
 
-/* #endregion */
+/* #endregion footer */

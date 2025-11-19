@@ -1,40 +1,45 @@
-<div id="editProfilePage" class="flex flex-col">
+<div id="editProfilePage" class="page editProfileLayout">
 
-    <form id="editUsernameForm">
+    <form id="editUsernameForm" class="editProfileForm">
+
         <label for="editUsernameInput">New Username</label>
-        <input class="outline-prim" type="text" name="Username" id="editUsernameInput" required>
+        <input type="text" name="Username" id="editUsernameInput" required>
         
-        <button class="bg-prim" type="submit" id="editUsernameSubmit">Confirm</button>
+        <button class="editProfileFormButton" type="submit" id="editUsernameSubmit">Confirm</button>
 
         <div class="message" id="editName-msg"></div>
+
     </form>
 
-    <form id="editMailForm">
+    <form id="editMailForm" class="editProfileForm">
+
         <label for="editMailInput">New Mail</label>
-        <input class="outline-prim" type="text" name="Mail" id="editMailInput" required>
+        <input type="text" name="Mail" id="editMailInput" required>
         
         <label for="confirmMailInput">Confirm new mail</label>
-        <input class="outline-prim" type="text" name="confirmMail" id="confirmMailInput" required>
+        <input type="text" name="confirmMail" id="confirmMailInput" required>
 
-        <button class="bg-prim" type="submit" id="editMailSubmit">Confirm</button>
+        <button class="editProfileFormButton" type="submit" id="editMailSubmit">Confirm</button>
 
         <div class="message" id="editMail-msg"></div>
+
     </form>
 
-    <form id="editPasswordForm">
+    <form id="editPasswordForm" class="editProfileForm">
 
         <label for="currentPasswordInput">Current Password</label>
-        <input class="outline-prim" type="text" name="currentPassword" id="currentPasswordInput" required>
+        <input type="text" name="currentPassword" id="currentPasswordInput" required>
 
         <label for="editPasswordInput">New Password</label>
-        <input class="outline-prim" type="text" name="newPassword" id="editPasswordInput" required>
+        <input type="text" name="newPassword" id="editPasswordInput" required>
         
         <label for="confirmPasswordInput">Confirm new password</label>
-        <input class="outline-prim" type="text" name="confirmPassword" id="confirmPasswordInput" required>
+        <input type="text" name="confirmPassword" id="confirmPasswordInput" required>
 
-        <button class="bg-prim" type="submit" id="editPasswordSubmit">Confirm</button>
+        <button class="editProfileFormButton" type="submit" id="editPasswordSubmit">Confirm</button>
 
         <div class="message" id="editPassword-msg"></div>
+
     </form>
 
 </div>
