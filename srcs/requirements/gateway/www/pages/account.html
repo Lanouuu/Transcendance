@@ -2,25 +2,92 @@
 
 	<h1>Account</h1>
 
-	<div class="accountBox">
+	<div class="
+		accountBox
+		bg-gradient-to-t from-prim/60 to-dark/80
+		bg-opacity-40
+	">
 
 		<a id="accountBoxEditProfile"
-           class="bg-prim hover:bg-sec text-white font-bold py-3 px-6 rounded-lg cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95"
-           href="#editProfile" role="button" aria-label="Edit profile">#</a>
+			class="bg-prim flex items-center justify-center rounded-xl max-h-16 text-gray-300 hover:bg-opacity-80 hover:text-white hover:font-black"
+			href="#editProfile" role="button" aria-label="Edit profile">🖉</a>
 
 		<div id="accountBoxInfo">
 
-				<p id="accountBoxUsername">Username<br><span>blabla</span></p>
-				<p id="accountBoxMail">Mail<br><span>blabla@bla.fr</span></p>
-				<p id="accountBox2fa">2FA<br><input type="checkbox" disabled></p>
+			<p id="accountBoxUsername">Username<br><span>blabla</span></p>
+			<p id="accountBoxMail">Mail<br><span>blabla@bla.fr</span></p>
+			<p id="accountBox2fa">2FA<br><input type="checkbox" disabled></p>
 
 		</div>
 
-		<div id="accountBoxProfilePic">
+		<div id="accountBoxProfilePic" class="flex flex-col gap-6">
 
 			<input id="profilePicInput" type="file" accept="image/*" class="hidden">
-			<button id="profilePicButton" class="bg-prim text-white p-2 outline outline-accent">Update Avatar</button>
-			<img src="img/cristal_profile_base.jpg">
+
+			<div class="group relative rounded-full w-fit">
+
+				<img src="img/cristal_profile_base.jpg" class="
+					w-48 h-48
+					rounded-full
+					object-cover
+					cursor-pointer
+				">
+
+				<button id="profilePicButton" class="
+					absolute 
+					rounded-full
+					object-fill
+                	inset-0 
+					w-full
+					h-full
+                	bg-gray-500 
+                	text-white 
+                	opacity-0 
+                	group-hover:opacity-60 
+                	transition-opacity 
+                	duration-200
+                	pointer-events-auto
+				">
+					🖉
+				</button>
+
+				<button id="profilePicButtonConfirm" class="
+					absolute
+					right-0
+					-bottom-3
+					rounded-full
+					w-1/6
+					h-1/6
+                	bg-gray-400
+                	text-light
+					text-xl
+					opacity-100
+					bg-opacity-30
+                	hover:bg-opacity-10 
+					hidden
+				">
+					✓
+				</button>
+				<button id="profilePicButtonCancel" class="
+					absolute
+					-right-7
+					bottom-6
+					rounded-full
+					w-1/6
+					h-1/6
+                	bg-gray-400
+                	text-light
+					text-xl
+					opacity-100
+					bg-opacity-30
+                	hover:bg-opacity-50
+					hidden
+				">
+					✗
+				</button>
+			</div>
+
+
 
 		</div>
 

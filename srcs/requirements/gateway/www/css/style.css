@@ -21,8 +21,8 @@
 .headerLayout {
 	@apply	flex items-center content-center justify-center
 			h-32 w-screen
-			text-5xl text-white font-semibold italic font-geo
-			bg-accent;
+			text-5xl text-white font-semibold italic font-geo;
+			/* bg-accent; */
 }
 
 /* header {
@@ -51,7 +51,7 @@ nav {
 	justify-content: space-around;
 
 	padding: 1rem;
-	background: linear-gradient(to right, var(--color-dark) 0%, var(--color-prim) 25% 75%, var(--color-dark) 100%);
+	/* background: linear-gradient(to right, var(--color-dark) 0%, var(--color-prim) 25% 75%, var(--color-dark) 100%); */
 }
 
 nav a {
@@ -100,7 +100,7 @@ body.loggedIn #signupNavLink {
 	padding: 2rem;
 	gap: 4rem;
 
-	background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%);
+	/* background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%); */
 
 	font-family: "Geo";
 	color: white;
@@ -124,7 +124,8 @@ body.loggedIn #signupNavLink {
 
 	border-radius: 3rem;
 
-	background: linear-gradient(to bottom, var(--color-dark) 15%, var(--color-prim));
+	/* background: linear-gradient(to bottom, var(--color-dark) 15%, var(--color-prim)); */
+	/* background-color: var(--color-dark); */
 }
 
 #accountPage .accountBox:hover {
@@ -165,7 +166,7 @@ body.loggedIn #signupNavLink {
 	overflow: hidden;
 }
 
-#accountBoxProfilePic img {
+/* #accountBoxProfilePic img {
 
 	max-width: 100%;
 	max-height: 100%;
@@ -176,7 +177,7 @@ body.loggedIn #signupNavLink {
 
 	border: solid 5px var(--color-accent);
 	border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
-}
+} */
 
 #accountBoxFriendList {
 	display: flex;
@@ -235,7 +236,7 @@ body.loggedIn #signupNavLink {
 
 	gap: 5rem;
 
-	background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%);
+	/* background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%); */
 }
 
 #homePageSteleInfo {
@@ -433,7 +434,7 @@ footer {
 	align-items: center;
 	justify-content: center;
 
-	background: var(--color-dark);
+	/* background: var(--color-dark); */
 
 	padding: 1.5rem;
 
