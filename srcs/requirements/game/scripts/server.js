@@ -48,7 +48,6 @@ wss.on('listening', () => {
 
 wss.on('connection', function connection(ws) {
   ws.on('error', console.error);
-
   ws.on('message', function message(data) {
     const res = JSON.parse(data.toString())
     // console.log("DATA RECEIVED IN WS CONNECTION = ", res)
@@ -133,7 +132,6 @@ setInterval(() => {
                 game.ball.position.x = game.player2.position.x - game.ball.imgSize.width
             }
         }
-        console.log("game = ", game)
         game.message = "Playing"
         if (game.player1.score === 5) {
             game.message = "END"
