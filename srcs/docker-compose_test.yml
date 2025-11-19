@@ -16,6 +16,7 @@ services:
       - "./requirements/gateway/www/img:/etc/nginx/html/img"
       - "./requirements/gateway/www/css:/etc/nginx/html/css"
       - "./requirements/gateway/www/scripts:/etc/nginx/html/scripts"
+      - "./requirements/gateway/www/index.html:/etc/nginx/html/index.html"
       - ssl_certifs:/etc/nginx/ssl
     depends_on:
       - users
