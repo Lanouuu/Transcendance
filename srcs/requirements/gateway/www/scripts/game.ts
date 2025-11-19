@@ -6,10 +6,15 @@ export async function launchLocalGame() {
 
 	const token: string | null = localStorage.getItem("jwt");
 	const userId: string | null = localStorage.getItem("userId");
+	const remoteButton: HTMLButtonElement = document.getElementById('gameRemoteGameButton') as HTMLButtonElement;
 
 	if (userId === null || token === null) {
 		console.error('Could not fetch user id/token');
 		return;
+	}
+
+	if (remoteButton) {
+		remoteButton.style.display = "none";
 	}
 
 	try {
@@ -39,6 +44,50 @@ export async function launchLocalGame() {
 		console.error(err);
 	}
 };
+
+export async function launchRemoteGame() {
+
+	const token: string | null = localStorage.getItem("jwt");
+	const userId: string | null = localStorage.getItem("userId");
+	const localButton: HTMLButtonElement = document.getElementById('gameLocalGameButton') as HTMLButtonElement;
+	
+	if (userId === null || token === null) {
+		console.error('Could not fetch user id/token');
+		return;
+	}
+
+	if (localButton){
+		localButton.style.display = "none";
+	}
+
+
+	try {
+		const res = await fetch(`https${route}/remote`, {
+			method: "GET",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId
+			},
+		});
+		if (!res.ok) {
+			const text = await res.text();
+			console.error(`Server error ${res.status}:`, text);
+			throw new Error(`Failed to load the game`);
+		}
+			
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")) {
+			const text = await res.text();
+			console.error(`Server did not return JSON`, text);
+			throw new Error(`Server response is not JSON`);
+		}
+
+		const game = await res.json();
+		gameLoop(game);
+	} catch (err) {
+		console.error(err);
+	}
+}
 
 export async function gameLoop(game: Game) { // BIZARRE LE TYPE
 

@@ -13,6 +13,8 @@ export async function displayAccountPage() {
 	const mailSpan: HTMLElement | null | undefined = document.getElementById("accountBoxMail")?.querySelector("span");
 	const dblFaBox: HTMLInputElement | null | undefined = document.getElementById("accountBox2fa")?.querySelector("input") as HTMLInputElement;
 	const profilePic: HTMLImageElement | null | undefined = document.getElementById("accountBoxProfilePic")?.querySelector("img") as HTMLImageElement;
+	const profilePicInput: HTMLInputElement					= document.getElementById('profilePicInput') as HTMLInputElement;
+	const profilePicButton: HTMLButtonElement				= document.getElementById('profilePicButton') as HTMLButtonElement;
 
 	if (usernameSpan === null || usernameSpan === undefined || mailSpan === null || mailSpan === undefined ||
 		dblFaBox === null || dblFaBox === undefined || profilePic === null || profilePic === undefined) {
@@ -68,6 +70,11 @@ export async function displayAccountPage() {
 			friendList.innerHTML = data;
 		}
 		else throw new Error("No friendList fetched");
+
+		if (profilePicInput && profilePicButton)
+		{
+			// document.addEventListener()
+		}
 	} catch (error) {
 		console.error(error);
 		// Faire qqch pour informer 

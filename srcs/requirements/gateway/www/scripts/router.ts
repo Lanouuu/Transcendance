@@ -54,12 +54,22 @@ class Router {
 						if (homeScript.home) homeScript.home();
 						break;
 					case 'game':
-						const localButtonScript = await import('./game.js')
+						const gameScript = await import('./game.js')
 						const localButton = document.getElementById('gameLocalGameButton');
-						if (localButton && localButtonScript.launchLocalGame) {
+						if (localButton && gameScript.launchLocalGame) {
 							localButton.addEventListener('click', async () => {
 								try {
-									await localButtonScript.launchLocalGame();
+									await gameScript.launchLocalGame();
+								} catch (error) {
+									console.error('Error launching the game:', error);
+								}
+							})
+						}
+						const remoteButton = document.getElementById('gameRemoteGameButton');
+						if (remoteButton && gameScript.launchRemoteGame) {
+							remoteButton.addEventListener('click', async () => {
+								try {
+									await gameScript.launchRemoteGame();
 								} catch (error) {
 									console.error('Error launching the game:', error);
 								}
