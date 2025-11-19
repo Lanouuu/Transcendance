@@ -1,13 +1,13 @@
-async function updateName(BASE_URL: string, userID: string, token: string) {
+async function updateName(BASE_URL: string, userId: string, token: string) {
     const newName: string = (document.getElementById("editUsernameInput") as HTMLInputElement).value;
 
     try {
-        const res = await fetch(`${BASE_URL}/update-name/${userID}`, {
+        const res = await fetch(`${BASE_URL}/update-name/${userId}`, {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json",
 				"authorization": `Bearer ${token}`,
-				"x-user-id": userID },
+				"x-user-id": userId },
             body: JSON.stringify({ newName }),
         });
 
@@ -30,17 +30,17 @@ async function updateName(BASE_URL: string, userID: string, token: string) {
     }
 }
 
-async function updateMail(BASE_URL: string, userID: string, token: string) {
+async function updateMail(BASE_URL: string, userId: string, token: string) {
     const newMail = (document.getElementById("editMailInput") as HTMLInputElement).value;
     const confirmMail = (document.getElementById("confirmMailInput") as HTMLInputElement).value;
 
     try {
-        const res = await fetch(`${BASE_URL}/update-mail/${userID}`, {
+        const res = await fetch(`${BASE_URL}/update-mail/${userId}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
 				"authorization": `Bearer ${token}`,
-				"x-user-id": userID },
+				"x-user-id": userId },
             body: JSON.stringify({ newMail, confirmMail }),
         });
 
@@ -63,18 +63,18 @@ async function updateMail(BASE_URL: string, userID: string, token: string) {
     }
 }
 
-async function updatePass(BASE_URL: string, userID: string, token: string) {
+async function updatePass(BASE_URL: string, userId: string, token: string) {
     const currentPassword = (document.getElementById("currentPasswordInput") as HTMLInputElement).value;
     const newPassword = (document.getElementById("editPasswordInput") as HTMLInputElement).value;
     const confirmPassword = (document.getElementById("confirmPasswordInput") as HTMLInputElement).value;
 
     try {
-        const res = await fetch(`${BASE_URL}/update-password/${userID}`, {
+        const res = await fetch(`${BASE_URL}/update-password/${userId}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
 				"authorization": `Bearer ${token}`,
-				"x-user-id": userID },
+				"x-user-id": userId },
             body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
         });
 
@@ -99,7 +99,7 @@ async function updatePass(BASE_URL: string, userID: string, token: string) {
 
 export async function editProfile() {
     const BASE_URL: string = "https://localhost:8443/users";
-    const userID: string = localStorage.getItem("userID") as string;
+    const userId: string = localStorage.getItem("userId") as string;
     const token: string = localStorage.getItem("jwt") as string;
 
     const nameForm = document.getElementById("editUsernameForm");
@@ -109,19 +109,19 @@ export async function editProfile() {
     if (nameForm) {
         nameForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            updateName(BASE_URL, userID, token);
+            updateName(BASE_URL, userId, token);
         });
     }
     if (mailForm) {
         mailForm.addEventListener("submit", async(e) => {
             e.preventDefault();
-            updateMail(BASE_URL, userID, token);
+            updateMail(BASE_URL, userId, token);
         });
     }
     if (passForm) {
         passForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            updatePass(BASE_URL, userID, token);
+            updatePass(BASE_URL, userId, token);
         });
     }
 }
