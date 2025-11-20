@@ -13,13 +13,16 @@
 		<label for="box2faLogin">Code 2FA<br>(if activated)</label>
 		<input type="text" id="box2faLogin" name="code2FA" placeholder="123456">
 
-		<button type="submit">Connection</button>
+		<button id="loginButton" type="submit">Connection</button>
+
+		<button onclick="window.location.href='https://localhost:8443/auth_service/login/42'"
+			class="">
+			<img src="../img/42 Paris_id78fsL3cM_1.svg">
+		</button>
+
 		<div class="message" id="login-msg"></div>
 
 	</form>
-	<button class="!text-dark" onclick="window.location.href='https://localhost:8443/auth_service/login/42'">
-		Se connecter avec 42
-	</button>
 
 
 </div>
