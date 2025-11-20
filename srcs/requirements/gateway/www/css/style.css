@@ -206,23 +206,6 @@ body.loggedIn #signupNavLink {
 
 /* #endregion account */
 
-/* #region editProfile */
-
-.editProfileLayout {
-	@apply	flex flex-row items-center justify-evenly
-			bg-gray-500;
-}
-
-.editProfileForm {
-	@apply flex flex-col items-center gap-2;
-}
-
-.editProfileFormButton {
-	@apply outline-1 outline-other;
-}
-
-/* #endregion editProfile */
-
 /* #region game */
 /* #endregion game */
 

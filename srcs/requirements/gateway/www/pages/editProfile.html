@@ -1,45 +1,212 @@
-<div id="editProfilePage" class="page editProfileLayout">
+<div id="editProfilePage" 
+    class="page editProfileLayout 
+        flex flex-row 
+        items-center 
+        justify-evenly">
 
-    <form id="editUsernameForm" class="editProfileForm">
+    <!-- #region username -->
 
-        <label for="editUsernameInput">New Username</label>
-        <input type="text" name="Username" id="editUsernameInput" required>
-        
-        <button class="editProfileFormButton" type="submit" id="editUsernameSubmit">Confirm</button>
+    <form id="editUsernameForm" 
+          class="bg-dark bg-opacity-40
+                 rounded-3xl
+                 p-8
+                 w-full lg:w-[22vw]
+                 h-auto lg:h-[55vh]
+                 flex flex-col items-center justify-between
+                 text-white font-geo text-xl
+                 hover:outline hover:outline-accent hover:shadow-[0_-15px_50px_var(--color-accent)]
+                 transition">
 
-        <div class="message" id="editName-msg"></div>
+        <!-- Titre -->
+        <h2 class="text-1xl sm:text-2xl lg:text-3xl xl:text-4xl 
+            font-geo 
+            font-semibold 
+            text-light 
+            mb-6 
+            text-center">
+            Username
+        </h2>
+
+        <!-- Label + Input -->
+        <div class="flex flex-col 
+            items-center 
+            justify-center 
+            flex-1 
+            w-full 
+            mt-2 
+            lg:-mt-16">
+
+            <label for="editUsernameInput" 
+                class="text-2xl 
+                    mb-2 
+                    text-center">
+                New Username
+            </label>
+
+            <input type="text" name="Username" id="editUsernameInput" 
+                   class="w-4/6
+                          mt-2
+                          p-2
+                          rounded-xl
+                          bg-dark bg-opacity-60
+                          shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                          focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                          focus:outline-none
+                          text-white font-geo"
+                   required>
+        </div>
+
+        <!-- Bouton -->
+        <button type="submit" id="editUsernameSubmit"
+                class="mt-4 px-6 py-3 rounded-xl
+                       bg-prim bg-opacity-60 hover:bg-opacity-100
+                       text-white font-semibold
+                       transition">
+            Confirm
+        </button>
+
+        <!-- Message -->
+        <div class="message text-center mt-2" id="editName-msg"></div>
 
     </form>
 
-    <form id="editMailForm" class="editProfileForm">
 
-        <label for="editMailInput">New Mail</label>
-        <input type="text" name="Mail" id="editMailInput" required>
+    <!-- #endregion username -->
+
+    <!-- #region mail -->
+
+    <form id="editMailForm" 
+        class="editProfileForm
+            bg-dark bg-opacity-40
+            rounded-3xl
+            p-8
+            w-[22vw] h-[55vh]
+            flex flex-col items-center justify-between
+            text-white font-geo text-xl
+            hover:outline hover:outline-accent hover:shadow-[0_-15px_50px_var(--color-accent)]
+            transition">
+
+        <h2 class="text-4xl font-geo font-semibold text-light mb-6">
+            Mail
+        </h2>
+
+        <label for="editMailInput" class="text-2xl">New mail</label>
+        <input type="text" name="Mail" id="editMailInput" 
+            class="w-4/6
+                p-2 
+                rounded-xl 
+                bg-dark bg-opacity-60
+                shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                focus:outline-none
+                text-white 
+                font-geo"
+            required>
         
-        <label for="confirmMailInput">Confirm new mail</label>
-        <input type="text" name="confirmMail" id="confirmMailInput" required>
+        <label for="confirmMailInput" class="text-2xl mt-4">Confirm new mail</label>
+        <input type="text" name="confirmMail" id="confirmMailInput" 
+            class="w-4/6
+                p-2 
+                rounded-xl
+                 bg-dark bg-opacity-60
+                shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                focus:outline-none 
+                text-white font-geo"
+            required>
 
-        <button class="editProfileFormButton" type="submit" id="editMailSubmit">Confirm</button>
+        <button 
+            class="editProfileFormButton 
+                mt-4 
+                px-6 py-3 
+                rounded-xl 
+                bg-prim 
+                bg-opacity-60 
+                hover:bg-opacity-100" 
+            type="submit" 
+            id="editMailSubmit">
+            Confirm
+        </button>
 
         <div class="message" id="editMail-msg"></div>
 
     </form>
 
-    <form id="editPasswordForm" class="editProfileForm">
+    <!-- #endregion mail -->
 
-        <label for="currentPasswordInput">Current Password</label>
-        <input type="text" name="currentPassword" id="currentPasswordInput" required>
+    <!-- #region password -->
 
-        <label for="editPasswordInput">New Password</label>
-        <input type="text" name="newPassword" id="editPasswordInput" required>
+    <form id="editPasswordForm" 
+        class="editProfileForm
+            bg-dark bg-opacity-40
+            rounded-3xl
+            p-8
+            w-[22vw] h-[55vh]
+            flex flex-col items-center justify-between
+            text-white font-geo text-xl
+            hover:outline hover:outline-accent hover:shadow-[0_-15px_50px_var(--color-accent)]
+            transition">
+
+        <h2 class="text-4xl font-geo font-semibold text-light mb-6">
+            Password
+        </h2>
+
+        <label for="currentPasswordInput" class="text-1xl">Current Password</label>
+        <input type="text" name="currentPassword" id="currentPasswordInput" 
+            class="w-4/6
+                p-2 
+                rounded-xl
+                bg-dark bg-opacity-60
+                shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                focus:outline-none 
+                text-white 
+                font-geo"
+            required>
+
+        <label for="editPasswordInput" class="text-1xl">New Password</label>
+        <input type="text" name="newPassword" id="editPasswordInput" 
+            class="w-4/6
+                p-2 
+                rounded-xl 
+                bg-dark bg-opacity-60
+                shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                focus:outline-none 
+                text-white
+                font-geo"
+            required>
         
-        <label for="confirmPasswordInput">Confirm new password</label>
-        <input type="text" name="confirmPassword" id="confirmPasswordInput" required>
+        <label for="confirmPasswordInput" class="text-1xl">Confirm new password</label>
+        <input type="text" name="confirmPassword" id="confirmPasswordInput" 
+            class="w-4/6 
+                p-2 
+                rounded-xl 
+                bg-dark bg-opacity-60
+                shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                focus:outline-none
+                text-white
+                font-geo"
+            required>
 
-        <button class="editProfileFormButton" type="submit" id="editPasswordSubmit">Confirm</button>
+        <button 
+            class="editProfileFormButton
+                mt-4 
+                px-6 py-3 
+                rounded-xl 
+                bg-prim 
+                bg-opacity-60 
+                hover:bg-opacity-100" 
+            type="submit" 
+            id="editPasswordSubmit">
+            Confirm
+        </button>
 
         <div class="message" id="editPassword-msg"></div>
 
     </form>
+
+    <!-- #endregion password -->
 
 </div>
