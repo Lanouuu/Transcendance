@@ -25,86 +25,72 @@ fastify.register(cors, {
     origin: "*",
     methods: ["GET", "POST", "DELETE"],
     credentials: true
-});
+})
 
 fastify.register(fastifyStatic, {
   root: join(dirname, '..'),
 })
 
-// A supprimer
-fastify.get('/', (request, reply) => {
-    reply.sendFile('scripts/index.html')
-})
+// // A supprimer
+// fastify.get('/', (request, reply) => {
+//     reply.sendFile('scripts/index.html')
+// })
 
+function startTimer(game) {
 
-const wss = new WebSocketServer({ 
-    server: fastify.server,
-    path: '/ws'
-});
-
-wss.on('listening', () => {
-  console.log("WebSocket server running on ws://localhost:8081")
-})
-
-wss.on('connection', function connection(ws) {
-  ws.on('error', console.error);
-
-  ws.on('message', function message(data) {
-    const res = JSON.parse(data.toString())
-    // console.log("DATA RECEIVED IN WS CONNECTION = ", res)
-    if (!games.has(parseInt(res.id, 10))) {
-        ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
-        return;
-    }
-    let game = games.get(res.id)
-    if (res.message == "Init")
-    {
-        game = res
-        game.socket.push(ws)
-    }
-    else {
-        game.player1.key.up = res.player1.key.up
-        game.player1.key.down = res.player1.key.down
-        game.player2.key.up = res.player2.key.up
-        game.player2.key.down = res.player2.key.down
-    }
-    games.set(game.id, game)
-    // console.log("GAME AFTER SET IN WS CONNECTION = ", game)
-  });
-});
-
-setInterval(() => {
-    for (const game of games.values()) {
-        if (game.board === undefined || game.socket === undefined) {
-            continue;
+    const intervalId = setInterval(() => {
+        game.socket.forEach(socket => {
+            if (socket.readyState === 1) {
+                socket.send(JSON.stringify({
+                    message: "Countdown",
+                    timer: game.timer
+                }))
+            }
+        })
+        game.timer--
+        if (game.timer < 0) {
+            clearInterval(intervalId)
+            game.started = true
         }
+    }, 1000)
+}
+
+function gameLoop(game) {
+    if (game.board === undefined || game.socket === undefined || game.player1.sprite === undefined) {
+        return ;
+    }
+    if (game.timerStarted === false) {
+        game.timerStarted = true
+        startTimer(game)
+    }
+    if (game.started === true) {
         // Player 1
         if (game.player1.key.up) {
 
-            if (game.player1.position.y - 15 <= 0)
-                game.player1.position.y = 0
+            if (game.player1.sprite.position.y - 15 <= 0)
+                game.player1.sprite.position.y = 0
             else
-                game.player1.position.y -=1 * 15
+                game.player1.sprite.position.y -=1 * 15
         }
         if (game.player1.key.down) {
-            if (game.player1.position.y + 15 + game.player1.imgSize.height >= game.board.imgSize.height)
-                game.player1.position.y = game.board.imgSize.height - game.player1.imgSize.height
+            if (game.player1.sprite.position.y + 15 + game.player1.sprite.imgSize.height >= game.board.imgSize.height)
+                game.player1.sprite.position.y = game.board.imgSize.height - game.player1.sprite.imgSize.height
             else
-                game.player1.position.y +=1 * 15
+                game.player1.sprite.position.y +=1 * 15
         }
         // Player 2
         if (game.player2.key.up) {
 
-            if (game.player2.position.y - 15 <= 0)
-                game.player2.position.y = 0
+            if (game.player2.sprite.position.y - 15 <= 0)
+                game.player2.sprite.position.y = 0
             else
-                game.player2.position.y -=1 * 15
+                game.player2.sprite.position.y -=1 * 15
         }
         if (game.player2.key.down) {
-            if (game.player2.position.y + 15 + game.player2.imgSize.height >= game.board.imgSize.height)
-                game.player2.position.y = game.board.imgSize.height - game.player2.imgSize.height
+            if (game.player2.sprite.position.y + 15 + game.player2.sprite.imgSize.height >= game.board.imgSize.height)
+                game.player2.sprite.position.y = game.board.imgSize.height - game.player2.sprite.imgSize.height
             else
-                game.player2.position.y +=1 * 15
+                game.player2.sprite.position.y +=1 * 15
         }
         // Move Ball
         if (game.ball.position !== undefined) {
@@ -123,17 +109,16 @@ setInterval(() => {
             if (game.ball.position.y <= 0 || game.ball.position.y + game.ball.imgSize.height >= game.board.imgSize.height)
                 game.ball.velocity.y = -game.ball.velocity.y
 
-            if (game.ball.position.x <= game.player1.position.x + game.player1.imgSize.width && game.ball.position.x >= game.player1.position.x && game.ball.position.y + game.ball.imgSize.height >= game.player1.position.y && game.ball.position.y <= game.player1.position.y + game.player1.imgSize.height) {
+            if (game.ball.position.x <= game.player1.sprite.position.x + game.player1.sprite.imgSize.width && game.ball.position.x >= game.player1.sprite.position.x && game.ball.position.y + game.ball.imgSize.height >= game.player1.sprite.position.y && game.ball.position.y <= game.player1.sprite.position.y + game.player1.sprite.imgSize.height) {
                 game.ball.velocity.x = -game.ball.velocity.x
-                game.ball.position.x = game.player1.position.x + game.player1.imgSize.width
+                game.ball.position.x = game.player1.sprite.position.x + game.player1.sprite.imgSize.width
             }
-
-            if (game.ball.position.x + game.ball.imgSize.width >= game.player2.position.x && game.ball.position.x <= game.player2.position.x + game.player2.imgSize.width && game.ball.position.y + game.ball.imgSize.height >= game.player2.position.y && game.ball.position.y <= game.player2.position.y + game.player2.imgSize.height) {
+            
+            if (game.ball.position.x + game.ball.imgSize.width >= game.player2.sprite.position.x && game.ball.position.x <= game.player2.sprite.position.x + game.player2.sprite.imgSize.width && game.ball.position.y + game.ball.imgSize.height >= game.player2.sprite.position.y && game.ball.position.y <= game.player2.sprite.position.y + game.player2.sprite.imgSize.height) {
                 game.ball.velocity.x = -game.ball.velocity.x
-                game.ball.position.x = game.player2.position.x - game.ball.imgSize.width
+                game.ball.position.x = game.player2.sprite.position.x - game.ball.imgSize.width
             }
         }
-        console.log("game = ", game)
         game.message = "Playing"
         if (game.player1.score === 5) {
             game.message = "END"
@@ -149,9 +134,51 @@ setInterval(() => {
             if (socket.readyState === 1) {
                 socket.send(JSON.stringify(game));
             }
-        });
-    } 
-}, 16)
+        })
+    }
+    if (game.message === "END") {
+        clearInterval(game.loopId)
+    }
+}
+
+const wss = new WebSocketServer({ 
+    server: fastify.server,
+    path: '/ws'
+})
+
+wss.on('listening', () => {
+  console.log("WebSocket server running on ws://localhost:3002/ws");
+})
+
+wss.on('connection', function connection(ws) {
+  ws.on('error', console.error)
+
+  ws.on('message', function message(data) {
+    const res = JSON.parse(data.toString())
+    // console.log("DATA RECEIVED IN WS CONNECTION = ", res)
+    if (!games.has(parseInt(res.id, 10))) {
+        ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
+        return
+    }
+    let game = games.get(res.id)
+    if (res.message == "Init")
+    {
+        game = res
+        game.socket.push(ws)
+        if (game.mode === "local") {
+            game.loopId = setInterval(() => gameLoop(game), 16)
+        }
+    }
+    else {
+        game.player1.key.up = res.player1.key.up
+        game.player1.key.down = res.player1.key.down
+        game.player2.key.up = res.player2.key.up
+        game.player2.key.down = res.player2.key.down
+    }
+    games.set(game.id, game)
+    // console.log("GAME AFTER SET IN WS CONNECTION = ", game)
+  })
+})
 
 fastify.get("/local", async (request, reply) => {
     try {
@@ -215,7 +242,7 @@ fastify.get("/state/:id", async (request, reply) => {
     }catch(e) {
         reply.status(404).send({ error: e.message })
     }
-});
+})
 
 // fastify.post("/state/:id", async (request, reply) => {
 //     try {

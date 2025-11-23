@@ -104,17 +104,25 @@ export async function gameLoop(game: Game) { // BIZARRE LE TYPE
 
 		ws.addEventListener('message', (event) => {
 			const serverGame = JSON.parse(event.data)
-			// console.log("GAME IN MESSAGE ", serverGame)
-			game.player1.position.y = serverGame.player1.position.y
-			game.player2.position.y = serverGame.player2.position.y
-			game.ball.position.x = serverGame.ball.position.x
-			game.ball.position.y = serverGame.ball.position.y
-			game.player1.score = serverGame.player1.score
-			game.player2.score = serverGame.player2.score
+			console.log("MESSAGE ", serverGame.message)
 			game.message = serverGame.message
-			if (game.message === "END") {
+			if (serverGame.message === "Countdown") {
+				game.timer = serverGame.timer
+			}
+			else if (serverGame.message === "Playing") {
+				game.started = serverGame.started
+				game.player1.sprite.position.y = serverGame.player1.sprite.position.y
+				game.player2.sprite	.position.y = serverGame.player2.sprite.position.y
+				game.ball.position.x = serverGame.ball.position.x
+				game.ball.position.y = serverGame.ball.position.y
+				game.player1.score = serverGame.player1.score
+				game.player2.score = serverGame.player2.score
+			}
+			else if (game.message === "END") {
 				game.winner = serverGame.winner
 				game.displayWinner = serverGame.displayWinner
+				game.player1.score = serverGame.player1.score
+				game.player2.score = serverGame.player2.score
 			}
 		})
 
@@ -190,27 +198,28 @@ async function gameAnimation(game: Game) {
 
 	const id = window.requestAnimationFrame(() => gameAnimation(game))
 	canvasContext.drawImage(game.board.image, game.board.position.x, game.board.position.y)
-	canvasContext.drawImage(game.player1.image, game.player1.position.x, game.player1.position.y)
-	canvasContext.drawImage(game.player2.image, game.player2.position.x, game.player2.position.y)
+	canvasContext.drawImage(game.player1.sprite.image, game.player1.sprite.position.x, game.player1.sprite.position.y)
+	canvasContext.drawImage(game.player2.sprite.image, game.player2.sprite.position.x, game.player2.sprite.position.y)
 	canvasContext.drawImage(game.ball.image, game.ball.position.x, game.ball.position.y)
 	canvasContext.fillText(String(game.player1.score), game.board.image.width / 2 - 20, 23.5)
 	canvasContext.fillText(String(game.player2.score), game.board.image.width / 2 + 20, 23.5)
-	if (game.message === "END") {
-		cancelAnimationFrame(id)
+	if (game.message === "Countdown") {
+		canvasContext.fillText(game.timer === 0 ? "GO !" : game.timer.toString(), game.board.image.width / 2, game.board.image.height / 2)
+	}
+	else if (game.message === "END") {
 		canvasContext.fillText(game.displayWinner, game.board.image.width / 2, game.board.image.height / 2)
+		cancelAnimationFrame(id)
 	}
 }
 
 
-async function loadImage (imagePath: string, velocity: Vector2D, key: KeyBind, score: number | undefined) : Promise<Sprite>{
+async function loadImage (imagePath: string, velocity: Vector2D) : Promise<Sprite>{
     return new Promise((resolve, reject) => {
         const img = new Sprite({
 			position: { x: 0 , y: 0 },
             velocity: velocity,
             imageSrc: imagePath,
 			imgSize: { height: 0 , width: 0},
-            key: key,
-            score: score
         })
         img.image.onload = () => resolve(img)
         img.image.onerror = () => reject(new Error(`Error, image ${imagePath} couldn't be load`))
@@ -255,15 +264,15 @@ function initSprite(board: Sprite, player1: Sprite, player2: Sprite, ball: Sprit
 export async function loadSprites(game: Game) {
     try {
         const [board, player1, player2, ball] = await Promise.all([
-            loadImage('../assets/Board.png', {x:0, y:0}, {up: undefined, down: undefined}, undefined),
-            loadImage('../assets/Player.png', {x:0, y:0}, {up: false, down: false}, 0),
-            loadImage('../assets/Player2.png', {x:0, y:0}, {up: false, down: false}, 0),
-            loadImage('../assets/Ball.png', {x:-9, y:9}, {up: undefined, down: undefined}, undefined)]
+            loadImage('../assets/Board.png', {x:0, y:0}),
+            loadImage('../assets/Player.png', {x:0, y:0}),
+            loadImage('../assets/Player2.png', {x:0, y:0}),
+            loadImage('../assets/Ball.png', {x:-9, y:9})]
         )
         initSprite(board, player1, player2, ball)
         game.board = board;
-        game.player1 = player1;
-        game.player2 = player2;
+        game.player1.sprite = player1;
+        game.player2.sprite = player2;
         game.ball = ball;
         // return [board, player, player2, ball]
     }catch(e) {
