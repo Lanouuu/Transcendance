@@ -20,6 +20,7 @@ const games = new Map()
 let gameId = 0
 const filename = fileURLToPath(import.meta.url)
 const dirname = join(filename, '..')
+let queue = []
 
 fastify.register(cors, { 
     origin: "*",
@@ -201,6 +202,10 @@ fastify.get("/local", async (request, reply) => {
 
 // fastify.get("/remote", async (request, reply) => {
 //     try {
+//         const token = localStorage.getItem("jwt");
+// 	    const userId = localStorage.getItem("userId");
+//         console.log("token = ", token)
+//         console.log("userId = ", userId)
 //         const game = new Game({
 //           id: gameId++,
 //           socket: [],
