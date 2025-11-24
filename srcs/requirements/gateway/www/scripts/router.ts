@@ -1,11 +1,28 @@
+const	PAGE_BACKGROUNDS: Record<string, string> = {
+	'account': '/img/Background1.png',
+	'editProfile': '/img/Background1.png',
+	'game': '/img/Background1.png',
+	'home': '/img/Background2.png',
+	'login': '/img/Background1.png',
+	'logout': '/img/Background1.png',
+	'signup': '/img/Background1.png',
+	'tournament': '/img/Background1.png',
+}
+
+const	PAGE_ORDER: string [] = ['home', 'game', 'tournament', 'account', 'logout', 'signup', 'login'];
+
 class Router {
 
 	private mainContent: HTMLElement;
+	private currentBgUrl: string;
+	private currentPage: string;
 	private BASE_URL: string = "https://localhost:8443/auth_service";
 
 	constructor() {
 		// Selects the part of the html doc we want to update (?)
 		this.mainContent = document.querySelector('main') as HTMLElement;
+		this.currentBgUrl = PAGE_BACKGROUNDS['home'];
+		this.currentPage = 'home';
 		// Launches the chain of function 
 		this.initRouter();
 	}
@@ -32,11 +49,96 @@ class Router {
 		this.loadPage(page);
 	}
 
+	private getTransitionDirection(page: string): string {
+		const nextPageIndex: number = PAGE_ORDER.indexOf(page);
+		const currentPageIndex: number = PAGE_ORDER.indexOf(this.currentPage);
+
+		if (currentPageIndex < nextPageIndex)
+			return 'right';
+		else
+			return 'left';
+	}
+
+	private async animateBgTransition(nextBgUrl: string, transitionDirection: string): Promise<void> {
+
+		if (nextBgUrl === this.currentBgUrl) return ;
+
+		const	currentBgContainer: HTMLElement = document.getElementById('backgroundContainer') as HTMLElement;
+		const	nextBgContainer: HTMLElement = document.getElementById('backgroundNext') as HTMLElement;
+
+		if (!currentBgContainer || !nextBgContainer) {
+			console.error('Could not find background containers');
+			return ;
+		}
+
+		nextBgContainer.style.backgroundImage = `url('${nextBgUrl}')`;
+		nextBgContainer.style.transition = 'none';
+
+		// On gere le translate de next en fonction de isRightTransition
+		if (transitionDirection === 'right') {
+			nextBgContainer.classList.remove('-translate-x-full', 'translate-x-0');
+			nextBgContainer.classList.add('translate-x-full')
+		} else {
+			nextBgContainer.classList.remove('translate-x-full', 'translate-x-0');
+			nextBgContainer.classList.add('-translate-x-full')
+		}
+
+		// Force un reflow pour eviter que le nav skip l'anim
+		// Ca ne fait rien d'autre
+		void nextBgContainer.offsetWidth;
+
+		nextBgContainer.style.transition = '';
+
+		void currentBgContainer.offsetWidth;
+		void nextBgContainer.offsetWidth;
+
+		// Ajout et retrait de classe --> Animation
+		if (transitionDirection === 'right') {
+
+			currentBgContainer.classList.add('-translate-x-full', 'bgTransiBlur');
+			nextBgContainer.classList.remove('translate-x-full');
+			nextBgContainer.classList.add('translate-x-0', 'bgTransiBlur');
+		} else {
+
+			currentBgContainer.classList.add('translate-x-full', 'bgTransiBlur');
+			nextBgContainer.classList.remove('-translate-x-full');
+			nextBgContainer.classList.add('translate-x-0', 'bgTransiBlur');
+		}
+
+		// On wait que l'animation se termine
+		await new Promise(resolve => setTimeout(resolve, 1000));
+		
+		// On retire les animations
+		currentBgContainer.style.transition = 'none';
+		nextBgContainer.style.transition = 'none';
+
+		// On update l'image (le current est mtn le next) et on remet tout en place
+		currentBgContainer.style.backgroundImage = `url('${nextBgUrl}')`;
+		currentBgContainer.classList.remove('-translate-x-full', 'translate-x-full', 'bgTransiBlur');
+		nextBgContainer.classList.remove('translate-x-0', '-translate-x-full', 'translate-x-full', 'bgTransiBlur');
+		nextBgContainer.style.backgroundImage = '';
+
+		// Force reflow
+		void currentBgContainer.offsetWidth;
+		void nextBgContainer.offsetWidth;
+
+		// On remet les animations
+		currentBgContainer.style.transition = '';
+		nextBgContainer.style.transition = '';
+
+		// Update de l'url dans la structure
+		this.currentBgUrl = nextBgUrl;
+	}
+
 	// Fetch the correct html file to update the <main> of index.html
 	// Load scripts related to the page
 	private async loadPage(page: string): Promise<void> {
 
 		try {
+
+				const	nextBackgroundUrl: string = PAGE_BACKGROUNDS[page] || PAGE_BACKGROUNDS['home'];
+				const	transitionDirection: string = this.getTransitionDirection(page);
+				await this.animateBgTransition(nextBackgroundUrl, transitionDirection);
 			
 				// Fetch the file corresponding to the attribute page
 				// Then gets its content as a text in the variabe content
@@ -109,8 +211,6 @@ class Router {
 		}
 	}
 }
-
-
 
 document.addEventListener('DOMContentLoaded', () => {
 

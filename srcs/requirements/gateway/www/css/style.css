@@ -435,3 +435,13 @@ body.loggedIn #signupNavLink {
 }
 
 /* #endregion footer */
+
+/* #region ANIMATIONS */
+
+@keyframes bgTransiBlur {
+	0% {blur: blur(0)};
+	50% {blur: blur(50px)};
+	100% {blur: blur(0)};
+}
+
+/* #endregion ANIMATIONS */
