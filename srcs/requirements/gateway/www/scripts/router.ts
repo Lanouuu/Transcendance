@@ -1,7 +1,6 @@
 class Router {
 
 	private mainContent: HTMLElement;
-	private BASE_URL: string = "https://localhost:8443/auth_service";
 
 	constructor() {
 		// Selects the part of the html doc we want to update (?)

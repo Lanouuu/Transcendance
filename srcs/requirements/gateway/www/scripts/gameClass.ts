@@ -35,12 +35,14 @@ export class Player {
 	key:		KeyBind;
 	score:		number | undefined;
 	sprite:		Sprite;
+	id:			number | undefined
 
 	constructor({name, key, score, sprite}: { name: string | undefined, key: KeyBind, score: number | undefined, sprite: Sprite}) {
 		this.name = name;
 		this.key = key;
 		this.score = score;
 		this.sprite = sprite;
+		this.id = undefined;
 	}
 }
 
@@ -54,6 +56,7 @@ export class Game {
 	started:		boolean;
 	timer:			number;
 	timerStarted:	boolean;
+	nbPlayer:		number;
 
 	player1:	Player;
 	player2:	Player;
@@ -70,6 +73,7 @@ export class Game {
 		this.started = false;
 		this.timer = 3;
 		this.timerStarted = false;
+		this.nbPlayer = 0;
 
 		this.player1 = new Player({
 			name: undefined,

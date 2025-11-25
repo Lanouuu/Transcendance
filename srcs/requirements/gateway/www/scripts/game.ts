@@ -1,6 +1,7 @@
 import { Game, Sprite, Vector2D, KeyBind, ImgSize } from "./gameClass.js"
 
-const route: string = "://localhost:8443/game";
+const route: string = `${window.location.origin}/game`;
+const ws_route: string = `://${window.location.host}/game`;
 
 export async function launchLocalGame() {
 
@@ -18,7 +19,7 @@ export async function launchLocalGame() {
 	}
 
 	try {
-		const res = await fetch(`https${route}/local`, {
+		const res = await fetch(`${route}/local`, {
 			method: "GET",
 			headers: {
 				"authorization": `Bearer ${token}`,
@@ -60,9 +61,9 @@ export async function launchRemoteGame() {
 		localButton.style.display = "none";
 	}
 
-
+	
 	try {
-		const res = await fetch(`https${route}/remote`, {
+		const res = await fetch(`${route}/remote`, {
 			method: "GET",
 			headers: {
 				"authorization": `Bearer ${token}`,
@@ -74,15 +75,16 @@ export async function launchRemoteGame() {
 			console.error(`Server error ${res.status}:`, text);
 			throw new Error(`Failed to load the game`);
 		}
-			
+		// console.log(res.text());
 		const contentType = res.headers.get("content-type");
 		if (!contentType || !contentType.includes("application/json")) {
 			const text = await res.text();
 			console.error(`Server did not return JSON`, text);
 			throw new Error(`Server response is not JSON`);
 		}
-
+		
 		const game = await res.json();
+
 		gameLoop(game);
 	} catch (err) {
 		console.error(err);
@@ -93,18 +95,18 @@ export async function gameLoop(game: Game) { // BIZARRE LE TYPE
 
 	try {
 		await loadSprites(game);
-		const ws = new WebSocket(`wss${route}/ws`); // A MODIFIER
-
+		const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
 		ws.addEventListener('open', (event) => {
-			game.message = "Init"
+			// game.message = "Init"
 			// console.log("GAME IN OPEN ", game)
 			if (ws.readyState === WebSocket.OPEN)
-				ws.send(JSON.stringify(game))
+				ws.send(JSON.stringify({game, message: "Init"}))
 		})
 
 		ws.addEventListener('message', (event) => {
 			const serverGame = JSON.parse(event.data)
-			console.log("MESSAGE ", serverGame.message)
+			console.log(serverGame)
+			// console.log("MESSAGE ", serverGame.message)
 			game.message = serverGame.message
 			if (serverGame.message === "Countdown") {
 				game.timer = serverGame.timer
@@ -141,9 +143,9 @@ export async function gameLoop(game: Game) { // BIZARRE LE TYPE
 					game.player2.key.down = true
 					break
 			}
-			game.message = "input"
+			// game.message = "input"
 			if (ws.readyState === WebSocket.OPEN)
-				ws.send(JSON.stringify(game))
+				ws.send(JSON.stringify({game, message: "input"}))
 			else
 				console.error("WebSocket is not open")
 		})
@@ -163,9 +165,9 @@ export async function gameLoop(game: Game) { // BIZARRE LE TYPE
 					game.player2.key.down = false
 					break
 			}
-			game.message = "input"
+			// game.message = "input"
 			if (ws.readyState === WebSocket.OPEN)
-				ws.send(JSON.stringify(game))
+				ws.send(JSON.stringify({game, message: "input"}))
 			else
 				console.error("WebSocket is not open")
 		})
@@ -197,6 +199,9 @@ async function gameAnimation(game: Game) {
 	canvasContext.textAlign = 'center'
 
 	const id = window.requestAnimationFrame(() => gameAnimation(game))
+	// console.log("message = ", game.message)
+	// if (game.message === "Waiting")		
+	// 	return;
 	canvasContext.drawImage(game.board.image, game.board.position.x, game.board.position.y)
 	canvasContext.drawImage(game.player1.sprite.image, game.player1.sprite.position.x, game.player1.sprite.position.y)
 	canvasContext.drawImage(game.player2.sprite.image, game.player2.sprite.position.x, game.player2.sprite.position.y)

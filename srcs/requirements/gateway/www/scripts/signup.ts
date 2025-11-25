@@ -1,6 +1,6 @@
 export function signup() {
 
-	const BASE_URL: string = "https://localhost:8443/auth_service";
+	const BASE_URL: string = `${window.location.origin}/auth_service`;
 
 	const form = document.getElementById("signup-form");
 

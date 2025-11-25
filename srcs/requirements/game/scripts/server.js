@@ -9,6 +9,8 @@ import fs from 'fs'
 
 const fastify = Fastify({
     logger: true,
+    connectionTimeout: 120000,
+    keepAliveTimeout: 120000,
     https: {
         key: fs.readFileSync('/etc/ssl/transcendence.key'),
         cert: fs.readFileSync('/etc/ssl/transcendence.crt') 
@@ -21,6 +23,7 @@ let gameId = 0
 const filename = fileURLToPath(import.meta.url)
 const dirname = join(filename, '..')
 let queue = []
+let pendingRemoteGame = []
 
 fastify.register(cors, { 
     origin: "*",
@@ -32,14 +35,10 @@ fastify.register(fastifyStatic, {
   root: join(dirname, '..'),
 })
 
-// // A supprimer
-// fastify.get('/', (request, reply) => {
-//     reply.sendFile('scripts/index.html')
-// })
-
 function startTimer(game) {
 
     const intervalId = setInterval(() => {
+        console.log("TIMER: ", game.socket.length)
         game.socket.forEach(socket => {
             if (socket.readyState === 1) {
                 socket.send(JSON.stringify({
@@ -58,6 +57,7 @@ function startTimer(game) {
 
 function gameLoop(game) {
     if (game.board === undefined || game.socket === undefined || game.player1.sprite === undefined) {
+        console.log("Game not ready yet")
         return ;
     }
     if (game.timerStarted === false) {
@@ -156,31 +156,34 @@ wss.on('connection', function connection(ws) {
 
   ws.on('message', function message(data) {
     const res = JSON.parse(data.toString())
-    // console.log("DATA RECEIVED IN WS CONNECTION = ", res)
-    if (!games.has(parseInt(res.id, 10))) {
+    console.log("DATA RECEIVED IN WS CONNECTION = ", res)
+    if (!games.has(parseInt(res.game.id, 10))) {
         ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
         return
     }
-    let game = games.get(res.id)
+    let game = games.get(res.game.id)
     if (res.message == "Init")
     {
-        game = res
+        game = res.game
+        // console.log("INIT = ", game)
         game.socket.push(ws)
-        if (game.mode === "local") {
+        console.log("SOCKET GAME = ", game.socket.length)
+        // if (game.mode === "local") {
+        if (game.message === "start")
             game.loopId = setInterval(() => gameLoop(game), 16)
-        }
+        // }
     }
     else {
-        game.player1.key.up = res.player1.key.up
-        game.player1.key.down = res.player1.key.down
-        game.player2.key.up = res.player2.key.up
-        game.player2.key.down = res.player2.key.down
+        game.player1.key.up = res.game.player1.key.up
+        game.player1.key.down = res.game.player1.key.down
+        game.player2.key.up = res.game.player2.key.up
+        game.player2.key.down = res.game.player2.key.down
     }
     games.set(game.id, game)
     // console.log("GAME AFTER SET IN WS CONNECTION = ", game)
   })
 })
-
+// local
 fastify.get("/local", async (request, reply) => {
     try {
         const game = new Game({
@@ -199,28 +202,79 @@ fastify.get("/local", async (request, reply) => {
         reply.send([])
     }
 })
+// END local
 
-// fastify.get("/remote", async (request, reply) => {
-//     try {
-//         const token = localStorage.getItem("jwt");
-// 	    const userId = localStorage.getItem("userId");
-//         console.log("token = ", token)
-//         console.log("userId = ", userId)
-//         const game = new Game({
-//           id: gameId++,
-//           socket: [],
-//           mode: 'remote',
-//         })
-//         games.set(game.id, game)
-//         console.log("Local game created with id:", game.id)
-//         reply.send(game)
-//     } catch (e) {
-//         console.log(e.message)
-//         // a supprimer
-//         console.log("Error creating local game")
-//         reply.send([])
-//     }
-// })
+//remote
+
+async function getUserName(id) {
+    try {
+        const res = await fetch(`http://users:3000/get-user/${id}`)
+        if (!res) {
+            const text = await res.text()
+			console.error(`Server error ${res.status}:`, text);
+			throw new Error(`Failed to fetch user information`);
+        }
+        const user = await res.json()
+        return user.name
+    } catch(e) {
+        console.log("getUserName error: ", e.error)
+    }
+}
+
+function findRemotePendingGame() {
+    if (pendingRemoteGame.length === 0)
+        return false;
+    for (let i = 0; i < pendingRemoteGame.length; i++) {
+    }
+}
+
+fastify.get("/remote", async (request, reply) => {
+    try {
+	    const userId = request.headers["x-user-id"]
+        queue.push([userId, await getUserName(userId), reply])
+        console.log(queue)
+        if (findRemotePendingGame() === false) {
+            const game = new Game({
+                id: gameId++,
+                socket: [],
+                mode: 'remote',
+            })
+            game.player1.id = queue[0][0]
+            game.player1.name = queue[0][1]
+            pendingRemoteGame.push(game)
+            game.message = "Waiting"
+            games.set(game.id, game)
+            reply.send(game)
+        }
+        else {
+            const gameTemp = pendingRemoteGame.shift()
+            const game = games.get(gameTemp.id)
+            game.player2.id = queue[0][0]
+            game.player2.name = queue[0][1]
+            game.message = "start"
+            games.set(game.id, game)
+            reply.send(game)
+            // if (game.socket[0].readyState === WebSocket.OPEN)
+             game.socket.forEach(socket => {
+                if (socket.readyState === 1) {
+                    console.log("SENDING START TO PLAYER 1")
+                    console.log("SENDING START TO PLAYER 1")
+                    console.log("SENDING START TO PLAYER 1")
+                    console.log("SENDING START TO PLAYER 1")
+                    console.log("SENDING START TO PLAYER 1")
+                    socket.send(JSON.stringify(game));
+                }
+            })
+        }
+        queue.shift()
+    } catch (e) {
+        console.log(e.message)
+        // a supprimer
+        console.log("Error creating local game")
+        reply.send([])
+    }
+})
+//END remote 
 
 // fastify.post("/input", async (request, reply) => {
 //     try {
@@ -276,40 +330,3 @@ const start = async () => {
 }
 
 start()
-
-// export function runServer() {
-    
-//     const fastify = Fastify({ logger: true });
-//     const PORT = parseInt(process.env.GAME_PORT, 10);
-//     const HOST = process.env.GAME_HOST;
-
-
-//     const filename = fileURLToPath(import.meta.url)
-//     const dirname = join(filename, '..')
-
-//     fastify.register(fastifyStatic, {
-//         root: join(dirname, '..'),
-//     })
-
-//     // A supprimer
-//     fastify.get('/', (request, reply) => {
-//         reply.sendFile('scripts/index.html')
-//     })
-//     // A supprimer
-//     fastify.get('/game', (request, reply) => {
-//         reply.send( {obj: 'hello'})
-//     })
-
-//     // fastify.post("/state", async (request, reply) => {
-//     //     reply.send({board: board, player: player, player2: player2, ball: ball});
-//     // })
-
-//     fastify.listen({host: HOST, port: PORT}, (err) => {
-//         if (err) {
-//             fastify.log.error(err);
-//             process.exit(1);
-//         }
-//     })
-// }
-
-// runServer();

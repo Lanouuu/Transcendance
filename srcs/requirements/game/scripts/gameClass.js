@@ -9,20 +9,22 @@ export class Game {
         this.started = false
         this.timer = 3
         this.timerStarted = false
+        this.nbPlayer = 0
 
-        // Player objects with placeholder sprite shapes so client can safely set sprite later
         this.player1 = {
             name: undefined,
             key: { up: false, down: false },
             score: 0,
-            sprite: undefined
+            sprite: undefined,
+            id: undefined
         }
 
         this.player2 = {
             name: undefined,
             key: { up: false, down: false },
             score: 0,
-            sprite: undefined
+            sprite: undefined,
+            id: undefined
         }
 
         this.ball = undefined

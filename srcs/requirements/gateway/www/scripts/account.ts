@@ -1,6 +1,6 @@
 export async function displayAccountPage() {
 
-	const BASE_URL: string = "https://localhost:8443/users";
+	const BASE_URL: string = `${window.location.origin}/users`;
 	const userId: string | null = localStorage.getItem("userId");
 	const token: string | null = localStorage.getItem("jwt");
 
