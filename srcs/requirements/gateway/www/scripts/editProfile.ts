@@ -109,19 +109,22 @@ export async function editProfile() {
     if (nameForm) {
         nameForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            updateName(BASE_URL, userId, token);
+            await updateName(BASE_URL, userId, token);
+            (e.target as HTMLFormElement).reset();
         });
     }
     if (mailForm) {
         mailForm.addEventListener("submit", async(e) => {
             e.preventDefault();
-            updateMail(BASE_URL, userId, token);
+            await updateMail(BASE_URL, userId, token);
+           (e.target as HTMLFormElement).reset();
         });
     }
     if (passForm) {
         passForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            updatePass(BASE_URL, userId, token);
+            await updatePass(BASE_URL, userId, token);
+            (e.target as HTMLFormElement).reset();
         });
     }
 }
