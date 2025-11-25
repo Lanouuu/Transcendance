@@ -10,6 +10,6 @@ COPY --chown=node:node ./scripts/ ./scripts/
 
 RUN npm install
 
-EXPOSE 3002
+EXPOSE 3003
 
 CMD ["node", "./scripts/server.js"]

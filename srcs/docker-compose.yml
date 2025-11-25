@@ -57,6 +57,16 @@ services:
       - pong_app
     restart: always
 
+  second_game:
+    container_name: second_game
+    build: ./requirements/second_game
+    expose: ["3003"]
+    env_file:
+      - .env
+    networks:
+      - pong_app
+    restart: always
+
   redis:
     image: redis:7-alpine
     container_name: redis
