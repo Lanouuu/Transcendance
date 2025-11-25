@@ -27,51 +27,151 @@
 		min-h-screen
 		flex
 		flex-col
-		bg-cover
-		bg-center
-		bg-no-repeat
-		bg-fixed"
-		style="background-image: url('/img/Background1.png');"
+		overflow-x-hidden
 	">
+		
+		<div id="backgroundContainer" class="
+			fixed
+			inset-0
+			-z-10
+			bg-cover
+			bg-center
+			bg-no-repeat
+			bg-fixed
+			transition-transform
+			duration-1000
+			ease-in-out
+		"
+		style="background-image: url('/img/Background2.png');">
+		</div>
+
+		<div id="backgroundNext" class="
+			fixed
+			inset-0
+			-z-10
+			bg-cover
+			bg-center
+			bg-no-repeat
+			bg-fixed
+			transition-transform
+			duration-1000
+			ease-in-out
+		"></div>
 
 		<header class="headerLayout">
 			Pong infinity
 		</header>
 
-		<nav>
-			<a href="#home">Home</a>
-			<a href="#game">Game</a>
-			<a href="#tournament">Tournament</a>
-			<a id="accountNavLink" href="#account">My account</a>
-			<a id="signupNavLink" href="#signup">Sign up</a>
-			<a id="loginNavLink" href="#login">Login</a>
-			<a id="logoutNavLink" href="#logout">Logout</a>
+		<nav class="navLayout">
+			<a href="#home" class="navLinkLayout">
+				Home
+			</a>
+
+			<a href="#game" class="navLinkLayout">
+				Game
+			</a>
+			
+			<a href="#tournament" class="navLinkLayout">
+				Tournament
+			</a>
+			
+			<a id="accountNavLink" href="#account" class="navLinkLayout">
+				My account
+			</a>
+			
+			<a id="signupNavLink" href="#signup" class="navLinkLayout">
+				Sign up
+			</a>
+			
+			<a id="loginNavLink" href="#login" class="navLinkLayout">
+				Login
+			</a>
+			
+			<a id="logoutNavLink" href="#logout" class="navLinkLayout">
+				Logout
+			</a>
 		</nav>
 
-		<main class="
-			flex
-			grow
-			flex-col
-		">
+		<main class="mainLayout">
 			<div>Loading ...</div>
 		</main>
 
 
-		<footer>
-			<p>This website was designed for 42 school Transcendance project</p>
+		<footer class="footerLayout">
+			<p>This website was created for 42 school's Transcendance project</p>
 			Participants:
-			<ul>
-				<li>
-					Thomas Lebon
-					<a href="https://fr.linkedin.com"><img src="https://static.licdn.com/aero-v1/sc/h/al2o9zrvru7aqj8e1x2rzsrca"></a>
-					<a href="https://github.com"><img src="https://github.githubassets.com/favicons/favicon.svg"></a>
+			<ul class="
+				flex flex-row flex-wrap justify-evenly
+				w-2/3
+				mx-auto
+			">
+				<li class="footerParticipant">
+					Alan De Franceschi
+					<div class="footerParticipantLinks">
+						<a href="https://fr.linkedin.com" rel="noopener noreferrer">
+							<img src="./img/logos/LinkdIn.png" class="max-h-10 max-w-10">
+						</a>
+						<a href="https://github.com" rel="noopener noreferrer">
+							<img src="https://github.githubassets.com/favicons/favicon.svg" class="max-h-10 max-w-10">
+						</a>
+					</div>
 				</li>
-				<li>
-					Alain 
-					<a href="https://fr.linkedin.com"><img src="https://static.licdn.com/aero-v1/sc/h/al2o9zrvru7aqj8e1x2rzsrca"></a>
-					<a href="https://github.com"><img src="https://github.githubassets.com/favicons/favicon.svg"></a>
+
+				<li class="footerParticipant">
+					Anthony Ciezadlik
+					<div class="footerParticipantLinks">
+						<a href="https://fr.linkedin.com" rel="noopener noreferrer">
+							<img src="./img/logos/LinkdIn.png" class="max-h-10 max-w-10">
+						</a>
+						<a href="https://github.com" rel="noopener noreferrer">
+							<img src="https://github.githubassets.com/favicons/favicon.svg" class="max-h-10 max-w-10">
+						</a>
+					</div>
 				</li>
+
+				<li class="footerParticipant">
+					Jacky Ung
+					<div class="footerParticipantLinks">
+						<a href="https://fr.linkedin.com" rel="noopener noreferrer">
+							<img src="./img/logos/LinkdIn.png" class="max-h-10 max-w-10">
+						</a>
+						<a href="https://github.com" rel="noopener noreferrer">
+							<img src="https://github.githubassets.com/favicons/favicon.svg" class="max-h-10 max-w-10">
+						</a>
+					</div>
+				</li>
+
+				<li class="footerParticipant">
+					Mervan Kilic
+					<div class="footerParticipantLinks">
+						<a href="https://fr.linkedin.com" rel="noopener noreferrer">
+							<img src="./img/logos/LinkdIn.png" class="max-h-10 max-w-10">
+						</a>
+						<a href="https://github.com" rel="noopener noreferrer">
+							<img src="https://github.githubassets.com/favicons/favicon.svg" class="max-h-10 max-w-10">
+						</a>
+					</div>
+				</li>
+
+				<li class="footerParticipant">
+					Tom Lebon
+					<div class="footerParticipantLinks">
+						<a href="https://fr.linkedin.com" rel="noopener noreferrer">
+							<img src="./img/logos/LinkdIn.png" class="max-h-10 max-w-10">
+						</a>
+						<a href="https://github.com" rel="noopener noreferrer">
+							<img src="https://github.githubassets.com/favicons/favicon.svg" class="max-h-10 max-w-10">
+						</a>
+					</div>
+				</li>
+
 			</ul>
+
+			<p class="p-2">Website hugely inspired by Cosmogenese</p>
+
+			<a href="https://www.instagram.com/cosmogenese/" target="_blank" rel="noopener noreferrer">
+				<img src="./img/logos/InstagramLogo.png" class="max-h-10 max-w-10">
+			</a>
 		</footer>
 
 	</body>

@@ -15,62 +15,40 @@
 	@apply grow min-h-full;
 }
 
+
 /* #region header */
 
-/* Manque le background et la police */
 .headerLayout {
 	@apply	flex items-center content-center justify-center
 			h-32 w-screen
 			text-5xl text-white font-semibold italic font-geo;
-			/* bg-accent; */
 }
-
-/* header {
-
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	height: 8rem;
-
-	background: radial-gradient(circle at bottom, var(--color-prim) 50%, var(--color-dark) 100%);
-	font-size: 2em;
-	font-family: "Geo";
-	font-weight: 600;
-	font-style: italic;
-	color: white;
-} */
 
 /* #endregion header */
 
 /* #region nav */
-nav {
 
-	display: flex;
-	flex-direction: row;
-	justify-content: space-around;
-
-	padding: 1rem;
-	/* background: linear-gradient(to right, var(--color-dark) 0%, var(--color-prim) 25% 75%, var(--color-dark) 100%); */
+.navLayout {
+	@apply flex flex-row justify-evenly
+	p-4
+	font-geo
+	text-3xl
+	text-dark/40
+	font-light
+	outline-none
+	;
 }
 
-nav a {
-	font-style: normal;
-	font-family: "Geo";
-	font-size: 1.5rem;
-	font-weight: 600;
-
-	text-decoration: none;
-	color: var(--color-light);
-	opacity: 90%;
-	/* filter: blur(0.8px); */
-}
-
-nav a:hover {
-	text-decoration: underline;
-	color: white;
-	opacity: 100%;
-	text-shadow: 3px -3px 10px var(--color-accent);
+.navLinkLayout {
+	@apply hover:underline
+	hover:text-dark/100
+	focus-visible:underline
+	focus-visible:text-dark/100
+	focus-visible:outline-none
+	transition-all
+	duration-300
+	ease-in
+	;
 }
 
 body:not(.loggedIn) #accountNavLink, body:not(.loggedIn) #logoutNavLink{
@@ -89,6 +67,15 @@ body.loggedIn #signupNavLink {
 /* #endregion nav */
 
 /* #region BODY */
+
+/* #region main */
+
+.mainLayout{
+	@apply flex grow flex-col
+	min-h-screen
+}
+
+/* #endregion main */
 
 /* #region account */
 
@@ -292,7 +279,6 @@ body.loggedIn #signupNavLink {
 	font-size: 4rem;
 	color: var(--color-accent);
 
-	background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%);
 }
 
 #loginPage form {
@@ -329,7 +315,7 @@ body.loggedIn #signupNavLink {
 	min-block-size: 1.5rem;
 }
 
-#loginPage form button {
+#loginButton {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -364,7 +350,6 @@ body.loggedIn #signupNavLink {
 	font-family: "Geo";
 	font-size: 5rem;
 	color: var(--color-dark);
-	background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%);
 }
 
 #logoutPage b {
@@ -384,9 +369,7 @@ body.loggedIn #signupNavLink {
 
 	font-family: "Geo";
 	font-size: 3rem;
-	color: white;
-
-	background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%);
+	color: var(--color-dark);
 }
 
 #signupPage form {
@@ -411,24 +394,37 @@ body.loggedIn #signupNavLink {
 
 /* #region footer */
 
-footer {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-
-	/* background: var(--color-dark); */
-
-	padding: 1.5rem;
-
-	color: var(--color-light);
-
+.footerLayout {
+	@apply flex flex-col items-center justify-center
+	p-4 
+	text-white
+	bg-dark/0
+	hover:bg-dark/90
+	transition-all
+	duration-500
+	ease-in-out
+	;
 }
 
-footer ul a img {
-	width: 1.3rem;
-	height: 1.3rem;
-	margin-left: 0.2rem;
+.footerParticipant {
+	@apply flex flex-col items-center gap-2
+	min-w-40
+	;
+}
+
+.footerParticipantLinks {
+	@apply flex flex-row items-center justify-evenly gap-4
+	;
 }
 
 /* #endregion footer */
+
+/* #region ANIMATIONS */
+
+@keyframes bgTransiBlur {
+	0% {blur: blur(0)};
+	50% {blur: blur(50px)};
+	100% {blur: blur(0)};
+}
+
+/* #endregion ANIMATIONS */
