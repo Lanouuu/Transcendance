@@ -35,6 +35,7 @@ clean:
 	@docker rmi -f $$(docker images -qa) || true
 	@docker volume rm $$(docker volume ls -q) || true
 	@docker network rm $$(docker network ls -q) || true
+	@rm srcs/requirements/gateway/www/css/output.css || true
 
 re: clean up
 
