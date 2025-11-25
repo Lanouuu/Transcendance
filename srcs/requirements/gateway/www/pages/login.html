@@ -1,28 +1,123 @@
-<div id="loginPage" class="page">
+<div id="loginPage" 
+	class="page
+		flex flex-col 
+        items-center
+		justify-center">
 
-	<h1>Login</h1>
+    <div class="bg-dark bg-opacity-40
+            rounded-3xl
+            p-8
+			-mt-36
+            w-full lg:w-[22vw]
+            h-[55vh] lg:h-[60vh]
+            flex flex-col items-center justify-between
+            text-white font-geo text-xl
+            hover:outline hover:outline-accent hover:shadow-[0_-15px_50px_var(--color-accent)]
+            transition">
+			
+		<h2 class="text-1xl sm:text-2xl lg:text-4xl xl:text-6xl 
+			font-geo 
+			font-semibold 
+			text-light 
+			mb-6
+			text-center">
+			Login
+		</h2>
 
-	<form id="login-form">
+		<form id="login-form"
+			class="flex flex-col w-full gap-8">
 
-		<label for="boxMailLogin">Mail</label>
-		<input type="text" name="username" id="boxMailLogin" required>
+			<div class="flex flex-col 
+                items-center gap-2">
 
-		<label for="boxPassLogin">Password</label>
-		<input type="password" name="password" id="boxPassLogin" required>
+				<label for="boxMailLogin"
+					class="text-2xl
+                        text-center">
+					Mail
+				</label>
 
-		<label for="box2faLogin">Code 2FA<br>(if activated)</label>
-		<input type="text" id="box2faLogin" name="code2FA" placeholder="123456">
+				<input type="text" name="username" id="boxMailLogin" 
+					class="w-4/6
+                    	p-2
+                    	rounded-xl
+                    	bg-dark bg-opacity-60
+                    	shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    	focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                    	focus:outline-none
+                    	text-white font-geo"
+					required>
 
-		<button id="loginButton" type="submit">Connection</button>
+				<label for="boxPassLogin"
+					class="text-2xl
+                        text-center">
+					Password
+				</label>
+
+				<input type="password" name="password" id="boxPassLogin" 
+					class="w-4/6
+                    	p-2
+                    	rounded-xl
+                    	bg-dark bg-opacity-60
+                    	shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    	focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                    	focus:outline-none
+                    	text-white font-geo"
+					required>
+
+				<label for="box2faLogin"
+				class="text-2xl
+                	text-center">
+				Code 2FA (if activated)
+				</label>
+
+				<input type="text" id="box2faLogin" name="code2FA" placeholder="123456"
+					class="w-4/6
+                    	p-2
+                    	rounded-xl
+                    	bg-dark bg-opacity-60
+                    	shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    	focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                    	focus:outline-none
+                    	text-white font-geo">
+
+					<div class="message text-center h-1" id="login-msg"></div>
+
+			</div>
+
+				<button type="submit" id="editUsernameSubmit"
+						class="mx-auto
+						py-3 
+						w-4/6
+						rounded-xl
+						bg-prim bg-opacity-90 
+						hover:bg-opacity-100
+						text-white font-semibold font-geo
+						shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+						hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+						transition">
+					Confirm
+				</button>
+
+		</form>
 
 		<button onclick="window.location.href='https://localhost:8443/auth_service/login/42'"
-			class="">
+			class="mx-auto
+                py-3 
+                w-4/6
+				flex flex-row
+				items-center
+				justify-evenly
+                rounded-xl
+                bg-prim bg-opacity-90 
+                hover:bg-opacity-100
+                text-white font-semibold font-geo
+                shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+                transition">
+			Connection with
 			<img src="../img/logos/42 Paris_id78fsL3cM_1.svg">
 		</button>
-
-		<div class="message" id="login-msg"></div>
-
-	</form>
-
+		
+	</div>
 
 </div>

@@ -10,7 +10,9 @@ export function login() {
 
 			const mail: string = (document.getElementById("boxMailLogin") as HTMLInputElement).value;
 			const password: string = (document.getElementById("boxPassLogin") as HTMLInputElement).value;
-			const code2FA: boolean = (document.getElementById("box2faLogin") as HTMLInputElement).checked;
+			const code2FA: string = (document.getElementById("box2faLogin") as HTMLInputElement).value;
+
+			(e.target as HTMLFormElement).reset();
 
 			try {
 				const res = await fetch(`${BASE_URL}/login`, {
@@ -40,7 +42,7 @@ export function login() {
 					msg.style.color = "red";
 					return ;
 				}
-
+				
 			} catch (err) {
 				console.error(err);
 				(document.getElementById("login-msg") as HTMLInputElement).textContent = "Erreur de communication avec le serveur.";
