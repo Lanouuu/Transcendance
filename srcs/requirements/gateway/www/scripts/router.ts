@@ -9,6 +9,24 @@ const	PAGE_BACKGROUNDS: Record<string, string> = {
 	'tournament': '/img/Background1.png',
 }
 
+// permet de recuperer l'ID et le Token depuis la connection oAuth 42
+// et redirige vers account
+// utiliser juste avant new Router() a la fin
+function handleOauth42Redirect() {
+    const params = new URLSearchParams(window.location.hash.split("?")[1]);
+    const token = params.get("token");
+    const id = params.get("id");
+
+    if (token && id) {
+        localStorage.setItem("jwt", token);
+        localStorage.setItem("userId", id);
+
+        document.body.classList.add("loggedIn");
+
+        window.location.hash = "#account";
+    }
+}
+
 const	PAGE_ORDER: string [] = ['home', 'game', 'tournament', 'account', 'logout', 'signup', 'login'];
 
 class Router {
@@ -219,5 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	else
 		document.body.classList.add("loggedIn");
 	console.log(document.body.classList);
+
+	handleOauth42Redirect();
+
 	new Router();
 });

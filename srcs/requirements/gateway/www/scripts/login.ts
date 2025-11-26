@@ -3,6 +3,7 @@ export function login() {
 	const BASE_URL: string = "https://localhost:8443/auth_service";
 
 	const form = document.getElementById("login-form");
+	const button42 = document.getElementById("42ConnectionButton");
 
 	if (form) {
 		form.addEventListener("submit", async (e) => {
@@ -50,8 +51,17 @@ export function login() {
 				
 			} catch (err) {
 				console.error(err);
-				(document.getElementById("login-msg") as HTMLInputElement).textContent = "Erreur de communication avec le serveur.";
+				(document.getElementById("login-msg") as HTMLInputElement).textContent = "Communication error with server";
 			}
 		});
+	}
+	if (button42) {
+		button42.addEventListener('click', async () => {
+			try {
+				window.location.href = `${BASE_URL}/login/42`;
+			} catch (err) {
+				console.error(err);
+			}
+		})
 	}
 }

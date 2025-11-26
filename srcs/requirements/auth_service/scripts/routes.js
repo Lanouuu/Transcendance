@@ -72,7 +72,8 @@ export default async function routes(fastify, options) {
       const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(jwt).digest("hex");
       await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
       
-      reply.code(200).send({ token:jwt, id: user.id });
+      //reply.code(200).send({ token:jwt, id: user.id });
+      reply.redirect(`https://localhost:8443/#/oauth42-success?token=${jwt}&id=${user.id}`);
 
       } catch (err) {
         console.error("OAuth 42 error:", err);
