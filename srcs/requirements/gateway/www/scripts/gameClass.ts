@@ -63,11 +63,11 @@ export class Game {
 	ball:		Sprite;
 	board:		Sprite;
 
-    constructor({id, socket, mode}: { id: number, socket: WebSocket, mode: string}) {
+    constructor({id, socket, mode, message}: { id: number, socket: WebSocket, mode: string, message: string}) {
         this.id = id
         this.socket = socket
         this.mode = mode
-        this.message = "";
+        this.message = message;
 		this.winner = "";
 		this.displayWinner = "";
 		this.started = false;

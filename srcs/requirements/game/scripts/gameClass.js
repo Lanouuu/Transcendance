@@ -1,9 +1,9 @@
 export class Game {
-    constructor({id, socket, mode}) {
+    constructor({id, socket, mode, message}) {
         this.id = id
         this.socket = socket
         this.mode = mode
-        this.message = ""
+        this.message = message
         this.winner = ""
         this.displayWinner = ""
         this.started = false
@@ -15,7 +15,13 @@ export class Game {
             name: undefined,
             key: { up: false, down: false },
             score: 0,
-            sprite: undefined,
+            sprite: {
+                position: {
+                    x: undefined,
+                    y: undefined
+                },
+                loaded: undefined
+            },
             id: undefined
         }
 
@@ -23,7 +29,13 @@ export class Game {
             name: undefined,
             key: { up: false, down: false },
             score: 0,
-            sprite: undefined,
+            sprite: {
+                position: {
+                    x: undefined,
+                    y: undefined
+                },
+                loaded: undefined
+            },
             id: undefined
         }
 

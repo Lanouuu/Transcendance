@@ -39,8 +39,12 @@ function startTimer(game) {
 
     const intervalId = setInterval(() => {
         console.log("TIMER: ", game.socket.length)
+        let i = 0
         game.socket.forEach(socket => {
+            console.log("SOCKET STATE = ", socket.readyState)
             if (socket.readyState === 1) {
+                console.log("COUNTDOWN SENDED ", i)
+                i++
                 socket.send(JSON.stringify({
                     message: "Countdown",
                     timer: game.timer
@@ -142,6 +146,13 @@ function gameLoop(game) {
     }
 }
 
+function updateGame(game, frontGame) {
+    game.board = frontGame.board
+    game.ball = frontGame.ball
+    game.player1.sprite = frontGame.player1.sprite
+    game.player2.sprite = frontGame.player2.sprite
+}
+
 const wss = new WebSocketServer({ 
     server: fastify.server,
     path: '/ws'
@@ -164,7 +175,7 @@ wss.on('connection', function connection(ws) {
     let game = games.get(res.game.id)
     if (res.message == "Init")
     {
-        game = res.game
+        updateGame(game , res.game)
         // console.log("INIT = ", game)
         game.socket.push(ws)
         console.log("SOCKET GAME = ", game.socket.length)
@@ -190,8 +201,9 @@ fastify.get("/local", async (request, reply) => {
           id: gameId++,
           socket: [],
           mode: 'local',
+          message: 'start'
         })
-        // console.log("GAME AT CREATION = ", game)
+        console.log("GAME AT CREATION = ", game)
         games.set(game.id, game)
         console.log("Local game created with id:", game.id)
         reply.send(game)
@@ -223,9 +235,8 @@ async function getUserName(id) {
 
 function findRemotePendingGame() {
     if (pendingRemoteGame.length === 0)
-        return false;
-    for (let i = 0; i < pendingRemoteGame.length; i++) {
-    }
+        return false
+    return true
 }
 
 fastify.get("/remote", async (request, reply) => {
@@ -238,11 +249,11 @@ fastify.get("/remote", async (request, reply) => {
                 id: gameId++,
                 socket: [],
                 mode: 'remote',
+                message: "Waiting"
             })
             game.player1.id = queue[0][0]
             game.player1.name = queue[0][1]
             pendingRemoteGame.push(game)
-            game.message = "Waiting"
             games.set(game.id, game)
             reply.send(game)
         }
@@ -257,11 +268,6 @@ fastify.get("/remote", async (request, reply) => {
             // if (game.socket[0].readyState === WebSocket.OPEN)
              game.socket.forEach(socket => {
                 if (socket.readyState === 1) {
-                    console.log("SENDING START TO PLAYER 1")
-                    console.log("SENDING START TO PLAYER 1")
-                    console.log("SENDING START TO PLAYER 1")
-                    console.log("SENDING START TO PLAYER 1")
-                    console.log("SENDING START TO PLAYER 1")
                     socket.send(JSON.stringify(game));
                 }
             })
