@@ -24,8 +24,13 @@ export function login() {
 				const data = await res.json();
 				const msg = document.getElementById("login-msg");
 				if (msg) {
-					msg.textContent = res.ok ? "Connexion réussie !" : (data.error || "Erreur de connexion");
-					msg.style.color = "lightgreen";
+					if (res.ok) {
+                		msg.textContent = data.message;
+                		msg.style.color = "lightgreen";
+            		} else {
+                		msg.textContent = data.error || data.message;
+                		msg.style.color = "red";
+            		}
 				}
 
 				if (res.ok && data.token) {
@@ -36,7 +41,7 @@ export function login() {
 
 					setTimeout(async () => {
 						window.location.hash = '#account';
-					}, 1000);
+					}, 800);
 				} else if (msg) {
 					msg.textContent = data.error || "erreur de connexion.";
 					msg.style.color = "red";

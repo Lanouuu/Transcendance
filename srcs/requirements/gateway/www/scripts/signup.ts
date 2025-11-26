@@ -24,8 +24,16 @@ export function signup() {
 				const msg = document.getElementById("signup-msg");
 				if (msg)
 				{
-					msg.textContent = res.ok ? "Compte créé avec succès !" : (data.error || "Erreur lors de l'inscription");
-					msg.style.color = "lightgreen";
+					if (res.ok) {
+                		msg.textContent = data.message;
+                		msg.style.color = "lightgreen";
+						setTimeout(() => {
+							window.location.hash = '#login';
+						}, 800);
+            		} else {
+                		msg.textContent = data.error || data.message;
+                		msg.style.color = "red";
+            		}
 				}
 
 				// Afficher le QR code si 2FA activé

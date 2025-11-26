@@ -281,36 +281,6 @@ body.loggedIn #signupNavLink {
 }
 /* #endregion logout */
 
-/* #region signup */
-
-#signupPage {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-
-	gap: 2rem;
-
-	font-family: "Geo";
-	font-size: 3rem;
-	color: var(--color-dark);
-}
-
-#signupPage form {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-
-	gap: 1rem;
-	margin: 1rem;
-}
-
-#signupPage form input {
-	color: black;
-}
-
-/* #endregion signup */
-
 /* #region tournament */
 /* #endregion tournament */
 

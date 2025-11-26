@@ -108,10 +108,10 @@ export default async function routes(fastify, options) {
         return reply.code(400).send({error: "Wrong mail format"});
 
       try {
-        const res = await fetch(`http://users:3000/mail/${mail}`);
-        if(res.ok) return reply.status(400).send({ error: "Mail already in use" });
         const rez = await fetch(`http://users:3000/name/${userName}`);
         if(rez.ok) return reply.status(400).send({ error: "User name already in use" });
+        const res = await fetch(`http://users:3000/mail/${mail}`);
+        if(res.ok) return reply.status(400).send({ error: "Mail already in use" });
       } catch (err) {
         console.error("Erreur de connexion au service user:", err);
         return reply.status(400).send({ error: "User service unavailable" });
@@ -146,7 +146,7 @@ export default async function routes(fastify, options) {
         throw new Error(errData.error || "User creation failed");
       }
 
-      return reply.status(201).send({userName, mail, qrcodedata });
+      return reply.status(201).send({message: "Signup successful!",userName, mail, qrcodedata });
 
       } catch (err) {
         fastify.log.error(err, "Error signup");
@@ -188,6 +188,7 @@ export default async function routes(fastify, options) {
       await redis.set(`user:${user.id}:online`, "1", "EX", 30);
 
       reply.code(200).send({
+        message: "Login successful!",
         token,
         id: user.id});
     });
