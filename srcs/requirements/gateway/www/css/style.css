@@ -12,7 +12,7 @@
 }
 
 .page {
-	@apply grow min-h-full;
+	@apply flex grow h-full;
 }
 
 
@@ -20,7 +20,7 @@
 
 .headerLayout {
 	@apply	flex items-center content-center justify-center
-			h-32 w-screen
+			h-32 w-full
 			text-5xl text-white font-semibold italic font-geo;
 }
 
@@ -30,6 +30,7 @@
 
 .navLayout {
 	@apply flex flex-row justify-evenly
+	h-20
 	p-4
 	font-geo
 	text-3xl
@@ -72,123 +73,75 @@ body.loggedIn #signupNavLink {
 
 .mainLayout{
 	@apply flex grow flex-col
-	min-h-screen
+	h-[calc(100vh-8rem-5rem)]
+	/* Ajouter du responsive */
 }
 
 /* #endregion main */
 
 /* #region account */
 
-#accountPage {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
+.accountLayout {
+	@apply flex flex-col place-items-center gap-16
 
-	padding: 2rem;
-	gap: 4rem;
+	h-full
+	p-8
 
-	/* background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%); */
-
-	font-family: "Geo";
-	color: white;
+	font-geo 
+	;
 }
 
-#accountPage h1 {
-	font-size: 5rem;
-}
-
-#accountPage .accountBox {
+.accountBoxLayout {
 	display: grid;
+	grid-template-columns: 12fr 1fr;
+	
+	@apply h-4/5 w-3/5
+
+	rounded-3xl
+	
+	text-white	
+	bg-dark bg-opacity-100
+	;
+}
+
+.accountBoxTabLayout {
+	@apply col-start-2 col-end-3
+	flex flex-col place-items-center place-content-evenly
+	h-full
+	;
+}
+
+.accountBoxTabItems {
+}
+
+.myAccountTabLayout{
+	@apply col-start-1 col-end-2;
+
+	display:grid;
+	grid-template-columns: 7fr 6fr 0.5fr;
 	grid-template-rows: 1fr 1fr;
-	grid-template-columns: 1fr 8fr 8fr;
-
-	height: 50vh;
-	max-height: 50vh;
-	width: 50vw;
-	max-width: 50vw;
-
-	padding: 3rem;
-
-	border-radius: 3rem;
-
-	/* background: linear-gradient(to bottom, var(--color-dark) 15%, var(--color-prim)); */
-	/* background-color: var(--color-dark); */
 }
 
-#accountPage .accountBox:hover {
-	outline: 1px solid var(--color-accent);
-	box-shadow: 0px -15px 50px var(--color-accent);
+.accountBoxInfoLayout {
+	@apply col-start-1 col-end-2 row-start-1 row-end-3
+	
+	relative
+
+	flex grow flex-row items-center justify-center
+
+	text-7xl
 }
 
-#accountBoxEditProfile {
-	grid-row: 1/2;
-	grid-column: 1/2;
+.accountBoxPicLayout {
+	@apply col-start-2 col-end-3 row-start-1 row-end-2
+
+	flex flex-col gap-6 justify-center items-center
 }
 
-#accountBoxInfo {
-	grid-row: 1/3;
-	grid-column: 2/3;
+.accountBoxStatsLayout {
+	@apply col-start-2 col-end-3 row-start-2 row-end-3
 
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-
-	gap: 4rem;
-
-	font-size: xx-large;
-	text-align: center;
-}
-
-#accountBoxProfilePic {
-	grid-row: 1/2;
-	grid-column: 3/4;
-
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	padding: 1rem;
-
-	overflow: hidden;
-}
-
-/* #accountBoxProfilePic img {
-
-	max-width: 100%;
-	max-height: 100%;
-	width: 35%;
-	height: 75%;
-	object-fit: cover;
-	object-position: center;
-
-	border: solid 5px var(--color-accent);
-	border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
-} */
-
-#accountBoxFriendList {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-
-	width: auto;
-	height: auto;
-
-	grid-row: 2/3;
-	grid-column: 3/4;
-
-	gap: 1rem;
-
-	text-align: center;
-
-	border: solid 3px var(--color-light);
-	border-radius: 5rem;
-	/* box-shadow: 0px 0px 50px var(--color-accent); */
-}
-
-#accountFriendList {
-	outline: solid 5px red;
+	grid grid-rows-3 grid-cols-2
 }
 
 /* #endregion account */
@@ -342,19 +295,13 @@ body.loggedIn #signupNavLink {
 
 /* #region logout */
 
-#logoutPage {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	font-family: "Geo";
-	font-size: 5rem;
-	color: var(--color-dark);
+.logoutLayout {
+	@apply page 
+	flex items-center justify-center
+	font-geo
+	text-[14rem]
 }
 
-#logoutPage b {
-	color: white;
-}
 /* #endregion logout */
 
 /* #region signup */
@@ -417,14 +364,56 @@ body.loggedIn #signupNavLink {
 	;
 }
 
+.footerLogos {
+	@apply max-h-10 max-w-10;
+}
+
+.footerLogoGithub {
+	@apply group-hover:invert 
+	transition-all
+	duration-500
+	ease-in-out
+	;
+}
+
 /* #endregion footer */
 
 /* #region ANIMATIONS */
 
 @keyframes bgTransiBlur {
-	0% {blur: blur(0)};
-	50% {blur: blur(50px)};
-	100% {blur: blur(0)};
+	0% {filter: blur(0);}
+	50% {filter: blur(50px);}
+	100% {filter: blur(0);}
 }
 
 /* #endregion ANIMATIONS */
+
+/* #region customClasses */
+
+.text-stroke-3 {
+	-webkit-text-stroke-width: 3px;
+}
+
+.text-stroke-dark {
+	-webkit-text-stroke-color: var(--color-dark);
+}
+
+.text-stroke-none {
+	-webkit-text-stroke: 0px;
+}
+
+/* #endregion customClasses */
+
+/* NOTES ACCOUNT
+
+
+Onglets:
+	- Infos: Info + images + stats de base + bouton modif
+	- FriendList: invite/recv, connecte ou pas, inviter a jouer, aller au profile de l'ami?
+	- Historique
+	- Stats "poussees"
+
+??
+LVL
+achievement 
+*/

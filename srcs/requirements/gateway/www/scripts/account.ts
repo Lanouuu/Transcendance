@@ -61,21 +61,21 @@ export async function displayAccountPage() {
 		}
 
 		// Ajout d'ami
-		const friendList: HTMLElement = document.getElementById("accountFriendList") as HTMLElement;
-		if (friendList) {
-			const res = await fetch(`${BASE_URL}/friends-list/${userId}`, {
-				method: "GET",
-				headers: {
-					"authorization": `Bearer ${token}`,
-					"x-user-id": userId
-				},
-			});
-			if (!res.ok) throw new Error(`Friend list not found`);
-			// option 1: parentheses
-			const data = (await res.json()).friendsList[0].name;
-			friendList.innerHTML = data;
-		}
-		else throw new Error("No friendList fetched");
+		// const friendList: HTMLElement = document.getElementById("accountFriendList") as HTMLElement;
+		// if (friendList) {
+		// 	const res = await fetch(`${BASE_URL}/friends-list/${userId}`, {
+		// 		method: "GET",
+		// 		headers: {
+		// 			"authorization": `Bearer ${token}`,
+		// 			"x-user-id": userId
+		// 		},
+		// 	});
+		// 	if (!res.ok) throw new Error(`Friend list not found`);
+		// 	// option 1: parentheses
+		// 	const data = (await res.json()).friendsList[0].name;
+		// 	friendList.innerHTML = data;
+		// }
+		// else throw new Error("No friendList fetched");
 
 		profilePicButton.addEventListener('click', () => {
 			profilePicInput.click();

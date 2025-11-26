@@ -1,108 +1,208 @@
-<div id="accountPage" class="page">
+<div id="accountPage" class="page accountLayout">
 
-	<h1>Account</h1>
+	<h1 class="text-8xl text-dark">
+		Account
+	</h1>
 
-	<div class="
-		accountBox
-		bg-dark
-		bg-opacity-40
-	">
+	<div class="accountBoxLayout">
 
-		<a id="accountBoxEditProfile"href="#editProfile" role="button" aria-label="Edit profile" class="
-			bg-prim
-			flex items-center justify-center
-			rounded-xl max-h-16 
-			text-gray-300 
-			hover:bg-opacity-80 hover:text-white hover:font-black
-		">
-			🖉
-		</a>
+		<ul class="accountBoxTabLayout">
 
-		<div id="accountBoxInfo">
+			<li class="accountBoxTabItems">
 
-			<p id="accountBoxUsername">Username<br><span>blabla</span></p>
-			<p id="accountBoxMail">Mail<br><span>blabla@bla.fr</span></p>
-			<p id="accountBox2fa">2FA<br><input type="checkbox" disabled></p>
+				<button id="myAccountTabButton"></button>
 
-		</div>
+				My account
 
-		<div id="accountBoxProfilePic" class="flex flex-col gap-6">
+			</li>
 
-			<input id="profilePicInput" type="file" accept="image/*" class="hidden">
+			<li class="accountBoxTabItems">
 
-			<div class="group relative rounded-full w-fit">
+				<button id="friendsTabButton"></button>
 
-				<img src="img/cristal_profile_base.jpg" class="
-					w-48 h-48
+				Friends
+
+			</li>
+
+			<li class="accountBoxTabItems">
+
+				<button id="statsTabButton"></button>
+
+				Stats
+
+			</li>
+
+			<li class="accountBoxTabItems">
+
+				<button id="historyTabButton"></button>
+
+				History
+
+			</li>
+
+		</ul>
+
+		<div id="myAccountTabLayout" class="myAccountTabLayout">
+
+			<!-- Profile infos -->
+			<div id="accountBoxInfo" class="accountBoxInfoLayout">
+
+				<a id="accountBoxEditProfile" href="#editProfile" role="button" aria-label="Edit profile" class="
+					absolute
+					left-8
+
+					flex items-center justify-center
+
+					h-2/3
+					w-12
 					rounded-full
-					object-cover
-					cursor-pointer
-				">
 
-				<button id="profilePicButton" class="
-					absolute 
-					rounded-full
-					object-fill
-                	inset-0 
-					w-full
-					h-full
-                	bg-gray-500 
-                	text-white 
-                	opacity-0 
-                	group-hover:opacity-60 
-                	transition-opacity 
-                	duration-200
-                	pointer-events-auto
+					text-3xl
+					bg-prim
+					text-gray-200 
+					hover:bg-opacity-80 hover:text-white hover:font-black
 				">
 					🖉
-				</button>
+				</a>
 
-				<button id="profilePicButtonConfirm" class="
-					absolute
-					right-0
-					-bottom-3
-					rounded-full
-					w-1/6
-					h-1/6
-                	bg-gray-400
-                	text-light
-					text-xl
-					opacity-100
-					bg-opacity-30
-                	hover:bg-opacity-10 
-					hidden
+				<div class="
+					flex flex-col items-center justify-center gap-16 
 				">
-					✓
-				</button>
-				<button id="profilePicButtonCancel" class="
-					absolute
-					-right-7
-					bottom-6
-					rounded-full
-					w-1/6
-					h-1/6
-                	bg-gray-400
-                	text-light
-					text-xl
-					opacity-100
-					bg-opacity-30
-                	hover:bg-opacity-50
-					hidden
-				">
-					✗
-				</button>
+
+					<p id="accountBoxUsername">Username<br><span>rien</span></p>
+					<p id="accountBoxMail">Mail<br><span>nada@degun.fr</span></p>
+					<p id="accountBox2fa">2FA<br><input type="checkbox" disabled></p>
+
+				</div>
+
+
 			</div>
+
+			<!-- Profile pic -->
+			<div id="accountBoxProfilePic" class="accountBoxPicLayout">
+
+				<input id="profilePicInput" type="file" accept="image/*" class="hidden">
+
+				<div class="group relative rounded-full w-fit">
+
+					<img src="img/cristal_profile_base.jpg" class="
+						w-56 h-56
+						rounded-full
+						object-cover
+						cursor-pointer
+					">
+
+					<button id="profilePicButton" class="
+						absolute 
+						rounded-full
+						object-fill
+     		           	inset-0 
+						w-full
+						h-full
+     	 	          	bg-gray-500 
+     		           	text-white
+						text-2xl
+     		           	opacity-0 
+       		         	group-hover:opacity-60 
+         		       	transition-opacity 
+           		     	duration-200
+             		   	pointer-events-auto
+					">
+						🖉
+					</button>
+
+					<button id="profilePicButtonConfirm" class="
+						absolute
+						right-0
+						-bottom-3
+						rounded-full
+						w-1/6
+						h-1/6
+     		           	bg-gray-400
+						text-light
+						text-xl
+						opacity-100
+						bg-opacity-30
+                		hover:bg-opacity-10 
+						hidden
+					">
+						✓
+					</button>
+
+					<button id="profilePicButtonCancel" class="
+						absolute
+						-right-7
+						bottom-6
+						rounded-full
+						w-1/6
+						h-1/6
+						bg-gray-400
+						text-light
+						text-xl
+						opacity-100
+						bg-opacity-30
+     		           	hover:bg-opacity-50
+						hidden
+					">
+						✗
+					</button>
+					
+				</div>
+
+			</div>
+
+			<!-- Stats -->
+			<div id="accountBoxStats" class="accountBoxStatsLayout">
+
+				<h2 class="
+					col-span-2 row-start-1 row-end-2
+					text-center
+					text-4xl
+				">
+					Basic stats
+				</h2>
+
+				<div id="accountStatsWinrate" class="
+					col-start-1 col-end-2 row-start-2 row-end-4
+					flex flex-col place-content-center place-items-center
+				">
+
+					<h3 class="text-3xl">Winrate</h3>
+
+					No data
+
+				</div>
+
+				<div id="accountStatsGraph" class="
+					col-start-2 col-end-3 row-start-2 row-end-4
+					flex flex-col place-content-center place-items-center
+				">
+
+					<h3 class="text-3xl">Graph</h3>
+
+					No data
+
+				</div>
+
+			</div>
+
+		</div>
+
+		<div id="friendsTab" class="hidden">
 
 
 
 		</div>
 
-		<div id="accountBoxFriendList">
+		<div id="statsTab" class="hidden">
 
-			Friends connected
-			<div id="accountFriendList">
-				No Friends
-			</div>
+
+
+		</div>
+
+		<div id="historyTab" class="hidden">
+
+
 
 		</div>
 
