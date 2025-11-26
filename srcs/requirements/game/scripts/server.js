@@ -177,23 +177,33 @@ wss.on('connection', function connection(ws) {
     {
         updateGame(game , res.game)
         // console.log("INIT = ", game)
+        if (ws.userId === undefined && game.socket.length === 0) {
+            console.log("PARING WEBSOCKET WITH PLAYER1")
+            ws.userId = game.player1.id
+            console.log("websocket is = ", ws.userId)
+        } else if (ws.userId === undefined && game.socket.length === 1) {
+            console.log("PARING WEBSOCKET WITH PLAYER2")
+            ws.userId = game.player2.id
+            console.log("websocket is = ", ws.userId)
+        }
         game.socket.push(ws)
-        console.log("SOCKET GAME = ", game.socket.length)
-        // if (game.mode === "local") {
         if (game.message === "start")
             game.loopId = setInterval(() => gameLoop(game), 16)
-        // }
     }
     else {
-        game.player1.key.up = res.game.player1.key.up
-        game.player1.key.down = res.game.player1.key.down
-        game.player2.key.up = res.game.player2.key.up
-        game.player2.key.down = res.game.player2.key.down
+        if (ws.userId === game.player1.id) {
+            game.player1.key.up = res.game.player1.key.up
+            game.player1.key.down = res.game.player1.key.down
+        } else if (ws.userId === game.player2.id) {
+            game.player2.key.up = res.game.player2.key.up
+            game.player2.key.down = res.game.player2.key.down
+        }
     }
     games.set(game.id, game)
     // console.log("GAME AFTER SET IN WS CONNECTION = ", game)
   })
 })
+
 // local
 fastify.get("/local", async (request, reply) => {
     try {
@@ -263,6 +273,7 @@ fastify.get("/remote", async (request, reply) => {
             game.player2.id = queue[0][0]
             game.player2.name = queue[0][1]
             game.message = "start"
+            // game.socket[0].userId = game.player1.id
             games.set(game.id, game)
             reply.send(game)
             // if (game.socket[0].readyState === WebSocket.OPEN)

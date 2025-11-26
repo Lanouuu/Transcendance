@@ -105,8 +105,6 @@ export async function gameLoop(game: Game) { // BIZARRE LE TYPE
 
 		ws.addEventListener('message', (event) => {
 			const serverGame = JSON.parse(event.data)
-			console.log(serverGame)
-			// console.log("MESSAGE ", serverGame.message)
 			game.message = serverGame.message
 			if (serverGame.message === "Countdown") {
 				game.timer = serverGame.timer
@@ -143,7 +141,6 @@ export async function gameLoop(game: Game) { // BIZARRE LE TYPE
 					game.player2.key.down = true
 					break
 			}
-			// game.message = "input"
 			if (ws.readyState === WebSocket.OPEN)
 				ws.send(JSON.stringify({game, message: "input"}))
 			else
@@ -165,7 +162,6 @@ export async function gameLoop(game: Game) { // BIZARRE LE TYPE
 					game.player2.key.down = false
 					break
 			}
-			// game.message = "input"
 			if (ws.readyState === WebSocket.OPEN)
 				ws.send(JSON.stringify({game, message: "input"}))
 			else
@@ -199,9 +195,6 @@ async function gameAnimation(game: Game) {
 	canvasContext.textAlign = 'center'
 
 	const id = window.requestAnimationFrame(() => gameAnimation(game))
-	// console.log("message = ", game.message)
-	// if (game.message === "Waiting")		
-	// 	return;
 	canvasContext.drawImage(game.board.image, game.board.position.x, game.board.position.y)
 	canvasContext.drawImage(game.player1.sprite.image, game.player1.sprite.position.x, game.player1.sprite.position.y)
 	canvasContext.drawImage(game.player2.sprite.image, game.player2.sprite.position.x, game.player2.sprite.position.y)
@@ -279,9 +272,7 @@ export async function loadSprites(game: Game) {
         game.player1.sprite = player1;
         game.player2.sprite = player2;
         game.ball = ball;
-        // return [board, player, player2, ball]
     }catch(e) {
         console.error("ERREUR CHARGEMENT IMAGES", e);
-        // return []
     }
 }
