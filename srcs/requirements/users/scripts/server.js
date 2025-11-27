@@ -270,6 +270,13 @@ export function runServer() {
       }
 
       try {
+
+        const checkStmt = usersDB.prepare("SELECT * FROM users WHERE id = ?")
+        const checkData = checkStmt.get(id);
+        if (!checkData) {
+          return reply.status(404).send({ error: "User not found" });
+        }
+
         const { newMail } = req.body;
         if (!newMail) {
           return reply.status(400).send({ error: "New mail required" });
@@ -279,9 +286,10 @@ export function runServer() {
           return reply.status(400).send({ error: "Mail confirmation required" });
         }
 
-        const checkStmt = usersDB.prepare("SELECT * FROM users WHERE mail = ?");
-        const checkMail = checkStmt.get(newMail);
-        if (checkMail) {
+        if (checkData.auth_type === "oauth42") {
+          return reply.status(400).send({ error: "Mail change not allowed for 42 accounts" });
+        }
+        if (checkData.mail === newMail) {
           return reply.status(400).send({ error: "Mail already in use" });
         }
 
@@ -323,7 +331,7 @@ export function runServer() {
         return reply.status(404).send({ error: "User not found" });
       }
       if(user.auth_type === "oauth42") {
-        return reply.status(403).send({ error: "Password modification is disabled for OAuth accounts." });
+        return reply.status(403).send({ error: "Password change not allowed for 42 accounts" });
       }
 
       try {
