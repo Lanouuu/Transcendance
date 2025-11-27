@@ -15,7 +15,7 @@ echo "   ✓ TypeScript watcher started (PID: $TSC_PID)"
 # 2. Première compilation Tailwind
 echo ""
 echo "🎨 Compiling Tailwind CSS (initial build)..."
-cd /etc/nginx/html && tailwindcss -i ./css/style.css -o ./css/output.css --minify
+cd /etc/nginx/html && tailwindcss -i ./css/style.css -o ./css/output.css --config ./tailwind.config.js --minify
 
 if [ -f /etc/nginx/html/css/output.css ]; then
     SIZE=$(du -h /etc/nginx/html/css/output.css | cut -f1)
@@ -30,7 +30,7 @@ echo ""
 echo "👀 Starting nodemon for style.css..."
 nodemon \
     --watch /etc/nginx/html/css/style.css \
-    --exec "echo '🔄 style.css changed' && cd /etc/nginx/html && tailwindcss -i ./css/style.css -o ./css/output.css --minify && echo '✅ CSS recompiled'" \
+    --exec "echo '🔄 style.css changed' && cd /etc/nginx/html && tailwindcss -i ./css/style.css -o ./css/output.css --config ./tailwind.config.js --minify && echo '✅ CSS recompiled'" \
     > /tmp/nodemon.log 2>&1 &
 NODEMON_PID=$!
 echo "   ✓ Nodemon started (PID: $NODEMON_PID)"

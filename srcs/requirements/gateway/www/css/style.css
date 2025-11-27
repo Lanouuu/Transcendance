@@ -93,36 +93,58 @@ body.loggedIn #signupNavLink {
 
 .accountBoxLayout {
 	display: grid;
-	grid-template-columns: 12fr 1fr;
+	grid-template-columns: 19fr 1fr;
 	
 	@apply h-4/5 w-3/5
 
 	rounded-3xl
 	
-	text-white	
-	bg-dark bg-opacity-100
 	;
 }
 
-.accountBoxTabLayout {
-	@apply col-start-2 col-end-3
-	flex flex-col place-items-center place-content-evenly
+/* #region Tabs *******************************************/
+
+.accountBoxTabDiv{
+	@apply col-start-2 col-end-3 row-start-1 row-end-2
+
+	flex flex-col items-end justify-around
+
+	p-2
+
 	h-full
+
+	rounded-r-3xl
+
+	bg-dark bg-opacity-50
 	;
 }
 
 .accountBoxTabItems {
+	@apply text-white text-lg
+	;
 }
 
-.myAccountTabLayout{
-	@apply col-start-1 col-end-2;
+/* #endregion Tabs ****************************************/
+
+/* #region MyInfos */
+
+.infosLayout{
+	@apply col-start-1 col-end-2 row-start-1 row-end-2
+
+	rounded-l-3xl
+
+	text-white	
+	bg-dark bg-opacity-80
+	;
 
 	display:grid;
 	grid-template-columns: 7fr 6fr 0.5fr;
 	grid-template-rows: 1fr 1fr;
+
+
 }
 
-.accountBoxInfoLayout {
+.accountInfos{
 	@apply col-start-1 col-end-2 row-start-1 row-end-3
 	
 	relative
@@ -132,17 +154,65 @@ body.loggedIn #signupNavLink {
 	text-7xl
 }
 
-.accountBoxPicLayout {
+.accountPic{
 	@apply col-start-2 col-end-3 row-start-1 row-end-2
 
 	flex flex-col gap-6 justify-center items-center
 }
 
-.accountBoxStatsLayout {
+.accountStats{
 	@apply col-start-2 col-end-3 row-start-2 row-end-3
 
 	grid grid-rows-3 grid-cols-2
 }
+
+/* #endregion MyAccount */
+
+/* #region Friends ****************************************/
+
+.friendsLayout {
+	@apply col-start-1 col-end-2 row-start-1 row-end-2
+	
+	flex flex-col items-center justify-center
+
+	text-white text-6xl
+
+	bg-dark bg-opacity-80
+	;
+}
+
+/* #endregion Friends *************************************/
+
+/* #region Stats ******************************************/
+
+.statsLayout {
+	@apply col-start-1 col-end-2 row-start-1 row-end-2
+
+	flex flex-col items-center justify-center
+
+	text-white text-6xl
+
+	bg-dark bg-opacity-80
+	;
+}
+
+/* #endregion Stats ***************************************/
+
+/* #region History ****************************************/
+
+.historyLayout {
+	@apply col-start-1 col-end-2 row-start-1 row-end-2
+
+	flex flex-col items-center justify-center
+
+	text-white text-6xl
+
+	bg-dark bg-opacity-80
+	;
+}
+
+/* #endregion History *************************************/
+
 
 /* #endregion account */
 
@@ -417,3 +487,9 @@ Onglets:
 LVL
 achievement 
 */
+
+/* PAS TRES PROPRE MAAAAAAAIS BON */
+
+.hidden {
+	display: none !important;
+}

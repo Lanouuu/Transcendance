@@ -3,49 +3,52 @@
 	<h1 class="text-8xl text-dark">
 		Account
 	</h1>
-
+	
+	<!-- Boite d'affichage -->
 	<div class="accountBoxLayout">
 
-		<ul class="accountBoxTabLayout">
+		<!-- Onglets -->
+		<ul class="accountBoxTabDiv">
 
 			<li class="accountBoxTabItems">
+				<button id="infosTabButton" class="active:text-blue-500">
 
-				<button id="myAccountTabButton"></button>
+					Infos
 
-				My account
-
+				</button>
 			</li>
 
 			<li class="accountBoxTabItems">
+				<button id="friendsTabButton" class="active:text-blue-500">
 
-				<button id="friendsTabButton"></button>
+					Friends
 
-				Friends
-
+				</button>
 			</li>
 
 			<li class="accountBoxTabItems">
+				<button id="statsTabButton" class="active:text-blue-500">
 
-				<button id="statsTabButton"></button>
+					Stats
 
-				Stats
-
+				</button>
 			</li>
 
 			<li class="accountBoxTabItems">
+				<button id="historyTabButton" class="active:text-blue-500">
 
-				<button id="historyTabButton"></button>
-
-				History
-
+					History
+				
+				</button>
 			</li>
 
 		</ul>
 
-		<div id="myAccountTabLayout" class="myAccountTabLayout">
+		<!-- Onglet info compte -->
+		<div id="infosTab" class="infosLayout">
 
 			<!-- Profile infos -->
-			<div id="accountBoxInfo" class="accountBoxInfoLayout">
+			<div id="accountBoxInfo" class="accountInfos">
 
 				<a id="accountBoxEditProfile" href="#editProfile" role="button" aria-label="Edit profile" class="
 					absolute
@@ -79,7 +82,7 @@
 			</div>
 
 			<!-- Profile pic -->
-			<div id="accountBoxProfilePic" class="accountBoxPicLayout">
+			<div id="accountBoxProfilePic" class="accountPic">
 
 				<input id="profilePicInput" type="file" accept="image/*" class="hidden">
 
@@ -152,7 +155,7 @@
 			</div>
 
 			<!-- Stats -->
-			<div id="accountBoxStats" class="accountBoxStatsLayout">
+			<div id="accountBoxStats" class="accountStats">
 
 				<h2 class="
 					col-span-2 row-start-1 row-end-2
@@ -188,21 +191,24 @@
 
 		</div>
 
-		<div id="friendsTab" class="hidden">
+		<!-- Onglet Amis -->
+		<div id="friendsTab" class="friendsLayout hidden">
 
-
-
-		</div>
-
-		<div id="statsTab" class="hidden">
-
-
+			OUAI LES AMIS
 
 		</div>
 
-		<div id="historyTab" class="hidden">
+		<!-- Onglet Stats -->
+		<div id="statsTab" class="statsLayout hidden">
 
+			OUAI LES STATS
 
+		</div>
+
+		<!-- Onglet historique -->
+		<div id="historyTab" class="historyLayout hidden">
+
+			OUAI L'HISTORIQUE
 
 		</div>
 
