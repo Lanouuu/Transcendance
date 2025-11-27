@@ -1,126 +1,94 @@
-<div id="signupPage" 
-	class="page
-		flex flex-col 
-        items-center
-		justify-evenly">
+<div id="signupPage" class="page 
+	flex flex-col items-center justify-center 
+	min-h-screen 
+	px-4 py-10">
 
-	<div class="bg-dark bg-opacity-40
-            rounded-3xl
-            p-8
-			-mt-48
-            w-full lg:w-[22vw]
-            h-[55vh] lg:h-[60vh]
-            flex flex-col items-center
-            text-white font-geo text-xl
-            hover:outline hover:outline-accent hover:shadow-[0_-15px_50px_var(--color-accent)]
-            transition">
-		
-			
-		<form id="signup-form"
-			class="flex flex-col justify-between w-full h-full">
-			
-			<h2 class="text-1xl sm:text-2xl lg:text-4xl xl:text-6xl 
-				font-geo 
-				font-semibold 
-				text-light 
-				mb-4
-				text-center">
-				Signup
-			</h2>
-			
-			<div class="flex flex-col 
-                items-center justify-center gap-2">
+    <div class="bg-dark bg-opacity-40
+                rounded-3xl
+                p-6 sm:p-8
+        		w-full max-w-[500px]
+        		min-h-[60vh] sm:min-h-[55vh] lg:min-h-[60vh]
+                flex flex-col items-center justify-between
+                text-white font-geo text-xl
+                hover:outline hover:outline-accent 
+				hover:shadow-[0_-15px_50px_var(--color-accent)]
+                transition">
 
-				<label for="boxUserNameSignup"
-					class="text-2xl
-                        text-center">
-					Username
-				</label>
+        <form id="signup-form" class="flex flex-col justify-between w-full gap-8">
 
-				<input type="text" name="username" id="boxUserNameSignup" 
-					class="w-4/6
-                    	p-2
-                    	rounded-xl
-                    	bg-dark bg-opacity-60
-                    	shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    	focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                    	focus:outline-none
-                    	text-white font-geo"
-					required>
+            <h2 class="text-2xl sm:text-3xl lg:text-4xl xl:text-6xl 
+                        font-geo font-semibold text-light mb-4 text-center">
+                Signup
+            </h2>
 
-				<label for=" boxMailSignup"
-					class="text-2xl
-                        text-center">
-					Mail
-				</label>
+            <div class="flex flex-col items-center justify-center gap-2">
 
-				<input type="email" name="mail" id="boxMailSignup" 
-					class="w-4/6
-                    	p-2
-                    	rounded-xl
-                    	bg-dark bg-opacity-60
-                    	shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    	focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                    	focus:outline-none
-                    	text-white font-geo"
-					required>
+                <label for="boxUserNameSignup" class="text-xl sm:text-2xl text-center">
+                    Username
+                </label>
+                <input type="text" name="username" id="boxUserNameSignup" 
+                    class="w-full sm:w-4/6 p-2 rounded-xl
+                           bg-dark bg-opacity-60
+                           shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                           focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                           focus:outline-none text-white font-geo"
+                    required>
 
-				<label for="boxPassSignup"
-					class="text-2xl
-                        text-center">
-					Password
-				</label>
+                <label for="boxMailSignup" class="text-xl sm:text-2xl text-center mt-2">
+                    Mail
+                </label>
+                <input type="email" name="mail" id="boxMailSignup" 
+                    class="w-full sm:w-4/6 p-2 rounded-xl
+                           bg-dark bg-opacity-60
+                           shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                           focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                           focus:outline-none text-white font-geo"
+                    required>
 
-				<input type="password" name="password" id="boxPassSignup" 
-					class="w-4/6
-                    	p-2
-                    	rounded-xl
-                    	bg-dark bg-opacity-60
-                    	shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    	focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                    	focus:outline-none
-                    	text-white font-geo"
-					required>
+                <label for="boxPassSignup" class="text-xl sm:text-2xl text-center mt-2">
+                    Password
+                </label>
+                <input type="password" name="password" id="boxPassSignup" 
+                    class="w-full sm:w-4/6 p-2 rounded-xl
+                           bg-dark bg-opacity-60
+                           shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                           focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                           focus:outline-none text-white font-geo"
+                    required>
 
-				<label class="flex flex-col items-center gap-2 cursor-pointer">
+                <label class="flex flex-col items-center gap-2 cursor-pointer mt-2">
+                    <input type="checkbox" id="box2faSignup" class="peer hidden">
+                    <span class="text-base sm:text-lg text-center">Enable two-factor authentication</span>
+                    <div class="w-6 h-6 rounded-md
+                                bg-dark bg-opacity-60
+                                shadow-[inset_3px_3px_6px_rgba(0,0,0,0.6),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                                flex items-center justify-center
+                                text-transparent peer-checked:text-white
+                                peer-checked:bg-prim
+                                peer-checked:shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]
+                                transition">
+                        ✓
+                    </div>
+                </label>
 
-    				<input type="checkbox" id="box2faSignup" class="peer hidden">
+                <div class="message text-center h-1" id="signup-msg"></div>
+            </div>
 
-					<span class="text-1xl text-center">Enable two-factor authentication</span>
+            <button type="submit"
+                class="mx-auto mt-4
+                       py-3 w-full sm:w-4/6
+                       rounded-xl
+                       bg-prim bg-opacity-90 
+                       hover:bg-opacity-100
+                       text-white font-semibold font-geo
+                       shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                       hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+                       transition">
+                Confirm
+            </button>
 
-    				<div class="w-6 h-6 rounded-md
-    				            bg-dark bg-opacity-60
-    				            shadow-[inset_3px_3px_6px_rgba(0,0,0,0.6),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
-    				            flex items-center justify-center
-    				            text-transparent peer-checked:text-white
-    				            peer-checked:bg-prim
-    				            peer-checked:shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]
-    				            transition">
-    				    ✓
-    				</div>
+        </form>
 
-				</label>
-			
-				<div class="message text-center h-1" id="signup-msg"></div>
-						
-			</div>
-
-			<button type="submit"
-				class="mx-auto
-					py-3 
-					w-4/6
-					rounded-xl
-					bg-prim bg-opacity-90 
-					hover:bg-opacity-100
-					text-white font-semibold font-geo
-					shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
-					hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
-					transition">
-				Confirm
-			</button>
-
-		</form>
-
-	</div>
+    </div>
 
 </div>

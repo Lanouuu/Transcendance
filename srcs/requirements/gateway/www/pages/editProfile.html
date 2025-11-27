@@ -1,146 +1,123 @@
 <div id="editProfilePage" 
-    class="page
-        flex flex-row 
-        items-center 
-        justify-evenly">
+     class="page 
+        flex flex-col 
+        lg:flex-row items-center justify-evenly 
+        gap-8 
+        px-4 py-8">
 
-    <!-- #region username -->
+    <!-- Username Box -->
 
-    <div id="editUsernameBox"
-        class="bg-dark bg-opacity-40
-            rounded-3xl
-            p-8
-            -mt-48
-            w-full lg:w-[22vw]
-            h-auto lg:h-[55vh]
-            flex flex-col items-center
-            text-white font-geo text-xl
-            hover:outline hover:outline-accent hover:shadow-[0_-15px_50px_var(--color-accent)]
-            transition">
-            
-            
-        <form id="editUsernameForm" 
-            class="flex flex-col justify-between w-full h-full">
-            
-            <h2 class="text-1xl sm:text-2xl lg:text-3xl xl:text-4xl 
-                font-geo 
-                font-semibold 
-                text-light 
-                mb-6 
-                text-center">
+    <div class="bg-dark bg-opacity-40 
+        rounded-3xl 
+        p-6 
+        w-full lg:w-[22vw] h-[55vh] 
+        flex flex-col 
+        text-white font-geo text-xl">
+
+        <form class="flex flex-col h-full justify-between items-center">
+
+            <h2 class="text-2xl lg:text-3xl xl:text-4xl 
+                    font-semibold text-light text-center 
+                    mb-4 w-full">
                 Username
             </h2>
 
-            <div class="flex flex-col 
-                items-center justify-center gap-2">
+            <div class="flex flex-col flex-1 justify-center items-center 
+                gap-4 
+                w-full">
 
-                <label for="editUsernameInput" 
-                    class="text-2xl
-                        text-center">
+                <label for="editUsernameInput" class="text-2xl">
                     New Username
                 </label>
 
-                <input type="text" name="Username" id="editUsernameInput" 
-                       class="w-4/6
-                            p-2
-                            rounded-xl
-                            bg-dark bg-opacity-60
-                            shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                            focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                            focus:outline-none
-                            text-white font-geo"
-                       required>
+                <input type="text" id="editUsernameInput" 
+                    class="w-4/6 p-2
+                        shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                        focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                        rounded-xl 
+                        bg-dark bg-opacity-60 focus:outline-none 
+                        text-white font-geo">
 
                 <div class="message text-center h-1" id="editName-msg"></div>
 
             </div>
 
-            <!-- Bouton -->
-            <button type="submit" id="editUsernameSubmit"
-                    class="mx-auto
-                    py-3 
-                    w-4/6
-                    rounded-xl
-                    bg-prim bg-opacity-90 
-                    hover:bg-opacity-100
+            <button type="submit" 
+                class="mx-auto 
+                    py-3 w-4/6 rounded-xl 
+                    bg-prim bg-opacity-90 hover:bg-opacity-100 
                     text-white font-semibold font-geo
                     shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
-                    transition">
+                    hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
                 Confirm
             </button>
-            
+
         </form>
 
     </div>
-    
-    <!-- #endregion username -->
 
-    <!-- #region mail -->
+    <!-- Mail Box -->
 
-    <div id="editMailBox"
-        class="bg-dark bg-opacity-40
-            rounded-3xl
-            p-8
-            -mt-48
-            w-full lg:w-[22vw]
-            h-auto lg:h-[55vh]
-            flex flex-col items-center
-            text-white font-geo text-xl
-            hover:outline hover:outline-accent hover:shadow-[0_-15px_50px_var(--color-accent)]
-            transition">
+    <div class="bg-dark bg-opacity-40 
+        rounded-3xl 
+        p-6 
+        w-full lg:w-[22vw] h-[55vh] 
+        flex flex-col 
+        text-white font-geo text-xl">
 
-        <form id="editMailForm" 
-            class="flex flex-col justify-between w-full h-full">
+        <form class="flex flex-col h-full justify-between items-center">
 
-            <h2 class="text-4xl font-geo font-semibold text-light mb-6 text-center">
+            <h2 class="text-2xl lg:text-3xl xl:text-4xl font-semibold text-light text-center 
+                    mb-4 
+                    w-full">
                 Mail
             </h2>
 
-            <div class="flex flex-col 
-                items-center gap-2">
+            <div class="flex flex-col flex-1 justify-center items-center 
+                gap-4 
+                w-full">
 
-                <label for="editMailInput" class="text-2xl">New mail</label>
-                <input type="text" name="Mail" id="editMailInput" 
-                    class="w-4/6
-                        p-2 
-                        rounded-xl 
-                        bg-dark bg-opacity-60
-                        shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                        focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                        focus:outline-none
-                        text-white 
-                        font-geo"
-                    required>
+                <label for="editMailInput" class="text-2xl">
+                    New Mail
+                </label>
 
-                <label for="confirmMailInput" class="text-2xl mt-4">Confirm new mail</label>
-                <input type="text" name="confirmMail" id="confirmMailInput" 
-                    class="w-4/6
+                <input type="email" id="editMailInput" 
+                    class="w-4/6 
                         p-2 
                         rounded-xl
-                         bg-dark bg-opacity-60
                         shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
                         focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                        focus:outline-none 
-                        text-white font-geo"
-                    required>
-                <div class="message h-1" id="editMail-msg"></div>
+                        bg-dark bg-opacity-60 
+                        focus:outline-none text-white font-geo">
+
+                <label for="confirmMailInput" 
+                    class="text-2xl 
+                        mt-4">
+                    Confirm Mail
+                </label>
+
+                <input type="email" id="confirmMailInput" 
+                    class="w-4/6 
+                        p-2 
+                        rounded-xl
+                        shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                        focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                        bg-dark bg-opacity-60 focus:outline-none 
+                        text-white font-geo">
+
+                <div class="message text-center h-1" id="editMail-msg"></div>
 
             </div>
 
-            <button 
-                class="mx-auto
+            <button type="submit" 
+                class="mx-auto 
                     py-3 
-                    w-4/6
-                    rounded-xl
-                    bg-prim bg-opacity-90 
-                    hover:bg-opacity-100
+                    w-4/6 
+                    rounded-xl 
+                    bg-prim bg-opacity-90 hover:bg-opacity-100 
                     text-white font-semibold font-geo
                     shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
-                    transition" 
-                type="submit" 
-                id="editMailSubmit">
+                    hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
                 Confirm
             </button>
 
@@ -148,94 +125,88 @@
 
     </div>
 
-    <!-- #endregion mail -->
+    <!-- Password Box -->
 
-    <!-- #region password -->
+    <div class="bg-dark bg-opacity-40 
+        rounded-3xl 
+        p-6 
+        w-full 
+        lg:w-[22vw] h-[55vh] 
+        flex flex-col 
+        text-white font-geo text-xl">
 
-    <div id="editPasswordBox"
-        class="bg-dark bg-opacity-40
-            rounded-3xl
-            p-8
-            -mt-48
-            w-[22vw] h-[55vh]
-            flex flex-col items-center
-            text-white font-geo text-xl
-            hover:outline hover:outline-accent hover:shadow-[0_-15px_50px_var(--color-accent)]
-            transition">
+        <form class="flex flex-col 
+            h-full 
+            justify-between items-center">
 
-        <form id="editPasswordForm" 
-            class="flex flex-col justify-between w-full h-full">
-
-            <h2 class="text-4xl font-geo font-semibold text-light mb-6 text-center">
+            <h2 class="text-2xl 
+                    lg:text-3xl xl:text-4xl font-semibold text-light text-center 
+                    mb-4 
+                    w-full">
                 Password
             </h2>
 
-            <div class="flex flex-col 
-                items-center gap-2">
+            <div class="flex flex-col flex-1 justify-center items-center 
+                gap-4 
+                w-full">
 
-                <label for="currentPasswordInput" class="text-2xl">Current Password</label>
-                <input type="password" name="currentPassword" id="currentPasswordInput" 
-                    class="w-4/6
-                        p-2 
-                        rounded-xl
-                        bg-dark bg-opacity-60
-                        shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                        focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                        focus:outline-none 
-                        text-white 
-                        font-geo"
-                    required>
+                <label for="currentPasswordInput" class="text-2xl">
+                    Current Password
+                </label>
 
-                <label for="editPasswordInput" class="text-2xl">New Password</label>
-                <input type="password" name="newPassword" id="editPasswordInput" 
-                    class="w-4/6
-                        p-2 
-                        rounded-xl 
-                        bg-dark bg-opacity-60
-                        shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                        focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                        focus:outline-none 
-                        text-white
-                        font-geo"
-                    required>
-
-                <label for="confirmPasswordInput" class="text-2xl">Confirm new password</label>
-                <input type="password" name="confirmPassword" id="confirmPasswordInput" 
+                <input type="password" id="currentPasswordInput" 
                     class="w-4/6 
                         p-2 
-                        rounded-xl 
-                        bg-dark bg-opacity-60
+                        rounded-xl
                         shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
                         focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                        focus:outline-none
-                        text-white
-                        font-geo"
-                    required>
+                        bg-dark bg-opacity-60 focus:outline-none 
+                        text-white font-geo">
 
-                <div class="message h-1" id="editPassword-msg"></div>
+                <label for="editPasswordInput" class="text-2xl">
+                    New Password
+                </label>
+
+                <input type="password" id="editPasswordInput" 
+                    class="w-4/6 
+                        p-2 
+                        rounded-xl
+                        shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                        focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                        bg-dark bg-opacity-60 focus:outline-none
+                        text-white font-geo">
+
+                <label for="confirmPasswordInput" class="text-2xl">
+                    Confirm Password
+                </label>
+
+                <input type="password" id="confirmPasswordInput" 
+                    class="w-4/6 
+                        p-2 
+                        rounded-xl
+                        shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                        focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                        bg-dark bg-opacity-60 focus:outline-none
+                        text-white font-geo">
+
+                <div class="message text-center h-1" id="editPassword-msg"></div>
 
             </div>
 
-            <button 
-                class="mx-auto
+            <button type="submit" 
+                class="mx-auto 
                     py-3 
-                    w-4/6
-                    rounded-xl
-                    bg-prim bg-opacity-90 
-                    hover:bg-opacity-100
-                    text-white font-semibold font-geo
+                    w-4/6 
+                    rounded-xl 
+                    bg-prim bg-opacity-90 hover:bg-opacity-100 
+                    text-white font-semibold font-geo 
                     shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
-                    transition" 
-                type="submit" 
-                id="editPasswordSubmit">
+                    hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
                 Confirm
             </button>
 
         </form>
 
     </div>
-
-    <!-- #endregion password -->
 
 </div>
