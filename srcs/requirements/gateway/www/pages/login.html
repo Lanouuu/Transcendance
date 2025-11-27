@@ -1,123 +1,103 @@
-<div id="loginPage" 
-	class="page
-		flex flex-col 
-        items-center
-		justify-center">
+<div id="loginPage"
+    class="page min-h-screen w-full flex flex-col items-center justify-center px-4 py-10">
 
     <div class="bg-dark bg-opacity-40
-            rounded-3xl
-            p-8
-			-mt-48
-            w-full lg:w-[22vw]
-            h-[55vh] lg:h-[60vh]
-            flex flex-col items-center justify-between
-            text-white font-geo text-xl
-            hover:outline hover:outline-accent hover:shadow-[0_-15px_50px_var(--color-accent)]
-            transition">
-			
-		<h2 class="text-1xl sm:text-2xl lg:text-4xl xl:text-6xl 
-			font-geo 
-			font-semibold 
-			text-light 
-			mb-6
-			text-center">
-			Login
-		</h2>
+        rounded-3xl
+        p-6 sm:p-8
+        w-full max-w-[500px]
+        min-h-[60vh] sm:min-h-[55vh] lg:min-h-[60vh]
+        flex flex-col items-center justify-between
+        text-white font-geo text-base sm:text-lg lg:text-xl
+        hover:outline hover:outline-accent
+        hover:shadow-[0_-15px_50px_var(--color-accent)]
+        transition gap-8">
 
-		<form id="login-form"
-			class="flex flex-col w-full gap-8">
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl
+            font-geo font-semibold text-light mb-6 text-center">
+            Login
+        </h2>
 
-			<div class="flex flex-col 
-                items-center gap-2">
+        <form id="login-form" class="flex flex-col w-full gap-8">
 
-				<label for="boxMailLogin"
-					class="text-2xl
-                        text-center">
-					Mail
-				</label>
+            <div class="flex flex-col items-center gap-4">
 
-				<input type="text" name="username" id="boxMailLogin" 
-					class="w-4/6
-                    	p-2
-                    	rounded-xl
-                    	bg-dark bg-opacity-60
-                    	shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    	focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                    	focus:outline-none
-                    	text-white font-geo"
-					required>
+                <label for="boxMailLogin"
+                    class="text-xl sm:text-2xl text-center">
+                    Mail
+                </label>
 
-				<label for="boxPassLogin"
-					class="text-2xl
-                        text-center">
-					Password
-				</label>
+                <input type="text" name="username" id="boxMailLogin"
+                    class="w-full sm:w-4/6
+                    p-3 sm:p-2
+                    rounded-xl
+                    bg-dark bg-opacity-60
+                    shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                    focus:outline-none text-white font-geo"
+                    required>
 
-				<input type="password" name="password" id="boxPassLogin" 
-					class="w-4/6
-                    	p-2
-                    	rounded-xl
-                    	bg-dark bg-opacity-60
-                    	shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    	focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                    	focus:outline-none
-                    	text-white font-geo"
-					required>
+                <label for="boxPassLogin"
+                    class="text-xl sm:text-2xl text-center">
+                    Password
+                </label>
 
-				<label for="box2faLogin"
-				class="text-2xl
-                	text-center">
-				Code 2FA (if activated)
-				</label>
+                <input type="password" name="password" id="boxPassLogin"
+                    class="w-full sm:w-4/6
+                    p-3 sm:p-2
+                    rounded-xl
+                    bg-dark bg-opacity-60
+                    shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                    focus:outline-none text-white font-geo"
+                    required>
 
-				<input type="text" id="box2faLogin" name="code2FA" placeholder="123456"
-					class="w-4/6
-                    	p-2
-                    	rounded-xl
-                    	bg-dark bg-opacity-60
-                    	shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    	focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
-                    	focus:outline-none
-                    	text-white font-geo">
+                <label for="box2faLogin"
+                    class="text-xl sm:text-2xl text-center">
+                    Code 2FA (if activated)
+                </label>
 
-					<div class="message text-center h-1" id="login-msg"></div>
+                <input type="text" id="box2faLogin" name="code2FA"
+                    placeholder="123456"
+                    class="w-full sm:w-4/6
+                    p-3 sm:p-2
+                    rounded-xl
+                    bg-dark bg-opacity-60
+                    shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                    focus:outline-none text-white font-geo">
 
-			</div>
+                <div class="message text-center h-4 sm:h-1" id="login-msg"></div>
+            </div>
 
-				<button type="submit" id="editUsernameSubmit"
-						class="mx-auto
-						py-3 
-						w-4/6
-						rounded-xl
-						bg-prim bg-opacity-90 
-						hover:bg-opacity-100
-						text-white font-semibold font-geo
-						shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
-						hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
-						transition">
-					Confirm
-				</button>
-
-		</form>
-
-		<button id="42ConnectionButton"
-			class="mx-auto
-                py-3 
-                w-4/6
-				flex flex-row
-				items-center
-				justify-evenly
+            <button type="submit" id="editUsernameSubmit"
+                class="mx-auto py-3 w-full sm:w-4/6
                 rounded-xl
-                bg-prim bg-opacity-90 
-                hover:bg-opacity-100
+                bg-prim bg-opacity-90 hover:bg-opacity-100
                 text-white font-semibold font-geo
                 shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
                 hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
                 transition">
-			Connection with
-			<img src="../img/logos/42 Paris_id78fsL3cM_1.svg">
-		</button>
-		
-	</div>
+                Confirm
+            </button>
+
+        </form>
+
+        <button id="42ConnectionButton"
+            class="mx-auto py-3 w-full sm:w-4/6
+            flex flex-row items-center justify-evenly
+            rounded-xl
+            bg-prim bg-opacity-90 hover:bg-opacity-100
+            text-white font-semibold font-geo
+            shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+            hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+            transition">
+
+            <span class="text-lg sm:text-xl">Connection with</span>
+
+            <img src="../img/logos/42 Paris_id78fsL3cM_1.svg"
+                class="w-10 sm:w-12 lg:w-14 h-auto">
+        </button>
+
+    </div>
 
 </div>
