@@ -156,7 +156,7 @@ class Router {
 
 				const	nextBackgroundUrl: string = PAGE_BACKGROUNDS[page] || PAGE_BACKGROUNDS['home'];
 				const	transitionDirection: string = this.getTransitionDirection(page);
-				await this.animateBgTransition(nextBackgroundUrl, transitionDirection);
+				// await this.animateBgTransition(nextBackgroundUrl, transitionDirection);
 			
 				// Fetch the file corresponding to the attribute page
 				// Then gets its content as a text in the variabe content

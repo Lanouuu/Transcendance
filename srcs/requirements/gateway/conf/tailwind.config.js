@@ -1,11 +1,20 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
 	content: [
-		"/etc/nginx/html/pages/**/*.html",
 		"/etc/nginx/html/scripts/**/*.{js,ts}",
 		"/etc/nginx/html/css/**/*.css",
-		"/etc/nginx/html/index.html"
+		"/etc/nginx/html/pages/**/*.html",
+		"/etc/nginx/html/index.html",
+		"./pages/**/*.html",
+        "./scripts/**/*.{js,ts}",
+        "./css/**/*.css",
+        "./index.html",
 	],
+
+	safelist: [
+		'hidden'
+	],
+
 	theme: {
 		extend: {
 			colors: {
@@ -17,6 +26,7 @@ module.exports = {
 				'other': '#dd5b5b',
 			}
 		},
+
 
 		fontFamily: {
 			'geo': ['"Geo"', 'sans-serif'],
