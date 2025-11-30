@@ -10,32 +10,32 @@
 		<!-- Onglets -->
 		<ul class="accountBoxTabDiv">
 
-			<li class="accountBoxTabItems">
-				<button id="infosTabButton" class="active:text-blue-500">
+			<li id="infosTabLi" class="accountBoxTabItems accountBoxActiveTab rounded-tr-3xl ">
+				<button id="infosTabButton" class="accountBoxTabButtons">
 
 					Infos
 
 				</button>
 			</li>
 
-			<li class="accountBoxTabItems">
-				<button id="friendsTabButton" class="active:text-blue-500">
+			<li id="friendsTabLi" class="accountBoxTabItems accountBoxInactiveTab">
+				<button id="friendsTabButton" class="accountBoxTabButtons">
 
 					Friends
 
 				</button>
 			</li>
 
-			<li class="accountBoxTabItems">
-				<button id="statsTabButton" class="active:text-blue-500">
+			<li id="statsTabLi" class="accountBoxTabItems accountBoxInactiveTab">
+				<button id="statsTabButton" class="accountBoxTabButtons">
 
 					Stats
 
 				</button>
 			</li>
 
-			<li class="accountBoxTabItems">
-				<button id="historyTabButton" class="active:text-blue-500">
+			<li id="historyTabLi" class="accountBoxTabItems accountBoxInactiveTab rounded-br-3xl">
+				<button id="historyTabButton" class="accountBoxTabButtons">
 
 					History
 				
@@ -194,7 +194,25 @@
 		<!-- Onglet Amis -->
 		<div id="friendsTab" class="friendsLayout hidden">
 
-			OUAI LES AMIS
+			<!-- Liste des amis (pseudo, (avatar ?), status de connection, bouton defi, bouton suppression, bouton aller au profile) -->
+			<div id="friendsList" class="friendsList">
+				OUAI LA LISTE D'AMIS
+			</div>
+
+			<!-- Listes des invitations a accepter (pseudo, bouton accepter, bouton refuser) -->
+			<div id="invitationList">
+				OUAI LA LISTE D'INVITATIONS
+			</div>
+
+			<!-- Bouton ajouter un ami / bloquer (input pseudo, bouton invitation, bouton bloquer) -->
+			<div id="addFriend">
+				OUAI AJOUTER UN AMI
+			</div>
+
+			<div id="blockuser">
+				OUAI BLOQUER UN USER
+			</div>
+
 
 		</div>
 

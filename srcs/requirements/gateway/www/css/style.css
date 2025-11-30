@@ -109,18 +109,29 @@ body.loggedIn #signupNavLink {
 
 	flex flex-col items-end justify-around
 
-	p-2
-
-	h-full
+	h-full w-full
 
 	rounded-r-3xl
-
-	bg-dark bg-opacity-50
 	;
 }
 
 .accountBoxTabItems {
-	@apply text-white text-lg
+	@apply flex items-center justify-center
+	h-full w-full
+	text-white text-lg
+	bg-dark bg-opacity-60
+	transition-all duration-500 ease-in-out
+	hover:outline hover:-outline-offset-[3px]
+	;
+}
+
+.accountBoxTabItems.active {
+	@apply bg-opacity-80 
+	;
+}
+.accountBoxTabButtons {
+	@apply h-full w-full
+
 	;
 }
 
@@ -173,11 +184,22 @@ body.loggedIn #signupNavLink {
 .friendsLayout {
 	@apply col-start-1 col-end-2 row-start-1 row-end-2
 	
-	flex flex-col items-center justify-center
+	rounded-l-3xl
 
-	text-white text-6xl
+	text-white text-xl
 
 	bg-dark bg-opacity-80
+	;
+
+	display: grid;
+	grid-template-columns: 6fr 1fr;
+	grid-template-rows: 1fr 1fr 1fr 1fr;
+}
+
+.friendsList {
+	@apply col-start-1 col-end-2 row-span-4
+	flex flex-col items-center justify-center
+	
 	;
 }
 
@@ -187,6 +209,8 @@ body.loggedIn #signupNavLink {
 
 .statsLayout {
 	@apply col-start-1 col-end-2 row-start-1 row-end-2
+
+	rounded-l-3xl
 
 	flex flex-col items-center justify-center
 
@@ -202,6 +226,8 @@ body.loggedIn #signupNavLink {
 
 .historyLayout {
 	@apply col-start-1 col-end-2 row-start-1 row-end-2
+
+	rounded-l-3xl
 
 	flex flex-col items-center justify-center
 
