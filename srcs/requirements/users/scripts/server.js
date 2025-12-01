@@ -148,12 +148,12 @@ export function runServer() {
         const stmt = usersDB.prepare("SELECT avatar_path FROM users WHERE id = ?");
         const user = stmt.get(id);
         if (!user || !user.avatar_path) {
-          return reply.status(400).send({ error: "Avatar not found" });
+          return reply.status(404).send({ error: "Avatar not found" });
         }
 
         const filePath = path.join(process.cwd(), "/data/avatars", user.avatar_path);
         if (!fs.existsSync(filePath)) {
-          return reply.status(400).send({ error: "Avatar file not found on server" });
+          return reply.status(404).send({ error: "Avatar file not found on server" });
         }
 
         return reply.type(`image/${path.extname(user.avatar_path).slice(1)}`).send(fs.createReadStream(filePath));
@@ -185,11 +185,11 @@ export function runServer() {
     fastify.post("/heartbeat", async (req, reply) => {
       const userID = req.headers["x-user-id"];
       if (!userID) { 
-        return reply.status(400).send({ error: "Missing user" });
+        return reply.status(401).send({ error: "Missing user" });
       }
 
       await redis.set(`user:${userID}:online`, "1", "EX", 30);
-      return reply.send({ success: true });
+      return reply.status(200).send({ success: true });
     });
 
     fastify.get("/get-user/:id", async (req, reply) => {
@@ -208,7 +208,7 @@ export function runServer() {
         }
         const user = stmt.get(id);
         if (!user) {
-          return reply.status(400).send({ error: "User not found" });
+          return reply.status(404).send({ error: "User not found" });
         }
 
         const sanitizedUser = {
@@ -234,7 +234,7 @@ export function runServer() {
       }
       const reqID = req.headers["x-user-id"];
       if (reqID !== id) {
-        return reply.status(400).send({ error: "Can only change your name" });
+        return reply.status(403).send({ error: "Can only change your name" });
       }
 
       try {
@@ -252,7 +252,7 @@ export function runServer() {
         const changeStmt = usersDB.prepare("UPDATE users SET name = ? WHERE id = ?");
         changeStmt.run(newName, id);
 
-        return reply.status(201).send({ success: true, message: "Name updated" });
+        return reply.status(200).send({ success: true, message: "Name updated" });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -266,7 +266,7 @@ export function runServer() {
       }
       const reqID = req.headers["x-user-id"];
       if (reqID !== id) {
-        return reply.status(400).send({ error: "Can only change your mail" });
+        return reply.status(403).send({ error: "Can only change your mail" });
       }
 
       try {
@@ -287,7 +287,7 @@ export function runServer() {
         }
 
         if (checkData.auth_type === "oauth42") {
-          return reply.status(400).send({ error: "Mail change not allowed for 42 accounts" });
+          return reply.status(403).send({ error: "Mail change not allowed for 42 accounts" });
         }
         if (checkData.mail === newMail) {
           return reply.status(400).send({ error: "Mail already in use" });
@@ -305,7 +305,7 @@ export function runServer() {
         const changeStmt = usersDB.prepare("UPDATE users SET mail = ? WHERE id = ?");
         changeStmt.run(newMail, id);
 
-        return reply.status(201).send({ success: true, message: "Mail updated" });
+        return reply.status(200).send({ success: true, message: "Mail updated" });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -319,10 +319,10 @@ export function runServer() {
       }
       const reqID = req.headers["x-user-id"];
       if (!reqID) {
-        return reply.status(400).send({ error: "Id missing in header" });
+        return reply.status(401).send({ error: "Id missing in header" });
       }
       if (reqID !== id) {
-        return reply.status(400).send({ error: "Id mismatch" });
+        return reply.status(403).send({ error: "Id mismatch" });
       }
 
       const user_auth_type = usersDB.prepare("SELECT auth_type, password FROM users WHERE id = ?");
@@ -367,7 +367,7 @@ export function runServer() {
         const changeStmt = usersDB.prepare("UPDATE users SET password = ? WHERE id = ?");
         changeStmt.run(hashedPassword, id);
 
-        return reply.status(201).send({ success: true, message: "Password updated" });
+        return reply.status(200).send({ success: true, message: "Password updated" });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -435,6 +435,37 @@ export function runServer() {
         insertStmt.run(userID, friendID);
 
         return reply.status(201).send({ success: true, message: "Invitation send to friend" });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    fastify.get("/get-invits/:id", async (req, reply) => {
+      try {
+        const userID = req.params.id;
+        if (!userID) {
+          return reply.status(400).send({ error: "ID required" });
+        }
+        const reqID = req.headers["x-user-id"];
+        if (userID !== reqID) {
+          return reply.status(403).send({ error: "Can only view your invitations" });
+        }
+
+        const listStmt = usersDB.prepare(`
+          SELECT
+            f.user_id AS sender_id,
+            u.name AS sender_name,
+            f.created_at AS sent_at,
+            f.id AS invite_id
+          FROM friends f
+          JOIN users u ON f.user_id = u.id
+          WHERE f.friend_id = ? AND f.status = 'pending'
+          ORDER BY f.created_at DESC;
+        `);
+        const pendingList = listStmt.all(userID);
+        
+        return reply.status(200).send({ pendingList });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -579,7 +610,7 @@ export function runServer() {
         `);
         const friendsList = listStmt.all(userID, userID);
 
-        return reply.status(201).send({ friendsList });
+        return reply.status(200).send({ friendsList });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -606,7 +637,7 @@ export function runServer() {
         );
         const blockedUsers = blockedStmt.all(userID);
 
-        reply.send({ blockedUsers });
+        reply.status(200).send({ blockedUsers });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -646,10 +677,10 @@ export function runServer() {
         }
       const reqID  = req.headers["x-user-id"];
       if (!reqID) {
-          return reply.status(400).send({ error: "reqID required" });
+          return reply.status(401).send({ error: "reqID required" });
         }
       if (userID !== reqID) {
-        return reply.status(400).send({ error: "Can only view your own matches list" });
+        return reply.status(403).send({ error: "Can only view your own matches list" });
       }
 
       try {
@@ -660,7 +691,7 @@ export function runServer() {
         `); 
         const macthList = getStmt.all(userID, userID);
       
-        return reply.status(201).send({ macthList });
+        return reply.status(200).send({ macthList });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
