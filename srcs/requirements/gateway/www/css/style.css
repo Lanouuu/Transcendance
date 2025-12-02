@@ -184,6 +184,8 @@ body.loggedIn #signupNavLink {
 .friendsLayout {
 	@apply col-start-1 col-end-2 row-start-1 row-end-2
 	
+	h-full w-full
+
 	rounded-l-3xl
 
 	text-white text-xl
@@ -192,14 +194,38 @@ body.loggedIn #signupNavLink {
 	;
 
 	display: grid;
-	grid-template-columns: 6fr 1fr;
+	grid-template-columns: 3fr 1fr;
 	grid-template-rows: 1fr 1fr 1fr 1fr;
 }
 
-.friendsList {
+.friendsListArea {
 	@apply col-start-1 col-end-2 row-span-4
-	flex flex-col items-center justify-center
+
+	flex flex-col items-center
 	
+	;
+}
+
+.friendsInviteListArea {
+	@apply col-start-2 col-end-3 row-start-1 row-end-3
+	m-2
+	outline outline-sec
+	;
+}
+
+.friendsInviteArea {
+	@apply col-start-2 col-end-3 row-start-3 row-end-4
+	flex flex-col items-center justify-evenly
+	m-2
+	outline outline-sec
+	;
+}
+
+.friendsBlockArea {
+	@apply col-start-2 col-end-3 row-start-4 row-end-5
+	flex flex-col items-center justify-evenly
+	m-2
+	outline outline-sec
 	;
 }
 
