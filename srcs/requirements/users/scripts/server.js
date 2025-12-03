@@ -42,12 +42,12 @@ export function runServer() {
     //#region create_user
 
     fastify.post("/create_user", async (req, reply) => {
-      const { name, mail, password, enable2FA, secret2FA, auth_type } = req.body;
-
-      if (!name || !mail)
-        return reply.code(400).send({ error: "Missing name or mail" });
-
       try {
+        const { name, mail, password, enable2FA, secret2FA, auth_type } = req.body;
+
+        if (!name || !mail)
+          return reply.code(400).send({ error: "Missing name or mail" });
+
         const stmt = usersDB.prepare(`
           INSERT INTO users (name, mail, password, enable2FA, secret2FA, auth_type)
           VALUES (?, ?, ?, ?, ?, ?)
@@ -139,12 +139,12 @@ export function runServer() {
     });
 
     fastify.get("/get-avatar/:id", async (req, reply) => {
-      const { id } = req.params;
-      if (!id) {
-        return reply.status(400).send({ error: "ID required" });
-      }
-
       try {
+        const { id } = req.params;
+        if (!id) {
+          return reply.status(400).send({ error: "ID required" });
+        }
+
         const stmt = usersDB.prepare("SELECT avatar_path FROM users WHERE id = ?");
         const user = stmt.get(id);
         if (!user || !user.avatar_path) {
@@ -193,13 +193,13 @@ export function runServer() {
     });
 
     fastify.get("/get-user/:id", async (req, reply) => {
-      const { id } = req.params;
-      if (!id) {
-        return reply.status(400).send({ error: "ID required" });
-      }
-      const reqID = req.headers["x-user-id"];
-
       try {
+        const { id } = req.params;
+        if (!id) {
+          return reply.status(400).send({ error: "ID required" });
+        }
+        const reqID = req.headers["x-user-id"];
+
         let stmt = null;
         if (reqID !== id) {
           stmt = usersDB.prepare("SELECT id, name, wins, losses FROM users WHERE id = ?");
@@ -228,16 +228,16 @@ export function runServer() {
     });
 
     fastify.post("/update-name/:id", async (req, reply) => {
-      const { id } = req.params;
-      if (!id) {
-        return reply.status(400).send({ error: "ID required" });
-      }
-      const reqID = req.headers["x-user-id"];
-      if (reqID !== id) {
-        return reply.status(403).send({ error: "Can only change your name" });
-      }
-
       try {
+        const { id } = req.params;
+        if (!id) {
+          return reply.status(400).send({ error: "ID required" });
+        }
+        const reqID = req.headers["x-user-id"];
+        if (reqID !== id) {
+          return reply.status(403).send({ error: "Can only change your name" });
+        }
+
         const { newName } = req.body;
         if (!newName) {
           return reply.status(400).send({ error: "New name required" });
@@ -260,16 +260,15 @@ export function runServer() {
     });
 
     fastify.post("/update-mail/:id", async (req, reply) => {
-      const { id } = req.params;
-      if (!id) {
-        return reply.status(400).send({ error: "ID required" });
-      }
-      const reqID = req.headers["x-user-id"];
-      if (reqID !== id) {
-        return reply.status(403).send({ error: "Can only change your mail" });
-      }
-
       try {
+        const { id } = req.params;
+        if (!id) {
+          return reply.status(400).send({ error: "ID required" });
+        }
+        const reqID = req.headers["x-user-id"];
+        if (reqID !== id) {
+          return reply.status(403).send({ error: "Can only change your mail" });
+        }
 
         const checkStmt = usersDB.prepare("SELECT * FROM users WHERE id = ?")
         const checkData = checkStmt.get(id);
@@ -313,28 +312,28 @@ export function runServer() {
     });
     
     fastify.post("/update-password/:id", async (req, reply) => {
-      const { id } = req.params;
-      if (!id) {
-        return reply.status(400).send({ error: "ID required" });
-      }
-      const reqID = req.headers["x-user-id"];
-      if (!reqID) {
-        return reply.status(401).send({ error: "Id missing in header" });
-      }
-      if (reqID !== id) {
-        return reply.status(403).send({ error: "Id mismatch" });
-      }
-
-      const user_auth_type = usersDB.prepare("SELECT auth_type, password FROM users WHERE id = ?");
-      const user = user_auth_type.get(id);
-      if (!user) {
-        return reply.status(404).send({ error: "User not found" });
-      }
-      if(user.auth_type === "oauth42") {
-        return reply.status(403).send({ error: "Password change not allowed for 42 accounts" });
-      }
-
       try {
+        const { id } = req.params;
+        if (!id) {
+          return reply.status(400).send({ error: "ID required" });
+        }
+        const reqID = req.headers["x-user-id"];
+        if (!reqID) {
+          return reply.status(401).send({ error: "Id missing in header" });
+        }
+        if (reqID !== id) {
+          return reply.status(403).send({ error: "Id mismatch" });
+        }
+
+        const user_auth_type = usersDB.prepare("SELECT auth_type, password FROM users WHERE id = ?");
+        const user = user_auth_type.get(id);
+        if (!user) {
+          return reply.status(404).send({ error: "User not found" });
+        }
+        if(user.auth_type === "oauth42") {
+          return reply.status(403).send({ error: "Password change not allowed for 42 accounts" });
+        }
+
         const { currentPassword } = req.body;
         if (!currentPassword) {
           return reply.status(400).send({ error: "current password required" });
@@ -490,6 +489,34 @@ export function runServer() {
         acceptStmt.run(friendID, userID);
 
         reply.send({ success: true, message: "Invitation accepted" });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    fastify.post("/decline-invit", async (req, reply) => {
+      try {
+        const userID = req.headers["x-user-id"];
+        const { friendID } = req.body;
+        if (!userID || !friendID) {
+          return reply.status(400).send({ error: "Missing parameters" });
+        }
+
+        const pendingStmt = usersDB.prepare(`
+          SELECT * FROM friends 
+          WHERE user_id = ? AND friend_id = ? 
+          AND status = 'pending'
+        `);
+        const isPending = pendingStmt.get(friendID, userID);
+        if (!isPending) {
+          return reply.status(404).send({ error: "No pending invitation found" });
+        }
+
+        const delStmt = usersDB.prepare("DELETE FROM friends WHERE id = ?");
+        delStmt.run(isPending.id);
+
+        return reply.send({ success: true, message: "Invitation declined" });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });
@@ -653,9 +680,9 @@ export function runServer() {
     //#region matches_management
 
     fastify.post("/save-match", async (req, reply) => {
-      const { player1ID, player2ID, winnerID, scoreP1, scoreP2, matchType } = req.body;
-
       try {
+        const { player1ID, player2ID, winnerID, scoreP1, scoreP2, matchType } = req.body;
+
         const saveStmt = usersDB.prepare(`
           INSERT INTO matches 
             (player1_id, player2_id, winner_id, score_p1, score_p2, match_type)
@@ -671,19 +698,19 @@ export function runServer() {
     });
 
     fastify.get("/get-matches/:id", async (req, reply) => {
-      const userID = req.params.id;
-      if (!userID) {
-          return reply.status(400).send({ error: "userID required" });
-        }
-      const reqID  = req.headers["x-user-id"];
-      if (!reqID) {
-          return reply.status(401).send({ error: "reqID required" });
-        }
-      if (userID !== reqID) {
-        return reply.status(403).send({ error: "Can only view your own matches list" });
-      }
-
       try {
+        const userID = req.params.id;
+        if (!userID) {
+            return reply.status(400).send({ error: "userID required" });
+          }
+        const reqID  = req.headers["x-user-id"];
+        if (!reqID) {
+            return reply.status(401).send({ error: "reqID required" });
+          }
+        if (userID !== reqID) {
+          return reply.status(403).send({ error: "Can only view your own matches list" });
+        }
+
         const getStmt = usersDB.prepare(`
           SELECT * FROM matches 
           WHERE player1_id = ? OR player2_id = ? 
