@@ -2,75 +2,85 @@ const USERS_URL: string = "https://localhost:8443/users";
 
 export async function displayAccountPage() {
 
-	const userId:		string | null = localStorage.getItem("userId");
-	const token:		string | null = localStorage.getItem("jwt");
-	const infosDiv:		HTMLDivElement | null = document.getElementById("infosTab") as HTMLDivElement | null;
-	const friendsDiv:	HTMLDivElement | null = document.getElementById("friendsTab") as HTMLDivElement | null;
-	const statsDiv:		HTMLDivElement | null = document.getElementById("statsTab") as HTMLDivElement | null;
-	const historyDiv:	HTMLDivElement | null = document.getElementById("historyTab") as HTMLDivElement | null;
+	const	userId:				string | null = localStorage.getItem("userId");
+	const	token:				string | null = localStorage.getItem("jwt");
+	let		accountActiveTab:	string | null = localStorage.getItem("accountActiveTab");
 
-
-	// #region handleTabs //
-	const infosBtn: HTMLButtonElement | null = document.getElementById("infosTabButton") as HTMLButtonElement | null;
-	const friendsBtn: HTMLButtonElement | null = document.getElementById("friendsTabButton") as HTMLButtonElement | null;
-	const statsBtn: HTMLButtonElement | null = document.getElementById("statsTabButton") as HTMLButtonElement | null;
-	const historyBtn: HTMLButtonElement | null = document.getElementById("historyTabButton") as HTMLButtonElement | null;
-
-	if (!infosDiv || !friendsDiv || !statsDiv || !historyDiv) {
-		console.error("HTML element not found: Tab Divs");
+	if (!userId || !token) {
+		console.error("Userid or token NULL");
 		return;
-	} 
+	}
 
-	if (!infosBtn || !friendsBtn || !statsBtn || !historyBtn) {
-		console.error("HTML element not found: Tab Buttons");
+	const tabTable: { [key: string]: {div: HTMLDivElement, btn: HTMLButtonElement, tab: HTMLLIElement, fctn: () => Promise<void> }} = {
+		'infos': {
+			'div': document.getElementById("infosTab") as HTMLDivElement,
+			'btn': document.getElementById("infosTabButton") as HTMLButtonElement,
+			'tab': document.getElementById("infosTabLi") as HTMLLIElement,
+			'fctn': () => showInfosTab(userId, token)
+		},
+		'friends': {
+			'div': document.getElementById("friendsTab") as HTMLDivElement,
+			'btn': document.getElementById("friendsTabButton") as HTMLButtonElement,
+			'tab': document.getElementById("friendsTabLi") as HTMLLIElement,
+			'fctn': () => showFriendsTab()
+		},
+		'stats': {
+			'div': document.getElementById("statsTab") as HTMLDivElement,
+			'btn': document.getElementById("statsTabButton") as HTMLButtonElement,
+			'tab': document.getElementById("statsTabLi") as HTMLLIElement,
+			'fctn': () => showStatsTab()
+		},
+		'history': {
+			'div': document.getElementById("historyTab") as HTMLDivElement,
+			'btn': document.getElementById("historyTabButton") as HTMLButtonElement,
+			'tab': document.getElementById("historyTabLi") as HTMLLIElement,
+			'fctn': () => showHistoryTab()
+		}
+	}
+
+	if (	!tabTable.infos.div || !tabTable.infos.btn || !tabTable.infos.tab
+		||	!tabTable.friends.div || !tabTable.friends.btn || !tabTable.friends.tab
+		||	!tabTable.stats.div || !tabTable.stats.btn || !tabTable.stats.tab
+		||	!tabTable.history.div || !tabTable.history.btn || !tabTable.history.tab) 
+	{
+		console.error("HTML element not found: tab display / div / button");
 		return;
 	} 
 
 	try {
 		
-		infosBtn.addEventListener('click', () => {
-			infosDiv.classList.remove('hidden');
-			friendsDiv.classList.add('hidden');
-			statsDiv.classList.add('hidden');
-			historyDiv.classList.add('hidden');
-		});
+		Object.keys(tabTable).forEach(tabKey => {
 
-		friendsBtn.addEventListener('click', () => {
-			friendsDiv.classList.remove('hidden');
-			infosDiv.classList.add('hidden');
-			statsDiv.classList.add('hidden');
-			historyDiv.classList.add('hidden');
-		});
+			tabTable[tabKey].btn.addEventListener('click', () => {
 
-		statsBtn.addEventListener('click', () => {
-			statsDiv.classList.remove('hidden');
-			infosDiv.classList.add('hidden');
-			friendsDiv.classList.add('hidden');
-			historyDiv.classList.add('hidden');
-		});
+				Object.keys(tabTable).forEach(key => {
 
-		historyBtn.addEventListener('click', () => {
-			historyDiv.classList.remove('hidden');
-			infosDiv.classList.add('hidden');
-			friendsDiv.classList.add('hidden');
-			statsDiv.classList.add('hidden');
+					tabTable[key].div.classList.toggle('hidden', key !== tabKey);
+					tabTable[key].tab.classList.toggle('active', key === tabKey);
+				});
+
+				tabTable[tabKey].fctn();
+				localStorage.setItem("accountActiveTab", tabKey);
+
+			});
 		});
 
 	}catch (error) {
 		console.error(error);
 	}
 
-	// #endregion handleTabs //
-
-	if (userId === null || token === null) {
-		console.error("Userid or token NULL");
-		return;
+	if (!accountActiveTab || !tabTable[accountActiveTab]) {
+		accountActiveTab = 'infos';
+		localStorage.setItem('accountActiveTab', 'infos')
 	}
-	
-	await displayAccountInfos(userId, token);
+	Object.keys(tabTable).forEach(key => {
+		tabTable[key].div.classList.toggle('hidden', key !== accountActiveTab);
+		tabTable[key].tab.classList.toggle('active', key === accountActiveTab);
+	});
+	tabTable[accountActiveTab].fctn();
 }
 
-async function displayAccountInfos (userId: string, token: string) {
+async function showInfosTab(userId: string, token: string): Promise<void> {
 
 	const usernameSpan: HTMLElement | null | undefined = document.getElementById("accountBoxUsername")?.querySelector("span");
 	const mailSpan: HTMLElement | null | undefined = document.getElementById("accountBoxMail")?.querySelector("span");
@@ -212,7 +222,21 @@ async function displayAccountInfos (userId: string, token: string) {
 	}
 
 }
+
+async function showFriendsTab(): Promise<void> {
+	console.log('showFriendsTab function called');
+	
+}
   
+async function showStatsTab(): Promise<void> {
+	console.log('showStatsTab function called');
+}
+
+
+async function showHistoryTab(): Promise<void> {
+	console.log('showHistoryTab function called');
+	
+}
 
 		// Ajout d'ami
 		// const friendList: HTMLElement = document.getElementById("accountFriendList") as HTMLElement;

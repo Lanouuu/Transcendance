@@ -10,32 +10,32 @@
 		<!-- Onglets -->
 		<ul class="accountBoxTabDiv">
 
-			<li class="accountBoxTabItems">
-				<button id="infosTabButton" class="active:text-blue-500">
+			<li id="infosTabLi" class="accountBoxTabItems accountBoxActiveTab rounded-tr-3xl ">
+				<button id="infosTabButton" class="accountBoxTabButtons">
 
 					Infos
 
 				</button>
 			</li>
 
-			<li class="accountBoxTabItems">
-				<button id="friendsTabButton" class="active:text-blue-500">
+			<li id="friendsTabLi" class="accountBoxTabItems accountBoxInactiveTab">
+				<button id="friendsTabButton" class="accountBoxTabButtons">
 
 					Friends
 
 				</button>
 			</li>
 
-			<li class="accountBoxTabItems">
-				<button id="statsTabButton" class="active:text-blue-500">
+			<li id="statsTabLi" class="accountBoxTabItems accountBoxInactiveTab">
+				<button id="statsTabButton" class="accountBoxTabButtons">
 
 					Stats
 
 				</button>
 			</li>
 
-			<li class="accountBoxTabItems">
-				<button id="historyTabButton" class="active:text-blue-500">
+			<li id="historyTabLi" class="accountBoxTabItems accountBoxInactiveTab rounded-br-3xl">
+				<button id="historyTabButton" class="accountBoxTabButtons">
 
 					History
 				
@@ -194,7 +194,103 @@
 		<!-- Onglet Amis -->
 		<div id="friendsTab" class="friendsLayout hidden">
 
-			OUAI LES AMIS
+			<!-- Liste des amis (pseudo, (avatar ?), status de connection, bouton defi, bouton suppression, bouton aller au profile) -->
+			<div class="friendsListArea">
+				<h1 class="h-1/6 text-center content-center">
+					OUAI LA LISTE D'AMIS
+				</h1>
+				<ul id="friendsList" class="
+					h-5/6 w-5/6
+					m-4
+					outline outline-sec
+					overflow-y-auto
+				">
+					<!-- No friends -->
+					<li>
+						<div class="flex flex-row items-center justify-between p-4">
+
+							<h2 id="fInListPseudo">
+								Pseudo
+							</h2>
+							<button id="fInListGameButton">
+								Challenge
+							</button>
+							<button id="fInListProfileButton">
+								Go to profile
+							</button>
+							<h2 id="fInListStatus">🟢</h2>
+
+						</div>
+					</li>
+				</ul>
+			</div>
+
+			<!-- Listes des invitations a accepter (pseudo, bouton accepter, bouton refuser) -->
+			<div class="friendsInviteListArea">
+
+				<h1 class="h-1/6 content-center text-base">
+					Friends Invitations
+				</h1>
+
+				<ul id="inviteList" class="h-5/6">
+
+					<li>
+						<div class="flex flex-row items-center justify-between text-sm p-1">
+							<h2 id="iInListPseudo">
+								Pseudo
+							</h2>
+							<button id="iInListAccept">Accept</button>
+							<button id="iInListReject">Reject</button>
+						</div>
+					</li>
+					<!-- No invitations pending -->
+				</ul>
+
+
+			</div>
+
+			<!-- Bouton ajouter un ami / bloquer (input pseudo, bouton invitation, bouton bloquer) -->
+
+			<div class="friendsInviteArea">
+
+				<h1>
+					Invite User
+				</h1>
+
+				<form id="inviteUserForm" class="flex flex-col items-center">
+
+					<input id="inviteUserInput" type="text" name="Username" placeholder="Username" class="
+						w-3/4
+						text-dark
+					"required>
+
+				</form>
+
+				<button id="inviteUserButton" type="submit">Confirm</button>
+
+			</div>
+
+
+
+			<div class="friendsBlockArea">
+
+				<h1>
+					Block User
+				</h1>
+
+				<form id="blockUserForm" class="flex flex-col items-center">
+
+					<input id="blockUserInput" type="text" name="Username" placeholder="Username" class="
+						w-3/4
+						text-dark
+					"required>
+
+				</form>
+
+				<button id="blockUserButton" type="submit">Confirm</button>
+
+			</div>
+
 
 		</div>
 
