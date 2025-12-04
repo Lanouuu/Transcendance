@@ -37,6 +37,16 @@ async function login(user: User): Promise<LoginResponse> {
   return res.json();
 }
 
+async function logout(userId: string, token: string): Promise<Response> {
+  return fetch(`${AUTH_URL}/logout`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "x-user-id": userId || ""
+      }
+  });
+}
+
 async function sendInvite(fromId: string, friendName: string, token: string): Promise<Response> {
   return fetch(`${USERS_URL}/send-invit`, {
     method: "POST",
@@ -79,6 +89,9 @@ export async function initTest(): Promise<void> {
 
     await sendInvite("1", "bob", tokens["alice"]);
     await acceptInvite("2", { friendID: 1 }, tokens["bob"]);
+
+    await logout('1', tokens['alice']);
+    await logout('2', tokens['bob']);
 
     console.log("Seed complete");
   } catch (err) {

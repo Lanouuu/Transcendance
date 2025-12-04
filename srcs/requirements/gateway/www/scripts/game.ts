@@ -4,8 +4,8 @@ const route: string = "://localhost:8443/game";
 
 export async function launchLocalGame() {
 
-	const token: string | null = localStorage.getItem("jwt");
-	const userId: string | null = localStorage.getItem("userId");
+	const token: string | null = sessionStorage.getItem("jwt");
+	const userId: string | null = sessionStorage.getItem("userId");
 	const remoteButton: HTMLButtonElement = document.getElementById('gameRemoteGameButton') as HTMLButtonElement;
 
 	if (userId === null || token === null) {
@@ -47,8 +47,8 @@ export async function launchLocalGame() {
 
 export async function launchRemoteGame() {
 
-	const token: string | null = localStorage.getItem("jwt");
-	const userId: string | null = localStorage.getItem("userId");
+	const token: string | null = sessionStorage.getItem("jwt");
+	const userId: string | null = sessionStorage.getItem("userId");
 	const localButton: HTMLButtonElement = document.getElementById('gameLocalGameButton') as HTMLButtonElement;
 	
 	if (userId === null || token === null) {

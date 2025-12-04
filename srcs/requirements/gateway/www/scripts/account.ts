@@ -1,10 +1,10 @@
-const USERS_URL: string = "https://localhost:8443/users";
+const USERS_URL: string = "https://localhost:8443/users"; // A changer "localhost"
 
 export async function displayAccountPage() {
 
-	const	userId:				string | null = localStorage.getItem("userId");
-	const	token:				string | null = localStorage.getItem("jwt");
-	let		accountActiveTab:	string | null = localStorage.getItem("accountActiveTab");
+	const	userId:				string | null = sessionStorage.getItem("userId");
+	const	token:				string | null = sessionStorage.getItem("jwt");
+	let		accountActiveTab:	string | null = sessionStorage.getItem("accountActiveTab");
 
 	if (!userId || !token) {
 		console.error("Userid or token NULL");
@@ -22,7 +22,7 @@ export async function displayAccountPage() {
 			'div': document.getElementById("friendsTab") as HTMLDivElement,
 			'btn': document.getElementById("friendsTabButton") as HTMLButtonElement,
 			'tab': document.getElementById("friendsTabLi") as HTMLLIElement,
-			'fctn': () => showFriendsTab()
+			'fctn': () => showFriendsTab(userId, token)
 		},
 		'stats': {
 			'div': document.getElementById("statsTab") as HTMLDivElement,
@@ -47,6 +47,11 @@ export async function displayAccountPage() {
 		return;
 	} 
 
+	tabTable['infos'].fctn;
+	tabTable['friends'].fctn;
+	tabTable['stats'].fctn;
+	tabTable['history'].fctn;
+
 	try {
 		
 		Object.keys(tabTable).forEach(tabKey => {
@@ -59,9 +64,7 @@ export async function displayAccountPage() {
 					tabTable[key].tab.classList.toggle('active', key === tabKey);
 				});
 
-				tabTable[tabKey].fctn();
-				localStorage.setItem("accountActiveTab", tabKey);
-
+				sessionStorage.setItem("accountActiveTab", tabKey);
 			});
 		});
 
@@ -71,7 +74,7 @@ export async function displayAccountPage() {
 
 	if (!accountActiveTab || !tabTable[accountActiveTab]) {
 		accountActiveTab = 'infos';
-		localStorage.setItem('accountActiveTab', 'infos')
+		sessionStorage.setItem('accountActiveTab', 'infos')
 	}
 	Object.keys(tabTable).forEach(key => {
 		tabTable[key].div.classList.toggle('hidden', key !== accountActiveTab);
@@ -223,8 +226,96 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 
 }
 
-async function showFriendsTab(): Promise<void> {
-	console.log('showFriendsTab function called');
+async function showFriendsTab(userId: string, token: string): Promise<void> {
+	const ulFriendsList: HTMLUListElement = document.getElementById("friendsList") as HTMLUListElement;
+	
+	if (!ulFriendsList) {
+		console.error("HTML Element not found");
+		return ;
+	}
+
+	try {
+		const res = await fetch(`${USERS_URL}/friends-list/${userId}`, {
+			method: "GET",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId
+			},
+		});
+		if (!res.ok) throw new Error(`Friend list not found`);
+		const { friendsList } = (await res.json());
+
+		const frag = document.createDocumentFragment();
+		for (const friend of friendsList) {
+			const friendId: string = friend.id;
+			const friendName: string  = friend.name;
+			let isOnline: boolean = false;
+			let avatarUrl = "./img/cristal_profile_base.jpg"; 
+		
+			try {
+				const [resStatus, resAvatar] = await Promise.all([
+					fetch(`${USERS_URL}/is-online/${friendId}`, {
+						method: "GET",
+						headers: { "authorization": `Bearer ${token}` },
+					}),
+					fetch(`${USERS_URL}/get-avatar/${friendId}`, {
+						method: "GET",
+						headers: { "authorization": `Bearer ${token}` },
+					})
+				]);
+
+				if (resStatus && resStatus.ok) {
+					isOnline = (await resStatus.json()).online;
+					console.log(isOnline);
+				}
+
+				if (resAvatar && resAvatar.ok) {
+					const imgBlob = await resAvatar.blob();
+					avatarUrl = URL.createObjectURL(imgBlob);
+				}
+
+			} catch (err) {
+				console.error("Friend data fetch failed for", friendId, err);
+			}
+
+			// creation balise li
+			const li = document.createElement("li");
+			li.className = "";
+
+
+			// ajout de l'image
+			const img = document.createElement("img");
+			img.src = avatarUrl;
+			img.width = 48;
+			img.height = 48;
+			img.className = "rounded-full";
+
+			//ajout du username
+			const nameSpan = document.createElement("span");
+			nameSpan.textContent = friendName;
+
+			const statusDot = document.createElement("span");
+			statusDot.textContent = isOnline ? "🟢" : "⚪️";
+
+			const playButton = document.createElement("button");
+			playButton.id = "fInListPlayButton";
+			playButton.textContent = "Play";
+
+			const delFriendButton = document.createElement("button");
+			delFriendButton.id = "fInListDelFriendButton";
+			delFriendButton.textContent = "DelF";
+
+			const blockFriendButton = document.createElement("button");
+			blockFriendButton.id = "fInListBlockFriendButton";
+			blockFriendButton.textContent = "BlockF";
+
+			li.append(img, statusDot, nameSpan, playButton, delFriendButton, blockFriendButton);
+			frag.appendChild(li);
+		}
+		ulFriendsList.appendChild(frag);
+	} catch (error) {
+		console.error("Error displaying friends Tab:", error); // afficher msg dans une div pour le user
+	}
 	
 }
   
@@ -237,20 +328,3 @@ async function showHistoryTab(): Promise<void> {
 	console.log('showHistoryTab function called');
 	
 }
-
-		// Ajout d'ami
-		// const friendList: HTMLElement = document.getElementById("accountFriendList") as HTMLElement;
-		// if (friendList) {
-		// 	const res = await fetch(`${BASE_URL}/friends-list/${userId}`, {
-		// 		method: "GET",
-		// 		headers: {
-		// 			"authorization": `Bearer ${token}`,
-		// 			"x-user-id": userId
-		// 		},
-		// 	});
-		// 	if (!res.ok) throw new Error(`Friend list not found`);
-		// 	// option 1: parentheses
-		// 	const data = (await res.json()).friendsList[0].name;
-		// 	friendList.innerHTML = data;
-		// }
-		// else throw new Error("No friendList fetched");
