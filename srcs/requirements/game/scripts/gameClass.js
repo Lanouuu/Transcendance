@@ -20,6 +20,10 @@ export class Game {
                     x: undefined,
                     y: undefined
                 },
+                imgSize: {
+                    height: undefined,
+                    width: undefined
+                },
                 loaded: undefined
             },
             id: undefined
@@ -34,12 +38,41 @@ export class Game {
                     x: undefined,
                     y: undefined
                 },
+                imgSize: {
+                    height: undefined,
+                    width: undefined
+                },
                 loaded: undefined
             },
             id: undefined
         }
 
-        this.ball = undefined
-        this.board = undefined
+        this.ball = {
+            position: {
+                x: undefined,
+                y: undefined
+            },
+            imgSize: {
+                height: undefined,
+                width: undefined
+            },
+            velocity: {
+                x: -9,
+                y: 9
+            },
+            loaded: undefined
+        }
+
+        this.board = {
+            position: {
+                x: undefined,
+                y: undefined
+            },
+            imgSize: {
+                height: undefined,
+                width: undefined
+            },
+            loaded: undefined
+        }
     }
 }

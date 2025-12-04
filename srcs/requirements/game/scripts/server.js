@@ -6,6 +6,7 @@ import { Game } from './gameClass.js'
 import cors from '@fastify/cors'
 import {WebSocketServer} from 'ws'
 import fs from 'fs'
+import { imageSize } from "image-size"
 
 const fastify = Fastify({
     logger: true,
@@ -60,7 +61,7 @@ function startTimer(game) {
 }
 
 function gameLoop(game) {
-    if (game.board === undefined || game.socket === undefined || game.player1.sprite === undefined) {
+    if (game.board === undefined || game.socket === undefined) {
         console.log("Game not ready yet")
         return ;
     }
@@ -143,14 +144,8 @@ function gameLoop(game) {
     }
     if (game.message === "END") {
         clearInterval(game.loopId)
+        // Envoyer les resultats a la base de donnees
     }
-}
-
-function updateGame(game, frontGame) {
-    game.board = frontGame.board
-    game.ball = frontGame.ball
-    game.player1.sprite = frontGame.player1.sprite
-    game.player2.sprite = frontGame.player2.sprite
 }
 
 const wss = new WebSocketServer({ 
@@ -167,7 +162,7 @@ wss.on('connection', function connection(ws) {
 
   ws.on('message', function message(data) {
     const res = JSON.parse(data.toString())
-    console.log("DATA RECEIVED IN WS CONNECTION = ", res)
+    // console.log("DATA RECEIVED IN WS CONNECTION = ", res)
     if (!games.has(parseInt(res.game.id, 10))) {
         ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
         return
@@ -175,26 +170,34 @@ wss.on('connection', function connection(ws) {
     let game = games.get(res.game.id)
     if (res.message == "Init")
     {
-        updateGame(game , res.game)
         // console.log("INIT = ", game)
-        if (ws.userId === undefined && game.socket.length === 0) {
-            console.log("PARING WEBSOCKET WITH PLAYER1")
-            ws.userId = game.player1.id
-            console.log("websocket is = ", ws.userId)
-        } else if (ws.userId === undefined && game.socket.length === 1) {
-            console.log("PARING WEBSOCKET WITH PLAYER2")
-            ws.userId = game.player2.id
-            console.log("websocket is = ", ws.userId)
+        if (game.mode === "remote") {
+            if (ws.userId === undefined && game.socket.length === 0) {
+                console.log("PARING WEBSOCKET WITH PLAYER1")
+                ws.userId = game.player1.id
+                console.log("websocket is = ", ws.userId)
+            } else if (ws.userId === undefined && game.socket.length === 1) {
+                console.log("PARING WEBSOCKET WITH PLAYER2")
+                ws.userId = game.player2.id
+                console.log("websocket is = ", ws.userId)
+            }
         }
         game.socket.push(ws)
         if (game.message === "start")
             game.loopId = setInterval(() => gameLoop(game), 16)
     }
     else {
-        if (ws.userId === game.player1.id) {
+        if (game.mode === "remote") {
+            if (ws.userId === game.player1.id) {
+                game.player1.key.up = res.game.player1.key.up
+                game.player1.key.down = res.game.player1.key.down
+            } else if (ws.userId === game.player2.id) {
+                game.player2.key.up = res.game.player2.key.up
+                game.player2.key.down = res.game.player2.key.down
+            }
+        } else {
             game.player1.key.up = res.game.player1.key.up
             game.player1.key.down = res.game.player1.key.down
-        } else if (ws.userId === game.player2.id) {
             game.player2.key.up = res.game.player2.key.up
             game.player2.key.down = res.game.player2.key.down
         }
@@ -203,6 +206,37 @@ wss.on('connection', function connection(ws) {
     // console.log("GAME AFTER SET IN WS CONNECTION = ", game)
   })
 })
+
+function loadSprite(game) {
+
+    let size = imageSize("assets/Board.png")
+
+    game.board.position.x = 0;
+    game.board.position.y = 0;
+    game.board.imgSize.height = size.height
+    game.board.imgSize.width = size.width
+
+    size = imageSize("assets/Ball.png")
+
+    game.ball.imgSize.height = size.height
+    game.ball.imgSize.width = size.width
+    game.ball.position.x = game.board.imgSize.width / 2 - game.ball.imgSize.width / 2;
+    game.ball.position.y = game.board.imgSize.height / 2 - game.ball.imgSize.height / 2;
+
+    size = imageSize("assets/Player.png")
+
+    game.player1.sprite.position.x = 0;
+    game.player1.sprite.position.y = game.board.imgSize.height / 2 - game.ball.imgSize.height / 2;;
+    game.player1.sprite.imgSize.height = size.height
+    game.player1.sprite.imgSize.width = size.width
+
+    size = imageSize("assets/Player2.png")
+
+    game.player2.sprite.position.x = game.board.imgSize.width - size.width;
+    game.player2.sprite.position.y = game.board.imgSize.height / 2 - game.ball.imgSize.height / 2;;
+    game.player2.sprite.imgSize.height = size.height
+    game.player2.sprite.imgSize.width = size.width
+}
 
 // local
 fastify.get("/local", async (request, reply) => {
@@ -213,6 +247,7 @@ fastify.get("/local", async (request, reply) => {
           mode: 'local',
           message: 'start'
         })
+        loadSprite(game)
         console.log("GAME AT CREATION = ", game)
         games.set(game.id, game)
         console.log("Local game created with id:", game.id)
@@ -261,6 +296,7 @@ fastify.get("/remote", async (request, reply) => {
                 mode: 'remote',
                 message: "Waiting"
             })
+            loadSprite(game)
             game.player1.id = queue[0][0]
             game.player1.name = queue[0][1]
             pendingRemoteGame.push(game)
