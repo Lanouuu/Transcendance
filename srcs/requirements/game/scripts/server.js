@@ -60,6 +60,36 @@ function startTimer(game) {
     }, 1000)
 }
 
+async function sendResult(game) {
+    const winner_id = undefined;
+    if (game.player1.score === 5)
+        winner_id = game.player1.id
+    else
+        winner_id = game.player2.id
+
+    try {
+        const response = await fetch("http://users:3000/save-match", {
+             method: "POST",
+             headers: {"Content-Type": "application/json"},
+             body: JSON.stringify({
+               player1ID: game.player1.id,
+               player2ID: game.player2.id,
+               winnerID: winner_id,
+               scoreP1: game.player1.score,
+               scoreP2: game.player2.score,
+               matchType: "remote"
+             }),
+           });
+
+        if(!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to send result");
+      }
+    } catch(e) {
+        console.log(e.error)
+    }
+}
+
 function gameLoop(game) {
     if (game.board === undefined || game.socket === undefined) {
         console.log("Game not ready yet")
@@ -143,8 +173,9 @@ function gameLoop(game) {
         })
     }
     if (game.message === "END") {
+        if (game.mode === "remote")
+            sendResult(game)
         clearInterval(game.loopId)
-        // Envoyer les resultats a la base de donnees
     }
 }
 
