@@ -23,6 +23,7 @@ export async function logout () {
   	} finally {
 		sessionStorage.removeItem("jwt");
 		sessionStorage.removeItem("userId");
+		sessionStorage.removeItem("accountActiveTab");
 		document.body.classList.remove("loggedIn");
 		window.dispatchEvent(new Event("user:logout"));
   	}

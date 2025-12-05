@@ -2,16 +2,16 @@ const USERS_URL: string = "https://localhost:8443/users"; // A changer "localhos
 
 export async function displayAccountPage() {
 
-	const	userId:				string | null = sessionStorage.getItem("userId");
-	const	token:				string | null = sessionStorage.getItem("jwt");
-	let		accountActiveTab:	string | null = sessionStorage.getItem("accountActiveTab");
+	const userId: string | null = sessionStorage.getItem("userId");
+	const token: string | null = sessionStorage.getItem("jwt");
+	let accountActiveTab: string | null = sessionStorage.getItem("accountActiveTab");
 
 	if (!userId || !token) {
 		console.error("Userid or token NULL");
 		return;
 	}
 
-	const tabTable: { [key: string]: {div: HTMLDivElement, btn: HTMLButtonElement, tab: HTMLLIElement, fctn: () => Promise<void> }} = {
+	const tabTable: { [key: string]: { div: HTMLDivElement, btn: HTMLButtonElement, tab: HTMLLIElement, fctn: () => Promise<void> } } = {
 		'infos': {
 			'div': document.getElementById("infosTab") as HTMLDivElement,
 			'btn': document.getElementById("infosTabButton") as HTMLButtonElement,
@@ -38,22 +38,21 @@ export async function displayAccountPage() {
 		}
 	}
 
-	if (	!tabTable.infos.div || !tabTable.infos.btn || !tabTable.infos.tab
-		||	!tabTable.friends.div || !tabTable.friends.btn || !tabTable.friends.tab
-		||	!tabTable.stats.div || !tabTable.stats.btn || !tabTable.stats.tab
-		||	!tabTable.history.div || !tabTable.history.btn || !tabTable.history.tab) 
-	{
+	if (!tabTable.infos.div || !tabTable.infos.btn || !tabTable.infos.tab
+		|| !tabTable.friends.div || !tabTable.friends.btn || !tabTable.friends.tab
+		|| !tabTable.stats.div || !tabTable.stats.btn || !tabTable.stats.tab
+		|| !tabTable.history.div || !tabTable.history.btn || !tabTable.history.tab) {
 		console.error("HTML element not found: tab display / div / button");
 		return;
-	} 
+	}
 
-	tabTable['infos'].fctn;
-	tabTable['friends'].fctn;
-	tabTable['stats'].fctn;
-	tabTable['history'].fctn;
+	await tabTable['infos'].fctn();
+	await tabTable['friends'].fctn();
+	await tabTable['stats'].fctn();
+	await tabTable['history'].fctn();
 
 	try {
-		
+
 		Object.keys(tabTable).forEach(tabKey => {
 
 			tabTable[tabKey].btn.addEventListener('click', () => {
@@ -68,7 +67,7 @@ export async function displayAccountPage() {
 			});
 		});
 
-	}catch (error) {
+	} catch (error) {
 		console.error(error);
 	}
 
@@ -80,7 +79,7 @@ export async function displayAccountPage() {
 		tabTable[key].div.classList.toggle('hidden', key !== accountActiveTab);
 		tabTable[key].tab.classList.toggle('active', key === accountActiveTab);
 	});
-	tabTable[accountActiveTab].fctn();
+	// tabTable[accountActiveTab].fctn();
 }
 
 async function showInfosTab(userId: string, token: string): Promise<void> {
@@ -226,13 +225,16 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 
 }
 
+// #region FriendsTab //
 async function showFriendsTab(userId: string, token: string): Promise<void> {
 	const ulFriendsList: HTMLUListElement = document.getElementById("friendsList") as HTMLUListElement;
-	
+
 	if (!ulFriendsList) {
 		console.error("HTML Element not found");
-		return ;
+		return;
 	}
+
+	ulFriendsList.innerHTML = "";
 
 	try {
 		const res = await fetch(`${USERS_URL}/friends-list/${userId}`, {
@@ -248,10 +250,10 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 		const frag = document.createDocumentFragment();
 		for (const friend of friendsList) {
 			const friendId: string = friend.id;
-			const friendName: string  = friend.name;
+			const friendName: string = friend.name;
 			let isOnline: boolean = false;
-			let avatarUrl = "./img/cristal_profile_base.jpg"; 
-		
+			let avatarUrl = "./img/cristal_profile_base.jpg";
+
 			try {
 				const [resStatus, resAvatar] = await Promise.all([
 					fetch(`${USERS_URL}/is-online/${friendId}`, {
@@ -278,47 +280,95 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 				console.error("Friend data fetch failed for", friendId, err);
 			}
 
-			// creation balise li
-			const li = document.createElement("li");
-			li.className = "";
-
-
-			// ajout de l'image
-			const img = document.createElement("img");
-			img.src = avatarUrl;
-			img.width = 48;
-			img.height = 48;
-			img.className = "rounded-full";
-
-			//ajout du username
-			const nameSpan = document.createElement("span");
-			nameSpan.textContent = friendName;
-
-			const statusDot = document.createElement("span");
-			statusDot.textContent = isOnline ? "🟢" : "⚪️";
-
-			const playButton = document.createElement("button");
-			playButton.id = "fInListPlayButton";
-			playButton.textContent = "Play";
-
-			const delFriendButton = document.createElement("button");
-			delFriendButton.id = "fInListDelFriendButton";
-			delFriendButton.textContent = "DelF";
-
-			const blockFriendButton = document.createElement("button");
-			blockFriendButton.id = "fInListBlockFriendButton";
-			blockFriendButton.textContent = "BlockF";
-
-			li.append(img, statusDot, nameSpan, playButton, delFriendButton, blockFriendButton);
-			frag.appendChild(li);
+			frag.appendChild(createLiItem(avatarUrl, friendName, isOnline, userId, token));
 		}
 		ulFriendsList.appendChild(frag);
 	} catch (error) {
 		console.error("Error displaying friends Tab:", error); // afficher msg dans une div pour le user
 	}
-	
+
 }
-  
+
+function createLiItem(avatarUrl: string, friendName: string, isOnline: boolean, userId: string, token: string): HTMLLIElement {
+	// creation balise li
+	const li = document.createElement("li");
+	li.style.display = "grid";
+	li.style.gridTemplateColumns = "1fr 1fr 5fr 1fr 1fr 1fr";
+	li.className = "m-1";
+
+
+	// ajout de l'image
+	const img = document.createElement("img");
+	img.src = avatarUrl;
+	img.width = 36;
+	img.height = 36;
+	img.className = "rounded-full";
+
+	//ajout du username
+	const nameSpan = document.createElement("span");
+	nameSpan.textContent = friendName;
+	nameSpan.className = "text-center";
+
+	// Ajout du status de connexion
+	const statusDot = document.createElement("span");
+	statusDot.textContent = isOnline ? "🟢" : "⚪️";
+
+	// Ajout du bouton de defi
+	const playButton = document.createElement("button");
+	const playIcon = document.createElement("img");
+
+	// playButton.id = "fInListPlayButton"; // Si plusieurs amis id identiques
+	playIcon.src = "./assets/other/challenge-user.svg";
+	playIcon.width = 24;
+	playIcon.height = 24;
+	playIcon.className = "invert"
+	playButton.appendChild(playIcon);
+
+	// Ajout du bouton de suppression d'un ami
+	const delFriendButton = document.createElement("button");
+	const delFriendIcon = document.createElement("img");
+
+	// delFriendButton.id = "fInListDelFriendButton"; // Same
+	delFriendIcon.src = "./assets/other/delete-user.svg";
+	delFriendIcon.width = 24;
+	delFriendIcon.height = 24;
+	delFriendIcon.className = "invert"
+	delFriendButton.appendChild(delFriendIcon);
+	delFriendButton.onclick = async () => {
+		const res = await fetch(`${USERS_URL}/delete-friend`, {
+			method: "POST",
+			headers: {
+				"x-user-id": userId,
+				"authorization": `Bearer ${token}`,
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({friendID: friendName})
+		});
+		if (!res.ok) {
+			console.error("Could not delete friend");
+		}
+		else console.log("Friend deleted");
+	}
+
+	// Ajout du bouton de blocage d'un ami
+	const blockFriendButton = document.createElement("button");
+	const blockFriendIcon = document.createElement("img");
+	
+	// blockFriendButton.id = "fInListBlockFriendButton"; // Same
+	blockFriendIcon.src = "./assets/other/block-user.svg";
+	blockFriendIcon.width = 24;
+	blockFriendIcon.height = 24;
+	blockFriendIcon.className = "invert"
+	blockFriendButton.appendChild(blockFriendIcon);
+
+	// Ajout de tous les elements crees a la balise li
+	li.append(img, statusDot, nameSpan, playButton, delFriendButton, blockFriendButton);
+
+	return (li);
+}
+
+// #endregion FriendsTab //
+
 async function showStatsTab(): Promise<void> {
 	console.log('showStatsTab function called');
 }
@@ -326,5 +376,5 @@ async function showStatsTab(): Promise<void> {
 
 async function showHistoryTab(): Promise<void> {
 	console.log('showHistoryTab function called');
-	
+
 }

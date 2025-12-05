@@ -59,7 +59,7 @@ export class Game {
 		this.player1 = new Sprite({
 			position: { x: 0 , y: 0 },
 			velocity: { x: 0, y: 0 },
-			imageSrc: "./assets/Player.png",
+			imageSrc: "./assets/pong/Player.png",
 			imgSize: { height: 0 , width: 0 },
 			key: { up: false , down: false },
 			score: 0
@@ -67,7 +67,7 @@ export class Game {
 		this.player2 = new Sprite({
 			position: { x: 0 , y: 0 },
 			velocity: { x: 0, y: 0 },
-			imageSrc: "./assets/Player2.png",
+			imageSrc: "./assets/pong/Player2.png",
 			imgSize: { height: 0 , width: 0 },
 			key: { up: false , down: false },
 			score: 0
@@ -75,7 +75,7 @@ export class Game {
 		this.ball = new Sprite({
 			position: { x: 0 , y: 0 },
 			velocity: { x: 0, y: 0 },
-			imageSrc: "./assets/Ball.png",
+			imageSrc: "./assets/pong/Ball.png",
 			imgSize: { height: 0 , width: 0 },
 			key: { up: false , down: false },
 			score: 0
@@ -83,7 +83,7 @@ export class Game {
 		this.board = new Sprite({
 			position: { x: 0 , y: 0 },
 			velocity: { x: 0, y: 0 },
-			imageSrc: "./assets/Board.png",
+			imageSrc: "./assets/pong/Board.png",
 			imgSize: { height: 0 , width: 0 },
 			key: { up: false , down: false },
 			score: 0
