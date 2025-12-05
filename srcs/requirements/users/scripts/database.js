@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 
-export function initDB() {
+export async function initDB() {
     const usersDB = new Database('./data/usersDB.db');
     usersDB.exec(
         `CREATE TABLE IF NOT EXISTS users (

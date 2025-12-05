@@ -8,7 +8,7 @@ import { pipeline } from 'stream/promises';
 import bcrypt from "bcryptjs";
 import Redis from "ioredis";
 
-export function runServer() {
+export async function runServer() {
     
     /****************************************************************************/
     /*                       Init Fastify Users Server                          */
@@ -19,7 +19,7 @@ export function runServer() {
     const fastify = Fastify({ logger: true });
     const PORT = parseInt(process.env.USERS_PORT, 10);
     const HOST = process.env.USERS_HOST;
-    const usersDB = db.initDB();
+    const usersDB = await db.initDB();
 
     const redis = new Redis({ host: "redis", port: 6379 });
     
@@ -32,6 +32,8 @@ export function runServer() {
     fastify.register(multipart, {
       limits: { fileSize: 2 * 1024 * 1024 },
     });
+
+    const AUTH_URL = "http://auth_service:3001";
 
     //#endregion init_users_server
     
@@ -109,8 +111,22 @@ export function runServer() {
         if (!id) {
           return reply.status(400).send({ error: "ID required" });
         }
-        const reqID = req.headers["x-user-id"];
-        if (id !== reqID) {
+
+        const authHeader = req.headers.authorization || '';
+        const sessionsCheck = await fetch(`${AUTH_URL}/sessions/validate`, {
+          method : 'POST',
+          headers: {
+            authorization: authHeader, 
+          }
+        });
+        if (!sessionsCheck.ok) {
+          return reply.status(500).send({ error: "Session verification failed" });
+        }
+        const sessionsJson = await sessionsCheck.json();
+        if (!sessionsJson.valid) {
+          return reply.status(401).send({ error: "Invalid session" });
+        }
+        if (sessionsJson.userId && String(sessionsJson.userId) !== String(id)) {
           return reply.status(403).send({ error: "Can only modify your own avatar" });
         }
   
@@ -233,8 +249,22 @@ export function runServer() {
         if (!id) {
           return reply.status(400).send({ error: "ID required" });
         }
-        const reqID = req.headers["x-user-id"];
-        if (reqID !== id) {
+        
+        const authHeader = req.headers.authorization || '';
+        const sessionsCheck = await fetch(`${AUTH_URL}/sessions/validate`, {
+          method : 'POST',
+          headers: {
+            authorization: authHeader, 
+          }
+        });
+        if (!sessionsCheck.ok) {
+          return reply.status(500).send({ error: "Session verification failed" });
+        }
+        const sessionsJson = await sessionsCheck.json();
+        if (!sessionsJson.valid) {
+          return reply.status(401).send({ error: "Invalid session" });
+        }
+        if (sessionsJson.userId && String(sessionsJson.userId) !== String(id)) {
           return reply.status(403).send({ error: "Can only change your name" });
         }
 
@@ -265,11 +295,12 @@ export function runServer() {
         if (!id) {
           return reply.status(400).send({ error: "ID required" });
         }
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const reqID = req.headers["x-user-id"];
         if (reqID !== id) {
           return reply.status(403).send({ error: "Can only change your mail" });
         }
-
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const checkStmt = usersDB.prepare("SELECT * FROM users WHERE id = ?")
         const checkData = checkStmt.get(id);
         if (!checkData) {
@@ -317,6 +348,7 @@ export function runServer() {
         if (!id) {
           return reply.status(400).send({ error: "ID required" });
         }
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const reqID = req.headers["x-user-id"];
         if (!reqID) {
           return reply.status(401).send({ error: "Id missing in header" });
@@ -324,7 +356,7 @@ export function runServer() {
         if (reqID !== id) {
           return reply.status(403).send({ error: "Id mismatch" });
         }
-
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const user_auth_type = usersDB.prepare("SELECT auth_type, password FROM users WHERE id = ?");
         const user = user_auth_type.get(id);
         if (!user) {
@@ -383,6 +415,7 @@ export function runServer() {
 
     fastify.post("/send-invit", async (req, reply) => {
       try {
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const userID = req.headers["x-user-id"];
         const { friendName } = req.body;
         if (!userID) {
@@ -400,7 +433,7 @@ export function runServer() {
         if (Number(userID) === friendID) {
           return reply.status(400).send({ error: "You cannot invite yourself" });
         }
-
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const blockedStmt = usersDB.prepare(`
           SELECT blocked_by FROM friends
           WHERE status = 'blocked'
@@ -446,11 +479,12 @@ export function runServer() {
         if (!userID) {
           return reply.status(400).send({ error: "ID required" });
         }
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const reqID = req.headers["x-user-id"];
         if (userID !== reqID) {
           return reply.status(403).send({ error: "Can only view your invitations" });
         }
-
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const listStmt = usersDB.prepare(`
           SELECT
             f.user_id AS sender_id,
@@ -479,6 +513,9 @@ export function runServer() {
           return reply.status(400).send({ error: "Missing parameters" });
         }
         
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         const pendingStmt = usersDB.prepare("SELECT * FROM friends WHERE user_id = ? AND friend_id = ? AND status = 'pending'");
         const isPending = pendingStmt.get(friendID, userID);
         if (!isPending) {
@@ -502,6 +539,9 @@ export function runServer() {
         if (!userID || !friendID) {
           return reply.status(400).send({ error: "Missing parameters" });
         }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         const pendingStmt = usersDB.prepare(`
           SELECT * FROM friends 
@@ -531,6 +571,9 @@ export function runServer() {
           return reply.status(400).send({ error: "Missing parameters" });
         }
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         deleteStmt = usersDB.prepare(`
           DELETE FROM friends
           WHERE status = 'accepted'
@@ -559,6 +602,9 @@ export function runServer() {
         if (!userID || !friendID) {
           return reply.status(400).send({ error: "Missing parameters" });
         }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         const blockStmt = usersDB.prepare(`
           UPDATE friends
@@ -590,6 +636,9 @@ export function runServer() {
           return reply.status(400).send({ error: "Missing parameters" });
         }
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         const unblockStmt = usersDB.prepare(`
           UPDATE friends
           SET status = 'accepted', blocked_by = 0
@@ -617,10 +666,12 @@ export function runServer() {
         if (!userID) {
           return reply.status(400).send({ error: "ID required" });
         }
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const reqID = req.headers["x-user-id"];
         if (userID !== reqID) {
           return reply.status(403).send({ error: "Can only view your own friends list" });
         }
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
         const listStmt = usersDB.prepare(`
           SELECT
@@ -650,10 +701,12 @@ export function runServer() {
         if (!userID) {
           return reply.status(400).send({ error: "ID required" });
         }
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const reqID = req.headers["x-user-id"];
         if (userID !== reqID) {
           return reply.status(403).send({ error: "Can only view your own blocked list" });
         }
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         const blockedStmt = usersDB.prepare(`
           SELECT f.friends_id AS id, u.name
@@ -703,6 +756,7 @@ export function runServer() {
         if (!userID) {
             return reply.status(400).send({ error: "userID required" });
           }
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const reqID  = req.headers["x-user-id"];
         if (!reqID) {
             return reply.status(401).send({ error: "reqID required" });
@@ -710,7 +764,7 @@ export function runServer() {
         if (userID !== reqID) {
           return reply.status(403).send({ error: "Can only view your own matches list" });
         }
-
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const getStmt = usersDB.prepare(`
           SELECT * FROM matches 
           WHERE player1_id = ? OR player2_id = ? 

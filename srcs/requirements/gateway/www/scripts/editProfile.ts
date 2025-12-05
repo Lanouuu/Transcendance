@@ -6,8 +6,8 @@ async function updateName(BASE_URL: string, userId: string, token: string) {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json",
-				"authorization": `Bearer ${token}`,
-				"x-user-id": userId },
+				"authorization": `Bearer ${token}`
+            },
             body: JSON.stringify({ newName }),
         });
 

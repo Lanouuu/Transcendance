@@ -188,7 +188,6 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 					method: 'POST',
 					headers: {
 						"authorization": `Bearer ${token}`,
-						"x-user-id": userId,
 					},
 					body: formData,
 				});
