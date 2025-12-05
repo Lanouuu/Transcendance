@@ -86,6 +86,7 @@ class Router {
 						"x-user-id": userId,
 					},
 				});
+				console.log(`Heartbeat send for userId: ${userId}`);
 			} catch (error) {
 				console.debug("Heartbeat failed", error);
 			}
