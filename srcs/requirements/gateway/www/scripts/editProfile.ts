@@ -40,7 +40,7 @@ async function updateMail(BASE_URL: string, userId: string, token: string) {
             headers: {
                 "Content-Type": "application/json",
 				"authorization": `Bearer ${token}`,
-				"x-user-id": userId },
+		    },
             body: JSON.stringify({ newMail, confirmMail }),
         });
 
@@ -74,7 +74,7 @@ async function updatePass(BASE_URL: string, userId: string, token: string) {
             headers: {
                 "Content-Type": "application/json",
 				"authorization": `Bearer ${token}`,
-				"x-user-id": userId },
+			},
             body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
         });
 

@@ -295,12 +295,25 @@ export async function runServer() {
         if (!id) {
           return reply.status(400).send({ error: "ID required" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        const reqID = req.headers["x-user-id"];
-        if (reqID !== id) {
+
+        const authHeader = req.headers.authorization || '';
+        const sessionsCheck = await fetch(`${AUTH_URL}/sessions/validate`, {
+          method : 'POST',
+          headers: {
+            authorization: authHeader, 
+          }
+        });
+        if (!sessionsCheck.ok) {
+          return reply.status(500).send({ error: "Session verification failed" });
+        }
+        const sessionsJson = await sessionsCheck.json();
+        if (!sessionsJson.valid) {
+          return reply.status(401).send({ error: "Invalid session" });
+        }
+        if (sessionsJson.userId && String(sessionsJson.userId) !== String(id)) {
           return reply.status(403).send({ error: "Can only change your mail" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         const checkStmt = usersDB.prepare("SELECT * FROM users WHERE id = ?")
         const checkData = checkStmt.get(id);
         if (!checkData) {
@@ -348,15 +361,25 @@ export async function runServer() {
         if (!id) {
           return reply.status(400).send({ error: "ID required" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        const reqID = req.headers["x-user-id"];
-        if (!reqID) {
-          return reply.status(401).send({ error: "Id missing in header" });
+
+        const authHeader = req.headers.authorization || '';
+        const sessionsCheck = await fetch(`${AUTH_URL}/sessions/validate`, {
+          method : 'POST',
+          headers: {
+            authorization: authHeader, 
+          }
+        });
+        if (!sessionsCheck.ok) {
+          return reply.status(500).send({ error: "Session verification failed" });
         }
-        if (reqID !== id) {
-          return reply.status(403).send({ error: "Id mismatch" });
+        const sessionsJson = await sessionsCheck.json();
+        if (!sessionsJson.valid) {
+          return reply.status(401).send({ error: "Invalid session" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        if (sessionsJson.userId && String(sessionsJson.userId) !== String(id)) {
+          return reply.status(403).send({ error: "Can only change your password" });
+        }
+
         const user_auth_type = usersDB.prepare("SELECT auth_type, password FROM users WHERE id = ?");
         const user = user_auth_type.get(id);
         if (!user) {
@@ -756,15 +779,25 @@ export async function runServer() {
         if (!userID) {
             return reply.status(400).send({ error: "userID required" });
           }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        const reqID  = req.headers["x-user-id"];
-        if (!reqID) {
-            return reply.status(401).send({ error: "reqID required" });
+
+        const authHeader = req.headers.authorization || '';
+        const sessionsCheck = await fetch(`${AUTH_URL}/sessions/validate`, {
+          method : 'POST',
+          headers: {
+            authorization: authHeader, 
           }
-        if (userID !== reqID) {
+        });
+        if (!sessionsCheck.ok) {
+          return reply.status(500).send({ error: "Session verification failed" });
+        }
+        const sessionsJson = await sessionsCheck.json();
+        if (!sessionsJson.valid) {
+          return reply.status(401).send({ error: "Invalid session" });
+        }
+        if (sessionsJson.userId && String(sessionsJson.userId) !== String(id)) {
           return reply.status(403).send({ error: "Can only view your own matches list" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         const getStmt = usersDB.prepare(`
           SELECT * FROM matches 
           WHERE player1_id = ? OR player2_id = ? 
