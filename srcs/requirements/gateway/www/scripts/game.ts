@@ -283,10 +283,10 @@ function initSprite(board: Sprite, player1: Sprite, player2: Sprite, ball: Sprit
 async function loadSprites(game: Game) {
     try {
         const [board, player1, player2, ball] = await Promise.all([
-            loadImage('../assets/pong/Board.png', {x:0, y:0}, {up: undefined, down: undefined}, undefined),
-            loadImage('../assets/pong/Player.png', {x:0, y:0}, {up: false, down: false}, 0),
-            loadImage('../assets/pong/Player2.png', {x:0, y:0}, {up: false, down: false}, 0),
-            loadImage('../assets/pong/Ball.png', {x:-9, y:9}, {up: undefined, down: undefined}, undefined)]
+            loadImage('../assets/pong/Board.png', {x:0, y:0}),
+            loadImage('../assets/pong/Player.png', {x:0, y:0}),
+            loadImage('../assets/pong/Player2.png', {x:0, y:0}),
+            loadImage('../assets/pong/Ball.png', {x:-9, y:9})]
         )
         initSprite(board, player1, player2, ball)
         game.board = board;
