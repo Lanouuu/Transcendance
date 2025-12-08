@@ -1,8 +1,7 @@
-const USERS_URL: string = "https://localhost:8443/users"; // A changer "localhost"
+const USERS_URL: string = `${window.location.origin}/users`;
 
 export async function displayAccountPage() {
 
-	const BASE_URL: string = `${window.location.origin}/users`;
 	const userId: string | null = sessionStorage.getItem("userId");
 	const token: string | null = sessionStorage.getItem("jwt");
 	let		accountActiveTab:	string | null = sessionStorage.getItem("accountActiveTab");
@@ -169,9 +168,9 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 			}
 			reader.readAsDataURL(file);
 
-			profilePicButton.style.display = "none";
-			profilePicButtonConfirm.style.display = "block";
-			profilePicButtonCancel.style.display = "block";
+			profilePicButton.classList.add('hidden');
+			profilePicButtonConfirm.classList.remove('hidden');
+			profilePicButtonCancel.classList.remove('hidden');
 
 
 		})
@@ -180,9 +179,9 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 
 			if (!selectedFile) return;
 
-			profilePicButtonConfirm.style.display = "none";
-			profilePicButtonCancel.style.display = "none";
-			profilePicButton.style.display = "block";
+			profilePicButtonConfirm.classList.add('hidden');
+			profilePicButtonCancel.classList.add('hidden');
+			profilePicButton.classList.remove('hidden');
 			try {
 				const formData = new FormData();
 				formData.append('avatar', selectedFile);
@@ -209,9 +208,9 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 
 		profilePicButtonCancel.addEventListener('click', async () => {
 
-			profilePicButtonConfirm.style.display = "none";
-			profilePicButtonCancel.style.display = "none";
-			profilePicButton.style.display = "block";
+			profilePicButtonConfirm.classList.add('hidden');
+			profilePicButtonCancel.classList.add('hidden');
+			profilePicButton.classList.remove('hidden');
 			profilePic.src = originalSrc;
 			selectedFile = null;
 			profilePicInput.value = '';
