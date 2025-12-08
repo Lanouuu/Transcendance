@@ -98,6 +98,26 @@ export default async function routes(fastify, options) {
       }
     });
 
+    fastify.post('/sessions/validate', async (req, reply) => {
+      try {
+        const auth = req.headers.authorization || '';
+        const token = auth.startsWith('Bearer ') ? auth.slice(7) : auth;
+        if (!token) return reply.code(401).send({ valid: false });
+      
+        let payload;
+        try {
+          payload = await verifyToken(fastify, token);
+        } catch (_) {
+          return reply.code(401).send({ valid: false });
+        }
+      
+        return reply.code(200).send({ valid: true, userId: String(payload.id) });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.code(500).send({ valid: false });
+      }
+    });
+
     // signup
     fastify.post("/signup", async (request, reply) => {
       const { userName, mail, password, enable2FA } = request.body;
