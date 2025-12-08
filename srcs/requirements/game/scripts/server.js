@@ -61,7 +61,7 @@ function startTimer(game) {
 }
 
 async function sendResult(game) {
-    const winner_id = undefined;
+    let winner_id = undefined;
     if (game.player1.score === 5)
         winner_id = game.player1.id
     else
@@ -82,9 +82,9 @@ async function sendResult(game) {
            });
 
         if(!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || "Failed to send result");
-      }
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || "Failed to send result");
+        }
     } catch(e) {
         console.log(e.error)
     }
@@ -257,14 +257,14 @@ function loadSprite(game) {
     size = imageSize("assets/Player.png")
 
     game.player1.sprite.position.x = 0;
-    game.player1.sprite.position.y = game.board.imgSize.height / 2 - game.ball.imgSize.height / 2;;
+    game.player1.sprite.position.y = game.board.imgSize.height / 2 - size.height / 2;;
     game.player1.sprite.imgSize.height = size.height
     game.player1.sprite.imgSize.width = size.width
 
     size = imageSize("assets/Player2.png")
 
     game.player2.sprite.position.x = game.board.imgSize.width - size.width;
-    game.player2.sprite.position.y = game.board.imgSize.height / 2 - game.ball.imgSize.height / 2;;
+    game.player2.sprite.position.y = game.board.imgSize.height / 2 - size.height / 2;;
     game.player2.sprite.imgSize.height = size.height
     game.player2.sprite.imgSize.width = size.width
 }
@@ -340,15 +340,15 @@ fastify.get("/remote", async (request, reply) => {
             game.player2.id = queue[0][0]
             game.player2.name = queue[0][1]
             game.message = "start"
-            // game.socket[0].userId = game.player1.id
             games.set(game.id, game)
             reply.send(game)
-            // if (game.socket[0].readyState === WebSocket.OPEN)
-             game.socket.forEach(socket => {
-                if (socket.readyState === 1) {
-                    socket.send(JSON.stringify(game));
-                }
-            })
+            if (game.socket[0].readyState === WebSocket.OPEN) {
+                game.socket.forEach(socket => {
+                   if (socket.readyState === 1) {
+                       socket.send(JSON.stringify(game));
+                   }
+               })
+            }
         }
         queue.shift()
     } catch (e) {

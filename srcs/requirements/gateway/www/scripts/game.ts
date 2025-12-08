@@ -100,7 +100,7 @@ export async function gameLoop(game: Game) { // BIZARRE LE TYPE
 			// game.message = "Init"
 			// console.log("GAME IN OPEN ", game)
 			if (ws.readyState === WebSocket.OPEN)
-				ws.send(JSON.stringify({message: "Init"}))
+				ws.send(JSON.stringify({game, message: "Init"}))
 		})
 
 		ws.addEventListener('message', (event) => {
