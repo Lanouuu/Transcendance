@@ -167,6 +167,8 @@ class Router {
 				// Updates the <main> of index.html
 				this.mainContent.innerHTML = content;
 
+				await new Promise(resolve => setTimeout(resolve, 0));
+
 				// Loads the scripts corresponding the the page loaded
 				switch(page) {
 					case 'home':
@@ -175,26 +177,7 @@ class Router {
 						break;
 					case 'game':
 						const gameScript = await import('./game.js')
-						const localButton = document.getElementById('gameLocalGameButton');
-						if (localButton && gameScript.launchLocalGame) {
-							localButton.addEventListener('click', async () => {
-								try {
-									await gameScript.launchLocalGame();
-								} catch (error) {
-									console.error('Error launching the game:', error);
-								}
-							})
-						}
-						const remoteButton = document.getElementById('gameRemoteGameButton');
-						if (remoteButton && gameScript.launchRemoteGame) {
-							remoteButton.addEventListener('click', async () => {
-								try {
-									await gameScript.launchRemoteGame();
-								} catch (error) {
-									console.error('Error launching the game:', error);
-								}
-							})
-						}
+						if (gameScript.setupGamePage) gameScript.setupGamePage();
 						break;
 					case 'tournament':
 						const tournamentScript = await import('./tournament.js');

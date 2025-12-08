@@ -18,22 +18,33 @@ export class Sprite {
 	velocity:	Vector2D;
 	image:		HTMLImageElement;
 	imgSize:	ImgSize;
-	key:		KeyBind;
-	score:		number | undefined;
 	loaded:		boolean;
 
-    constructor({position, velocity, imageSrc, imgSize, key, score}: { position: Vector2D, velocity: Vector2D, imageSrc: string, imgSize: ImgSize, key: KeyBind, score: number | undefined}) {
+    constructor({position, velocity, imageSrc, imgSize}: { position: Vector2D, velocity: Vector2D, imageSrc: string, imgSize: ImgSize}) {
         this.position = position
         this.velocity = velocity
         this.image = new Image()
         this.image.src = imageSrc
 		this.imgSize = imgSize;
-        this.key = key
-        this.score = score
         this.loaded = false
     }
 }
 
+export class Player {
+	name:		string | undefined; 
+	key:		KeyBind;
+	score:		number | undefined;
+	sprite:		Sprite;
+	id:			number | undefined
+
+	constructor({name, key, score, sprite}: { name: string | undefined, key: KeyBind, score: number | undefined, sprite: Sprite}) {
+		this.name = name;
+		this.key = key;
+		this.score = score;
+		this.sprite = sprite;
+		this.id = undefined;
+	}
+}
 
 export class Game {
 	id:				number;
@@ -42,51 +53,41 @@ export class Game {
 	message:		string;
 	winner:			string;
 	displayWinner:	string;
+	started:		boolean;
+	timer:			number;
+	timerStarted:	boolean;
+	nbPlayer:		number;
 
-	player1:	Sprite;
-	player2:	Sprite;
+	player1:	Player;
+	player2:	Player;
 	ball:		Sprite;
 	board:		Sprite;
 
-    constructor({id, socket, mode}: { id: number, socket: WebSocket, mode: string}) {
+    constructor({id, socket, mode, message}: { id: number, socket: WebSocket, mode: string, message: string}) {
         this.id = id
         this.socket = socket
         this.mode = mode
-        this.message = "";
+        this.message = message;
 		this.winner = "";
 		this.displayWinner = "";
+		this.started = false;
+		this.timer = 3;
+		this.timerStarted = false;
+		this.nbPlayer = 0;
 
-		this.player1 = new Sprite({
-			position: { x: 0 , y: 0 },
-			velocity: { x: 0, y: 0 },
-			imageSrc: "./assets/Player.png",
-			imgSize: { height: 0 , width: 0 },
+		this.player1 = new Player({
+			name: undefined,
 			key: { up: false , down: false },
-			score: 0
+			score: 0,
+			sprite: undefined as unknown as Sprite
 		});
-		this.player2 = new Sprite({
-			position: { x: 0 , y: 0 },
-			velocity: { x: 0, y: 0 },
-			imageSrc: "./assets/Player2.png",
-			imgSize: { height: 0 , width: 0 },
+		this.player2 = new Player({
+			name: undefined,
 			key: { up: false , down: false },
-			score: 0
+			score: 0,
+			sprite: undefined as unknown as Sprite
 		});
-		this.ball = new Sprite({
-			position: { x: 0 , y: 0 },
-			velocity: { x: 0, y: 0 },
-			imageSrc: "./assets/Ball.png",
-			imgSize: { height: 0 , width: 0 },
-			key: { up: false , down: false },
-			score: 0
-		})
-		this.board = new Sprite({
-			position: { x: 0 , y: 0 },
-			velocity: { x: 0, y: 0 },
-			imageSrc: "./assets/Board.png",
-			imgSize: { height: 0 , width: 0 },
-			key: { up: false , down: false },
-			score: 0
-		})
+		this.ball = undefined as unknown as Sprite;
+		this.board = undefined as unknown as Sprite;
     }
 }

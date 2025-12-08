@@ -1,6 +1,6 @@
 export function login() {
 
-	const BASE_URL: string = "https://localhost:8443/auth_service";
+	const BASE_URL: string = `${window.location.origin}/auth_service`;
 
 	const form = document.getElementById("login-form");
 	const button42 = document.getElementById("42ConnectionButton");

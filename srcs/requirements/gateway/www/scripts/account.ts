@@ -2,8 +2,9 @@ const USERS_URL: string = "https://localhost:8443/users";
 
 export async function displayAccountPage() {
 
-	const	userId:				string | null = localStorage.getItem("userId");
-	const	token:				string | null = localStorage.getItem("jwt");
+	const BASE_URL: string = `${window.location.origin}/users`;
+	const userId: string | null = localStorage.getItem("userId");
+	const token: string | null = localStorage.getItem("jwt");
 	let		accountActiveTab:	string | null = localStorage.getItem("accountActiveTab");
 
 	if (!userId || !token) {
