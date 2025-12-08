@@ -99,8 +99,8 @@ async function updatePass(BASE_URL: string, userId: string, token: string) {
 
 export async function editProfile() {
     const BASE_URL: string = "https://localhost:8443/users";
-    const userId: string = localStorage.getItem("userId") as string;
-    const token: string = localStorage.getItem("jwt") as string;
+    const userId: string = sessionStorage.getItem("userId") as string;
+    const token: string = sessionStorage.getItem("jwt") as string;
 
     const nameForm = document.getElementById("editUsernameForm");
     const mailForm = document.getElementById("editMailForm");

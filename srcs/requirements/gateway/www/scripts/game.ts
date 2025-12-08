@@ -37,8 +37,9 @@ export async function setupGamePage(): Promise<void> {
 
 async function launchLocalGame() {
 
-	const token: string | null = localStorage.getItem("jwt");
-	const userId: string | null = localStorage.getItem("userId");
+	const token: string | null = sessionStorage.getItem("jwt");
+	const userId: string | null = sessionStorage.getItem("userId");
+	const remoteButton: HTMLButtonElement = document.getElementById('gameRemoteGameButton') as HTMLButtonElement;
 
 	if (userId === null || token === null) {
 		console.error('Could not fetch user id/token');
@@ -75,8 +76,9 @@ async function launchLocalGame() {
 
 async function launchRemoteGame() {
 
-	const token: string | null = localStorage.getItem("jwt");
-	const userId: string | null = localStorage.getItem("userId");
+	const token: string | null = sessionStorage.getItem("jwt");
+	const userId: string | null = sessionStorage.getItem("userId");
+	const localButton: HTMLButtonElement = document.getElementById('gameLocalGameButton') as HTMLButtonElement;
 	
 	if (userId === null || token === null) {
 		console.error('Could not fetch user id/token');
@@ -281,10 +283,10 @@ function initSprite(board: Sprite, player1: Sprite, player2: Sprite, ball: Sprit
 async function loadSprites(game: Game) {
     try {
         const [board, player1, player2, ball] = await Promise.all([
-            loadImage('../assets/Board.png', {x:0, y:0}),
-            loadImage('../assets/Player.png', {x:0, y:0}),
-            loadImage('../assets/Player2.png', {x:0, y:0}),
-            loadImage('../assets/Ball.png', {x:-9, y:9})]
+            loadImage('../assets/pong/Board.png', {x:0, y:0}, {up: undefined, down: undefined}, undefined),
+            loadImage('../assets/pong/Player.png', {x:0, y:0}, {up: false, down: false}, 0),
+            loadImage('../assets/pong/Player2.png', {x:0, y:0}, {up: false, down: false}, 0),
+            loadImage('../assets/pong/Ball.png', {x:-9, y:9}, {up: undefined, down: undefined}, undefined)]
         )
         initSprite(board, player1, player2, ball)
         game.board = board;

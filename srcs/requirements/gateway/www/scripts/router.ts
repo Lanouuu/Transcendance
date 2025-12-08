@@ -18,10 +18,12 @@ function handleOauth42Redirect() {
     const id = params.get("id");
 
     if (token && id) {
-        localStorage.setItem("jwt", token);
-        localStorage.setItem("userId", id);
+        sessionStorage.setItem("jwt", token);
+        sessionStorage.setItem("userId", id);
 
         document.body.classList.add("loggedIn");
+
+		window.dispatchEvent(new Event('user:login'));
 
         window.location.hash = "#account";
     }
@@ -34,7 +36,8 @@ class Router {
 	private mainContent: HTMLElement;
 	private currentBgUrl: string;
 	private currentPage: string;
-	private BASE_URL: string = "https://localhost:8443/auth_service";
+	private heartBeatInterval: number | null = null;
+	private BASE_URL: string = `https://localhost:8443/`; // A modifier
 
 	constructor() {
 		// Selects the part of the html doc we want to update (?)
@@ -50,13 +53,54 @@ class Router {
 		// First load (supposed to launch main i guess)
 		this.handleRoute();
 
-		// A SUPPRIMER (TESTS) /////////////////////////////////////////////////////////////////////////////////
-		const addFriendsModule = await import('./addFriends.js');
-		if (addFriendsModule.initTest) addFriendsModule.initTest();
-		else console.log("CA MARCHE PO");
-		////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 		window.addEventListener('hashchange', () => this.handleRoute());
+		
+		window.addEventListener('user:login', () => this.startHeartbeat());
+		window.addEventListener('user:logout', () => this.stopHeartbeat());
+
+// 		window.addEventListener('storage', (ev: StorageEvent) => {
+//			if (ev.key === 'jwt') {
+//				if (sessionStorage.getItem('jwt')) this.startHeartbeat();
+//				else this.stopHeartbeat();
+//			}
+//		});
+// 		Potentiellement juste dispatch un event user:login ou logout en fonction et laisser ceux du haut gerer le bordel
+
+		if (sessionStorage.getItem("jwt") && sessionStorage.getItem("userId")) 
+			this.startHeartbeat();
+	}
+
+	private startHeartbeat (): void {
+
+		if (this.heartBeatInterval !== null) return ;
+
+		const sendHeartbeat = async () => {
+			const token = sessionStorage.getItem("jwt");
+			const userId = sessionStorage.getItem("userId");
+			if (!token || !userId) return ;
+			try {
+				await fetch(`${this.BASE_URL}/users/heartbeat`, {
+					method: "POST",
+					headers: {
+						"authorization": `Bearer ${token}`,
+						"x-user-id": userId,
+					},
+				});
+				console.log(`Heartbeat send for userId: ${userId}`);
+			} catch (error) {
+				console.debug("Heartbeat failed", error);
+			}
+		};
+
+		void sendHeartbeat();
+		this.heartBeatInterval = window.setInterval(sendHeartbeat, 20_000);
+	}
+
+	private stopHeartbeat(): void {
+		if (this.heartBeatInterval !== null) {
+			clearInterval(this.heartBeatInterval);
+			this.heartBeatInterval = null;
+		}
 	}
 
 	// Gets called each time the hash (#) changes (?)
@@ -213,9 +257,20 @@ class Router {
 	}
 }
 
+// A SUPPRIMER (TESTS) /////////////////////////////////////////////////////////////////////////////////
+(async () => {
+	if (!localStorage.getItem("userTest")) {
+		const addFriendsModule = await import('./addFriends.js');
+		if (addFriendsModule.initTest) addFriendsModule.initTest();
+		else console.log("CA MARCHE PO");
+		localStorage.setItem("userTest", "true");
+	}
+})();	
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 document.addEventListener('DOMContentLoaded', () => {
 
-	if (!localStorage.getItem("jwt"))
+	if (!sessionStorage.getItem("jwt"))
 		document.body.classList.remove("loggedIn");
 	else
 		document.body.classList.add("loggedIn");

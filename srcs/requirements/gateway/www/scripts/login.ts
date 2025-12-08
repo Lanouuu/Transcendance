@@ -35,10 +35,12 @@ export function login() {
 				}
 
 				if (res.ok && data.token) {
-					localStorage.setItem("jwt", data.token);
-					localStorage.setItem("userId", data.id);
+					sessionStorage.setItem("jwt", data.token);
+					sessionStorage.setItem("userId", data.id);
 
 					document.body.classList.add("loggedIn");
+
+					window.dispatchEvent(new Event('user:login'));
 
 					setTimeout(async () => {
 						window.location.hash = '#account';
