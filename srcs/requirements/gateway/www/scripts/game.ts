@@ -1,15 +1,23 @@
 import { Game, Sprite, Vector2D, KeyBind, ImgSize } from "./gameClass.js"
+import { SnakeGame } from "./snakeGame.js"
+
 
 const route: string = `${window.location.origin}/game`;
 const ws_route: string = `://${window.location.host}/game`;
+const snake_route: string = `${window.location.origin}/second_game`;
+const snake_ws_route: string = `://${window.location.host}/second_game`;
 
 export async function setupGamePage(): Promise<void> {
 	
 	const initButtons = () => {
 		const remoteButton: HTMLButtonElement = document.getElementById('gameRemoteGameButton') as HTMLButtonElement;
 		const localButton: HTMLButtonElement = document.getElementById('gameLocalGameButton') as HTMLButtonElement;
+		const snakeLocalButton: HTMLButtonElement = document.getElementById('snakeLocalGameButton') as HTMLButtonElement;
+		const snakeRemoteButton: HTMLButtonElement = document.getElementById('snakeRemoteGameButton') as HTMLButtonElement;
+		const gameMenu: HTMLElement = document.getElementById('gameSelectionMenu') as HTMLElement;
 
-		if (!remoteButton || !localButton) {
+
+		if (!remoteButton || !localButton || !snakeLocalButton || !snakeRemoteButton) {
 			console.error("Could not fetch game buttons");
 			return ;
 		}
@@ -25,6 +33,16 @@ export async function setupGamePage(): Promise<void> {
 			localButton.classList.add('hidden');
 			remoteButton.classList.add('hidden');
 			console.log("remoteGameBUtton");	
+		});
+		snakeLocalButton.addEventListener('click', async () => {
+			console.log("snakeLocalGameButton");
+			if (gameMenu) gameMenu.classList.add('hidden');
+			launchSnakeLocalGame();
+		});
+		snakeRemoteButton.addEventListener('click', async () => {
+			console.log("snakeRemoteGameButton");
+			if (gameMenu) gameMenu.classList.add('hidden');
+			launchSnakeRemoteGame();
 		});
 	};
 
@@ -296,4 +314,279 @@ async function loadSprites(game: Game) {
     }catch(e) {
         console.error("ERREUR CHARGEMENT IMAGES", e);
     }
+}
+
+
+// Snake Game Functions
+
+async function launchSnakeLocalGame() {
+	const token: string | null = sessionStorage.getItem("jwt");
+	const userId: string | null = sessionStorage.getItem("userId");
+
+	if (userId === null || token === null) {
+		console.error('Could not fetch user id/token');
+		return;
+	}
+
+	try {
+		const res = await fetch(`${snake_route}/local`, {
+			method: "GET",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId
+			},
+		});
+		if (!res.ok) {
+			const text = await res.text();
+			console.error(`Server error ${res.status}:`, text);
+			throw new Error(`Failed to load Snake game`);
+		}
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")) {
+			const text = await res.text();
+			console.error(`Server did not return JSON`, text);
+			throw new Error(`Server response is not JSON`);
+		}
+
+		const gameData = await res.json();
+		const game = new SnakeGame(gameData);
+		snakeGameLoop(game);
+	} catch (err) {
+		console.error(err);
+	}
+}
+
+async function launchSnakeRemoteGame() {
+	const token: string | null = sessionStorage.getItem("jwt");
+	const userId: string | null = sessionStorage.getItem("userId");
+
+	if (userId === null || token === null) {
+		console.error('Could not fetch user id/token');
+		return;
+	}
+
+	try {
+		const res = await fetch(`${snake_route}/remote`, {
+			method: "GET",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId
+			},
+		});
+		if (!res.ok) {
+			const text = await res.text();
+			console.error(`Server error ${res.status}:`, text);
+			throw new Error(`Failed to load Snake game`);
+		}
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")) {
+			const text = await res.text();
+			console.error(`Server did not return JSON`, text);
+			throw new Error(`Server response is not JSON`);
+		}
+
+		const gameData = await res.json();
+		const game = new SnakeGame(gameData);
+		snakeGameLoop(game);
+	} catch (err) {
+		console.error(err);
+	}
+}
+
+async function snakeGameLoop(game: SnakeGame) {
+	try {
+		const ws = new WebSocket(`wss${snake_ws_route}/ws`);
+		game.socket = ws;
+
+		ws.addEventListener('open', () => {
+			if (ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({game, message: "Init"}));
+			}
+		});
+
+		ws.addEventListener('message', (event) => {
+			const serverGame = JSON.parse(event.data);
+			game.updateFromServer(serverGame);
+		});
+
+		ws.addEventListener('error', (error) => {
+			console.error('WebSocket error:', error);
+		});
+
+		ws.addEventListener('close', () => {
+			console.log('WebSocket connection closed');
+		});
+
+		// Input handling
+		window.addEventListener('keydown', (e) => {
+			let updated = false;
+
+			// Player 1: WASD
+			switch(e.key) {
+				case 'w':
+				case 'W':
+					game.player1.nextDirection = {x: 0, y: -1};
+					updated = true;
+					break;
+				case 's':
+				case 'S':
+					game.player1.nextDirection = {x: 0, y: 1};
+					updated = true;
+					break;
+				case 'a':
+				case 'A':
+					game.player1.nextDirection = {x: -1, y: 0};
+					updated = true;
+					break;
+				case 'd':
+				case 'D':
+					game.player1.nextDirection = {x: 1, y: 0};
+					updated = true;
+					break;
+
+				// Player 2: Arrow keys
+				case 'ArrowUp':
+					game.player2.nextDirection = {x: 0, y: -1};
+					updated = true;
+					break;
+				case 'ArrowDown':
+					game.player2.nextDirection = {x: 0, y: 1};
+					updated = true;
+					break;
+				case 'ArrowLeft':
+					game.player2.nextDirection = {x: -1, y: 0};
+					updated = true;
+					break;
+				case 'ArrowRight':
+					game.player2.nextDirection = {x: 1, y: 0};
+					updated = true;
+					break;
+			}
+
+			if (updated && ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({game, message: "input"}));
+			}
+		});
+
+		// Start rendering
+		snakeAnimation(game);
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+function snakeAnimation(game: SnakeGame) {
+	const canvas = document.getElementById("snakeCanvas") as HTMLCanvasElement;
+	const ctx = canvas.getContext('2d');
+
+	if (!ctx || !canvas) {
+		console.error('Could not fetch snake canvas or context');
+		return;
+	}
+
+	// Show canvas
+	canvas.classList.remove('hidden');
+
+	// Set canvas size based on grid
+	canvas.width = game.grid.width * game.grid.cellSize;
+	canvas.height = game.grid.height * game.grid.cellSize;
+
+	const render = () => {
+		// Clear canvas
+		ctx.fillStyle = '#000000';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		// Draw grid (optional - subtle)
+		ctx.strokeStyle = '#1a1a1a';
+		ctx.lineWidth = 1;
+		for (let x = 0; x <= game.grid.width; x++) {
+			ctx.beginPath();
+			ctx.moveTo(x * game.grid.cellSize, 0);
+			ctx.lineTo(x * game.grid.cellSize, canvas.height);
+			ctx.stroke();
+		}
+		for (let y = 0; y <= game.grid.height; y++) {
+			ctx.beginPath();
+			ctx.moveTo(0, y * game.grid.cellSize);
+			ctx.lineTo(canvas.width, y * game.grid.cellSize);
+			ctx.stroke();
+		}
+
+		// Draw Player 1 snake
+		if (game.player1.snake && game.player1.snake.length > 0) {
+			game.player1.snake.forEach((segment, index) => {
+				const alpha = index === 0 ? 1 : 0.8; // Head brighter
+				ctx.globalAlpha = alpha;
+				ctx.fillStyle = game.player1.color;
+				ctx.fillRect(
+					segment.x * game.grid.cellSize + 1,
+					segment.y * game.grid.cellSize + 1,
+					game.grid.cellSize - 2,
+					game.grid.cellSize - 2
+				);
+			});
+		}
+
+		// Draw Player 2 snake
+		if (game.player2.snake && game.player2.snake.length > 0) {
+			game.player2.snake.forEach((segment, index) => {
+				const alpha = index === 0 ? 1 : 0.8; // Head brighter
+				ctx.globalAlpha = alpha;
+				ctx.fillStyle = game.player2.color;
+				ctx.fillRect(
+					segment.x * game.grid.cellSize + 1,
+					segment.y * game.grid.cellSize + 1,
+					game.grid.cellSize - 2,
+					game.grid.cellSize - 2
+				);
+			});
+		}
+
+		ctx.globalAlpha = 1;
+
+		// Draw UI text
+		ctx.fillStyle = '#FFFFFF';
+		ctx.font = '24px Arial';
+		ctx.textAlign = 'center';
+
+		// Draw scores at top
+		ctx.fillText(
+			`${game.player1.name || 'Player 1'}: ${game.player1.snake.length}`,
+			canvas.width / 4,
+			30
+		);
+		ctx.fillText(
+			`${game.player2.name || 'Player 2'}: ${game.player2.snake.length}`,
+			(canvas.width * 3) / 4,
+			30
+		);
+
+		// Draw game state messages
+		if (game.message === "Countdown") {
+			ctx.font = '48px Arial';
+			ctx.fillText(
+				game.timer === 0 ? "GO!" : game.timer.toString(),
+				canvas.width / 2,
+				canvas.height / 2
+			);
+		} else if (game.message === "Waiting") {
+			ctx.font = '36px Arial';
+			ctx.fillText(
+				"Waiting for opponent...",
+				canvas.width / 2,
+				canvas.height / 2
+			);
+		} else if (game.message === "END") {
+			ctx.font = '36px Arial';
+			ctx.fillText(game.displayWinner, canvas.width / 2, canvas.height / 2);
+			// Stop animation
+			return;
+		}
+
+		requestAnimationFrame(render);
+	};
+
+	render();
 }
