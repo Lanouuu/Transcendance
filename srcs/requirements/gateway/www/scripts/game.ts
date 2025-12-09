@@ -26,6 +26,8 @@ export async function setupGamePage(): Promise<void> {
 			remoteButton.classList.add('hidden');
 			console.log("remoteGameBUtton");	
 		});
+		
+
 	};
 
 

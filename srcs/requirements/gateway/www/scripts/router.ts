@@ -225,7 +225,7 @@ class Router {
 						break;
 					case 'tournament':
 						const tournamentScript = await import('./tournament.js');
-						// if (tournamentScript.tournament) tournamentScript.tournament();
+						if (tournamentScript.displayTournamentPage) tournamentScript.displayTournamentPage();
 						break;
 					case 'account':
 						const accountScript = await import('./account.js');
