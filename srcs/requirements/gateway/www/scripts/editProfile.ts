@@ -1,3 +1,5 @@
+const BASE_URL: string = `${window.location.origin}/users`;
+
 async function updateName(BASE_URL: string, userId: string, token: string) {
     const newName: string = (document.getElementById("editUsernameInput") as HTMLInputElement).value;
 
@@ -98,7 +100,6 @@ async function updatePass(BASE_URL: string, userId: string, token: string) {
 }
 
 export async function editProfile() {
-    const BASE_URL: string = "https://localhost:8443/users";
     const userId: string = sessionStorage.getItem("userId") as string;
     const token: string = sessionStorage.getItem("jwt") as string;
 
