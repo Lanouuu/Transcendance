@@ -1,4 +1,4 @@
-const AUTH_URL: string = "https://localhost:8443/auth_service";
+const AUTH_URL: string = `${window.location.origin}/auth_service`;
 
 export async function logout () {
 	const token = sessionStorage.getItem("jwt");
