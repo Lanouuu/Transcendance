@@ -1,6 +1,6 @@
 const BASE_URL: string = `${window.location.origin}/users`;
 
-async function updateName(BASE_URL: string, userId: string, token: string) {
+async function updateName(userId: string, token: string) {
     const newName: string = (document.getElementById("editUsernameInput") as HTMLInputElement).value;
 
     try {
@@ -32,7 +32,7 @@ async function updateName(BASE_URL: string, userId: string, token: string) {
     }
 }
 
-async function updateMail(BASE_URL: string, userId: string, token: string) {
+async function updateMail(userId: string, token: string) {
     const newMail = (document.getElementById("editMailInput") as HTMLInputElement).value;
     const confirmMail = (document.getElementById("confirmMailInput") as HTMLInputElement).value;
 
@@ -65,7 +65,7 @@ async function updateMail(BASE_URL: string, userId: string, token: string) {
     }
 }
 
-async function updatePass(BASE_URL: string, userId: string, token: string) {
+async function updatePass(userId: string, token: string) {
     const currentPassword = (document.getElementById("currentPasswordInput") as HTMLInputElement).value;
     const newPassword = (document.getElementById("editPasswordInput") as HTMLInputElement).value;
     const confirmPassword = (document.getElementById("confirmPasswordInput") as HTMLInputElement).value;
@@ -110,21 +110,21 @@ export async function editProfile() {
     if (nameForm) {
         nameForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            await updateName(BASE_URL, userId, token);
+            await updateName(userId, token);
             (e.target as HTMLFormElement).reset();
         });
     }
     if (mailForm) {
         mailForm.addEventListener("submit", async(e) => {
             e.preventDefault();
-            await updateMail(BASE_URL, userId, token);
+            await updateMail(userId, token);
            (e.target as HTMLFormElement).reset();
         });
     }
     if (passForm) {
         passForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            await updatePass(BASE_URL, userId, token);
+            await updatePass(userId, token);
             (e.target as HTMLFormElement).reset();
         });
     }
