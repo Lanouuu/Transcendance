@@ -49,8 +49,8 @@ try {
     if (!token) {
         return reply.code(401).send({ error: "No token provided" });
     }
-
-    const decoded = await verifyToken(token);
+    console.log("verify token logout");
+    const decoded = await verifyToken(fastify,token);
     
     request.user = decoded;
     request.token = token;
