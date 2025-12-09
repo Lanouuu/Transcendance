@@ -246,12 +246,38 @@ export default async function routes(fastify, options) {
     });
 
     // deconnexion
-    fastify.post("/logout", { preHandler: [fastify.authenticate] }, async (req, reply) => {
-      const tokenHash = await bcrypt.hash(req.token,10);
-      await db.run("DELETE FROM sessions WHERE token_hash = ?", [tokenHash]);
+    fastify.post("/logout", async (req, reply) => {
+      try {
+        const authHeader = req.headers["authorization"] || "";
+        let token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : (authHeader || undefined);
 
-      const userID = req.user.id;
-      await redis.del(`user:${userID}:online`);
-      reply.send({ message: "Logged out" });
+        if (!token) {
+          fastify.log.warn("logout: no token provided");
+          return reply.code(401).send({ error: "No token provided" });
+        }
+
+        let payload;
+        try {
+          payload = await verifyToken(fastify, token);
+        } catch (err) {
+          fastify.log.warn({ err }, "logout: token verification failed");
+          return reply.code(401).send({ error: "Invalid token" });
+        }
+
+        const userID = String(payload.id);
+        if (!userID) {
+          fastify.log.warn("logout: no user id in token");
+          return reply.code(400).send({ error: "Invalid token payload" });
+        }
+
+        await db.run("DELETE FROM sessions WHERE user_id = ?", [userID]);
+
+        const delCount = await redis.del(`user:${userID}:online`);
+
+        reply.send({ message: "Logged out" });
+      } catch (err) {
+        fastify.log.error(err, "logout error");
+        return reply.code(500).send({ error: "Logout failed" });
+      }
     });
 }
