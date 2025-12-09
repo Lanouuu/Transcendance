@@ -106,7 +106,7 @@ export async function initTest(): Promise<void> {
     await sendInvite("1", "jacob", tokens["alice"]);
 
     await acceptInvite("2", { friendID: 1 }, tokens["bob"]);
-    await acceptInvite("3", { friendID: 1 }, tokens["cat"]);
+    // await acceptInvite("3", { friendID: 1 }, tokens["cat"]);
     await acceptInvite("4", { friendID: 1 }, tokens["david"]);
     await acceptInvite("5", { friendID: 1 }, tokens["eric"]);
     await acceptInvite("6", { friendID: 1 }, tokens["frank"]);

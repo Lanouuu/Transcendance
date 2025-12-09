@@ -227,13 +227,14 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 // #region FriendsTab //
 async function showFriendsTab(userId: string, token: string): Promise<void> {
 	const ulFriendsList: HTMLUListElement = document.getElementById("friendsList") as HTMLUListElement;
+	const ulPendingList: HTMLUListElement = document.getElementById("inviteList") as HTMLUListElement;
 
-	if (!ulFriendsList) {
+	if (!ulFriendsList || !ulPendingList) {
 		console.error("HTML Element not found");
 		return;
 	}
 
-	ulFriendsList.innerHTML = "";
+	// #region friendList //
 
 	try {
 		const res = await fetch(`${USERS_URL}/friends-list/${userId}`, {
@@ -247,6 +248,9 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 		const { friendsList } = (await res.json());
 
 		const frag = document.createDocumentFragment();
+		if (friendsList.length > 0) {
+			ulFriendsList.innerHTML = "";
+		}
 		for (const friend of friendsList) {
 			const friendId: string = friend.id;
 			const friendName: string = friend.name;
@@ -267,7 +271,6 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 
 				if (resStatus && resStatus.ok) {
 					isOnline = (await resStatus.json()).online;
-					console.log(isOnline);
 				}
 
 				if (resAvatar && resAvatar.ok) {
@@ -279,16 +282,46 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 				console.error("Friend data fetch failed for", friendId, err);
 			}
 
-			frag.appendChild(createLiItem(avatarUrl, friendName, isOnline, userId, token));
+			frag.appendChild(createLiFriendItem(avatarUrl,friendId, friendName, isOnline, userId, token));
 		}
 		ulFriendsList.appendChild(frag);
 	} catch (error) {
 		console.error("Error displaying friends Tab:", error); // afficher msg dans une div pour le user
 	}
+	// #endregion friendList //
+
+	// #region inviteList //
+
+	try {
+		const res = await fetch(`${USERS_URL}/get-invits/${userId}`, {
+			method: "GET",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId
+			},
+		});
+		if (!res.ok) throw new Error(`Invite list not found`);
+		const { pendingList } = (await res.json());
+
+		const frag = document.createDocumentFragment();
+		if (pendingList.length > 0) {
+			ulPendingList.innerHTML = "";
+		}
+		for (const invite of pendingList) {
+			const senderId: string = invite.sender_id;
+			const senderName: string = invite.sender_name;
+			frag.appendChild(createLiPendingItem(userId, token, senderId, senderName))
+		}
+		ulPendingList.appendChild(frag);
+	} catch (error) {
+		console.error("Pending data fetch failed", error);
+	}
+	
+	// #endregion inviteList //
 
 }
 
-function createLiItem(avatarUrl: string, friendName: string, isOnline: boolean, userId: string, token: string): HTMLLIElement {
+function createLiFriendItem(avatarUrl: string, friendId: string, friendName: string, isOnline: boolean, userId: string, token: string): HTMLLIElement {
 	// creation balise li
 	const li = document.createElement("li");
 	li.style.display = "grid";
@@ -334,19 +367,28 @@ function createLiItem(avatarUrl: string, friendName: string, isOnline: boolean, 
 	delFriendIcon.className = "invert"
 	delFriendButton.appendChild(delFriendIcon);
 	delFriendButton.onclick = async () => {
-		const res = await fetch(`${USERS_URL}/delete-friend`, {
-			method: "POST",
-			headers: {
-				"x-user-id": userId,
-				"authorization": `Bearer ${token}`,
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify({friendID: friendName})
-		});
-		if (!res.ok) {
+		try {
+			if (!confirm(`Delete ${friendName} from your friend's list ?`)) return ;
+			const res = await fetch(`${USERS_URL}/delete-friend`, {
+				method: "POST",
+				headers: {
+					"x-user-id": userId,
+					"authorization": `Bearer ${token}`,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({friendID: friendId})
+			});
+			if (!res.ok) {
+				console.error("Could not delete friend");
+				return ;
+			}
+			li.remove();
+			console.log("Friend deleted");
+			// Ajouter une confirmation + un msg d'info
+		} catch (error) {
 			console.error("Could not delete friend");
+			return ;
 		}
-		else console.log("Friend deleted");
 	}
 
 	// Ajout du bouton de blocage d'un ami
@@ -359,10 +401,150 @@ function createLiItem(avatarUrl: string, friendName: string, isOnline: boolean, 
 	blockFriendIcon.height = 24;
 	blockFriendIcon.className = "invert"
 	blockFriendButton.appendChild(blockFriendIcon);
+	blockFriendButton.onclick = async () => {
+		try {
+			if (!confirm(`Block ${friendName} ?`)) return ;
+			const res = await fetch(`${USERS_URL}/block-friend`, {
+				method: "POST",
+				headers: {
+					"x-user-id": userId,
+					"authorization": `Bearer ${token}`,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({friendID: friendId})
+			});
+			if (!res.ok) {
+				console.error("Could not block friend");
+				return ;
+			}
+			li.remove();
+			console.log("Friend blocked");
+			// Ajouter une confirmation + un msg d'info
+		} catch (error) {
+			console.error("Could not block friend");
+			return ;
+		}
+	};
 
 	// Ajout de tous les elements crees a la balise li
 	li.append(img, statusDot, nameSpan, playButton, delFriendButton, blockFriendButton);
 
+	return (li);
+}
+
+function createLiPendingItem(userId: string, token: string, senderId: string, senderName: string): HTMLLIElement {
+
+	const li = document.createElement("li");
+
+	const nameSpan = document.createElement("span");
+	nameSpan.textContent = senderName;
+	nameSpan.className = "text-center";
+
+	// Ajout du bouton accept invitation
+	const acceptFriendButton = document.createElement("button");
+	const acceptFriendIcon = document.createElement("img");
+	
+	// acceptFriendButton.id = "fInListacceptFriendButton"; // Same
+	acceptFriendIcon.src = "./assets/other/add-user.svg";
+	acceptFriendIcon.width = 24;
+	acceptFriendIcon.height = 24;
+	acceptFriendIcon.className = "invert"
+	acceptFriendButton.appendChild(acceptFriendIcon);
+	acceptFriendButton.onclick = async () => {
+		try {
+			const res = await fetch(`${USERS_URL}/accept-invit`, {
+				method: "POST",
+				headers: {
+					"x-user-id": userId,
+					"authorization": `Bearer ${token}`,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({friendID: senderId})
+			});
+			if (!res.ok) {
+				console.error("Could not accept invitation");
+				return ;
+			}
+			li.remove();
+			await showFriendsTab(userId, token);
+			console.log("Invitation accepted");
+		} catch (error) {
+			console.error("Could not accept invitation");
+			return ;
+		}
+	};
+
+	// Ajout du bouton decline invitation
+	const declineFriendButton = document.createElement("button");
+	const declineFriendIcon = document.createElement("img");
+	
+	// acceptFriendButton.id = "fInListacceptFriendButton"; // Same
+	declineFriendIcon.src = "./assets/other/delete-user.svg";
+	declineFriendIcon.width = 24;
+	declineFriendIcon.height = 24;
+	declineFriendIcon.className = "invert"
+	declineFriendButton.appendChild(declineFriendIcon);
+	declineFriendButton.onclick = async () => {
+		try {
+			const res = await fetch(`${USERS_URL}/decline-invit`, {
+				method: "POST",
+				headers: {
+					"x-user-id": userId,
+					"authorization": `Bearer ${token}`,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({friendID: senderId})
+			});
+			if (!res.ok) {
+				console.error("Could decline invitation");
+				return ;
+			}
+			li.remove();
+			console.log("Invitation declined");
+		} catch (error) {
+			console.error("Could not decline invitation");
+			return ;
+		}
+	};
+
+	// Ajout du bouton de blocage d'un ami
+	const blockFriendButton = document.createElement("button");
+	const blockFriendIcon = document.createElement("img");
+	
+	// blockFriendButton.id = "fInListBlockFriendButton"; // Same
+	blockFriendIcon.src = "./assets/other/block-user.svg";
+	blockFriendIcon.width = 24;
+	blockFriendIcon.height = 24;
+	blockFriendIcon.className = "invert"
+	blockFriendButton.appendChild(blockFriendIcon);
+	blockFriendButton.onclick = async () => {
+		try {
+			if (!confirm(`Block ${senderName} ?`)) return ;
+			const res = await fetch(`${USERS_URL}/block-friend`, {
+				method: "POST",
+				headers: {
+					"x-user-id": userId,
+					"authorization": `Bearer ${token}`,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({friendID: senderId})
+			});
+			if (!res.ok) {
+				console.error("Could not block friend");
+				return ;
+			}
+			li.remove();
+			console.log("Friend blocked");
+			// Ajouter une confirmation + un msg d'info
+		} catch (error) {
+			console.error("Could not block friend");
+			return ;
+		}
+	};
+
+	
+
+	li.append(nameSpan, acceptFriendButton, declineFriendButton, blockFriendButton);
 	return (li);
 }
 
