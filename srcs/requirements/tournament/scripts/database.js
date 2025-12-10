@@ -16,6 +16,7 @@ export async function initDB() {
             name                TEXT NOT NULL UNIQUE,
             status              TEXT DEFAULT 'pending',
             players_ids         TEXT,
+            players_names       TEXT,
             creator_id          TEXT,
             winner_id           TEXT,
             nb_max_players      INTEGER NOT NULL,

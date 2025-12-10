@@ -15,6 +15,22 @@ class tournoi {
   created_at
 }
 
+async function getUserName(id) {
+    try {
+        const res = await fetch(`http://users:3000/get-user/${id}`);
+        if (!res.ok) {
+            const text = await res.text();
+            console.error(`Server error ${res.status}:`, text);
+            throw new Error(`Failed to fetch user information`);
+        }
+        const user = await res.json();
+        return user.name;
+    } catch(e) {
+        console.log("getUserName error: ", e.message);
+        return `User_${id}`;
+    }
+}
+
 export async function runServer() {
 
     const fastify = Fastify({ logger: true });
@@ -28,6 +44,67 @@ export async function runServer() {
         path: '/ws'
     })
 
+    fastify.post('/tournamentCreate', async (request, reply) => {
+      const { name, creator_id, nb_max_players } = request.body || {};
+
+      if (!name || !creator_id || !nb_max_players) {
+        return reply.code(400).send({ error: "name, creator_id, nb_max_players required" });
+      }
+
+      try {
+        const playerId = request.headers["x-user-id"];
+        const playerName = await getUserName(playerId);
+        const result = await dbtour.run(
+          "INSERT INTO tournament (name, creator_id, nb_max_players, players_ids, players_names, nb_current_players) VALUES (?, ?, ?, ?, ?, ?)",
+          [name, creator_id, nb_max_players, `${creator_id}`, playerName, 1]
+        );
+        console.log(`✓ Tournament created: "${name}" (ID: ${result.lastID}) by user ${creator_id}`);
+        reply.send({ message: "Success", tournament_id: result.lastID, name });
+      } catch (err) {
+        fastify.log.error({ err }, "Tournament creation failed");
+        reply.code(500).send({ error: "Database insertion failed" });
+      }
+    });
+
+    fastify.get('/tournamentList', async (request, reply) => {
+      try {
+        const tourList = await dbtour.all("SELECT * FROM tournament ORDER BY created_at DESC");
+        reply.send(tourList);
+      } catch (err) {
+        fastify.log.error({ err }, "List tournaments failed");
+        reply.code(400).send({ error: "Database read failed" });
+      }
+    });
+
+    fastify.post('/tournamentJoin', async (request, reply) => {
+      const { idTour } = request.body || {};
+      if (!idTour) return reply.code(400).send({ error: "tournament id required" });
+
+      try {
+        const playerId = request.headers["x-user-id"];
+        const playerName = await getUserName(playerId);
+        const result = await dbtour.run(
+          `UPDATE tournament
+          SET players_ids = CASE
+          WHEN players_ids IS NULL OR players_ids = '' THEN ?
+          ELSE  players_ids || ',' || ?
+          END,
+          players_names = CASE
+          WHEN players_names IS NULL OR players_names = '' THEN ?
+          ELSE players_names || ',' || ?
+          END,
+          nb_current_players = nb_current_players + 1
+          WHERE id = ?`, [playerId, playerId, playerName, playerName, idTour]
+        );
+        console.log(`✓ Player ${playerId} joined tournament ${idTour}`);
+        reply.send({ message: "Success", text: "Player added to tournament" });
+      } catch (err) {
+        fastify.log.error({ err }, "Add player to tournament failed");
+        reply.code(500).send({ error: "Database update failed" });
+      }
+    });
+
+
     wss.on('listening', () => {
       console.log("WebSocket server running on ws://localhost:3004/ws");
     })
@@ -36,29 +113,6 @@ export async function runServer() {
     ws.on('error', console.error);
     console.log("Connection detected")
     ws.on('message', function message(data) {
-      const res = JSON.parse(data.toString())
-
-      if(res.message === "creationTour") {
-        if(!res.name) {
-          ws.send(JSON.stringify({
-            message: "Error",
-            error: "Missing name"
-          }));
-        }
-        if(!res.creator_id) {
-          ws.send(JSON.stringify({
-            message: "Error",
-            error: "Missing creator_id"
-          }));
-        }
-        if(!res.nb_max_players) {
-          ws.send(JSON.stringify({
-            message: "Error",
-            error: "Missing nb_max_players"
-          }));
-        }
-      dbtour.run("INSERT INTO tournament (name, creator_id, nb_max_players) VALUES (?, ?, ?)", [res.name, res.creator_id, res.nb_max_players]);
-      }
 
     });
   

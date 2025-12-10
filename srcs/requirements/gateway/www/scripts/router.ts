@@ -211,7 +211,8 @@ class Router {
 				// Updates the <main> of index.html
 				this.mainContent.innerHTML = content;
 
-				await new Promise(resolve => setTimeout(resolve, 0));
+				// Attendre plus longtemps pour laisser le DOM se mettre à jour
+				await new Promise(resolve => setTimeout(resolve, 50));
 
 				// Loads the scripts corresponding the the page loaded
 				switch(page) {
