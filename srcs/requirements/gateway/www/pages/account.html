@@ -246,16 +246,18 @@
 					Invite User
 				</h1>
 
-				<form id="inviteUserForm" class="flex flex-col items-center">
+				<form id="inviteUserForm" class="flex flex-col items-center justify-between">
 
 					<input id="inviteUserInput" type="text" name="Username" placeholder="Username" class="
 						w-3/4
 						text-dark
 					"required>
 
-				</form>
+					<div class="message text-center h-1" id="sendInvit-msg"></div>
 
-				<button id="inviteUserButton" type="submit">Confirm</button>
+				</form>
+				
+				<button id="inviteUserButton" type="submit" form="inviteUserForm">Confirm</button>
 
 			</div>
 

@@ -475,14 +475,44 @@ export async function runServer() {
           }
         }
 
-        const checkStmt = usersDB.prepare(`
-          SELECT * FROM friends
-          WHERE (user_id = ? AND friend_id = ?) 
-          OR 
-          (user_id = ? AND friend_id = ?)`
-        );
-        const existing = checkStmt.get(userID, friendID, friendID, userID);
-        if (existing) {
+        const reversePending = usersDB.prepare(`
+          SELECT * FROM friends WHERE user_id = ? AND friend_id = ? AND status = 'pending'
+        `).get(friendID, userID);
+        if (reversePending) {
+          usersDB.prepare("UPDATE friends SET status = 'accepted' WHERE id = ?").run(reversePending.id);
+
+          usersDB.prepare(`
+            DELETE FROM friends
+            WHERE id != ?
+            AND (
+              (user_id = ? AND friend_id = ?)
+              OR
+              (user_id = ? AND friend_id = ?)
+            )
+          `).run(reversePending.id, userID, friendID, friendID, userID);
+
+          return reply.status(201).send({ success: true, message: "Invitation accepted (mutual)" });
+        }
+
+        const existingRows = usersDB.prepare(`
+          SELECT id, status FROM friends
+          WHERE (user_id = ? AND friend_id = ?)
+             OR (user_id = ? AND friend_id = ?)
+        `).all(userID, friendID, friendID, userID);
+
+        if (existingRows.length > 0) {
+          if (existingRows.length > 1) {
+            const keepId = existingRows[0].id;
+            usersDB.prepare(`
+              DELETE FROM friends
+              WHERE id != ?
+              AND (
+                (user_id = ? AND friend_id = ?)
+                OR
+                (user_id = ? AND friend_id = ?)
+              )
+            `).run(keepId, userID, friendID, friendID, userID);
+          }
           return reply.status(409).send({ message: "Invitation already sent" });
         }
   

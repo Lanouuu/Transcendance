@@ -247,10 +247,8 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 		if (!res.ok) throw new Error(`Friend list not found`);
 		const { friendsList } = (await res.json());
 
+		ulFriendsList.innerHTML = "";
 		const frag = document.createDocumentFragment();
-		if (friendsList.length > 0) {
-			ulFriendsList.innerHTML = "";
-		}
 		for (const friend of friendsList) {
 			const friendId: string = friend.id;
 			const friendName: string = friend.name;
@@ -303,10 +301,8 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 		if (!res.ok) throw new Error(`Invite list not found`);
 		const { pendingList } = (await res.json());
 
+		ulPendingList.innerHTML = "";
 		const frag = document.createDocumentFragment();
-		if (pendingList.length > 0) {
-			ulPendingList.innerHTML = "";
-		}
 		for (const invite of pendingList) {
 			const senderId: string = invite.sender_id;
 			const senderName: string = invite.sender_name;
@@ -319,6 +315,49 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 	
 	// #endregion inviteList //
 
+	// #region sendInvit
+
+	const invitForm = document.getElementById("inviteUserForm");
+
+	if (invitForm) {
+        invitForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+			
+			const friendName: string = (document.getElementById("inviteUserInput") as HTMLInputElement).value;
+
+			try {
+				const res = await fetch(`${USERS_URL}/send-invit`, {
+					method: "POST",
+           			headers: {
+						"x-user-id": userId,
+                		"Content-Type": "application/json",
+						"authorization": `Bearer ${token}`
+            		},
+            		body: JSON.stringify({ friendName }),
+				})
+				
+				const data = await res.json();
+        		const msg = document.getElementById("sendInvit-msg");
+        		if (msg) {
+            		if (res.ok) {
+                		msg.textContent = data.message;
+                		msg.style.color = "lightgreen";
+            		} else {
+                		msg.textContent = data.error || data.message;
+                		msg.style.color = "red";
+            		}
+				}
+
+				await showFriendsTab(userId, token);
+			} catch (err) {
+				console.error(err);
+				//ajouter message
+			}
+            (e.target as HTMLFormElement).reset();
+        });
+    }
+
+	// #endregion inviteList //
 }
 
 function createLiFriendItem(avatarUrl: string, friendId: string, friendName: string, isOnline: boolean, userId: string, token: string): HTMLLIElement {
