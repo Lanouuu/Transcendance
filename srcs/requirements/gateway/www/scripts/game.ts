@@ -137,6 +137,70 @@ async function gameLoop(game: Game) { // BIZARRE LE TYPE
 	try {
 		await loadSprites(game);
 		const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
+
+		// Store handler references for cleanup
+		const keydownHandler = (e: KeyboardEvent) => {
+			// Prevent arrow keys from scrolling the page
+			if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+				e.preventDefault();
+			}
+
+			switch (e.key) {
+				case 'a':
+					game.player1.key.up = true
+					break
+				case 'd':
+					game.player1.key.down = true
+					break
+				case 'ArrowLeft':
+					game.player2.key.up = true
+					break
+				case 'ArrowRight':
+					game.player2.key.down = true
+					break
+			}
+			if (ws.readyState === WebSocket.OPEN)
+				ws.send(JSON.stringify({game, message: "input"}))
+			else
+				console.error("WebSocket is not open")
+		};
+
+		const keyupHandler = (e: KeyboardEvent) => {
+			// Prevent arrow keys from scrolling the page
+			if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+				e.preventDefault();
+			}
+
+			switch (e.key) {
+				case 'a':
+					game.player1.key.up = false
+					break
+				case 'd':
+					game.player1.key.down = false
+					break
+				case 'ArrowLeft':
+					game.player2.key.up = false
+					break
+				case 'ArrowRight':
+					game.player2.key.down = false
+					break
+			}
+			if (ws.readyState === WebSocket.OPEN)
+				ws.send(JSON.stringify({game, message: "input"}))
+			else
+				console.error("WebSocket is not open")
+		};
+
+		// Attach event listeners
+		window.addEventListener('keydown', keydownHandler);
+		window.addEventListener('keyup', keyupHandler);
+
+		// Cleanup function
+		const cleanup = () => {
+			window.removeEventListener('keydown', keydownHandler);
+			window.removeEventListener('keyup', keyupHandler);
+		};
+
 		ws.addEventListener('open', (event) => {
 			// game.message = "Init"
 			// console.log("GAME IN OPEN ", game)
@@ -164,50 +228,15 @@ async function gameLoop(game: Game) { // BIZARRE LE TYPE
 				game.displayWinner = serverGame.displayWinner
 				game.player1.score = serverGame.player1.score
 				game.player2.score = serverGame.player2.score
+				// Cleanup after a short delay to allow final animation
+				setTimeout(cleanup, 2000);
 			}
 		})
 
-		window.addEventListener('keydown', (e) => {
-			switch (e.key) {
-				case 'a':
-					game.player1.key.up = true
-					break
-				case 'd':
-					game.player1.key.down = true
-					break
-				case 'ArrowLeft':
-					game.player2.key.up = true
-					break
-				case 'ArrowRight':
-					game.player2.key.down = true
-					break
-			}
-			if (ws.readyState === WebSocket.OPEN)
-				ws.send(JSON.stringify({game, message: "input"}))
-			else
-				console.error("WebSocket is not open")
-		})
+		// Cleanup on WebSocket close/error
+		ws.addEventListener('close', cleanup);
+		ws.addEventListener('error', cleanup);
 
-		window.addEventListener('keyup', (e) => {
-			switch (e.key) {
-				case 'a':
-					game.player1.key.up = false
-					break
-				case 'd':
-					game.player1.key.down = false
-					break
-				case 'ArrowLeft':
-					game.player2.key.up = false
-					break
-				case 'ArrowRight':
-					game.player2.key.down = false
-					break
-			}
-			if (ws.readyState === WebSocket.OPEN)
-				ws.send(JSON.stringify({game, message: "input"}))
-			else
-				console.error("WebSocket is not open")
-		})
 		console.log('Sprite loaded');
 		gameAnimation(game);
 	} catch (error) {
@@ -400,27 +429,13 @@ async function snakeGameLoop(game: SnakeGame) {
 		const ws = new WebSocket(`wss${snake_ws_route}/ws`);
 		game.socket = ws;
 
-		ws.addEventListener('open', () => {
-			if (ws.readyState === WebSocket.OPEN) {
-				ws.send(JSON.stringify({game, message: "Init"}));
+		// Store handler reference for cleanup
+		const keydownHandler = (e: KeyboardEvent) => {
+			// Prevent arrow keys from scrolling the page
+			if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+				e.preventDefault();
 			}
-		});
 
-		ws.addEventListener('message', (event) => {
-			const serverGame = JSON.parse(event.data);
-			game.updateFromServer(serverGame);
-		});
-
-		ws.addEventListener('error', (error) => {
-			console.error('WebSocket error:', error);
-		});
-
-		ws.addEventListener('close', () => {
-			console.log('WebSocket connection closed');
-		});
-
-		// Input handling
-		window.addEventListener('keydown', (e) => {
 			let updated = false;
 
 			// Player 1: WASD
@@ -468,6 +483,40 @@ async function snakeGameLoop(game: SnakeGame) {
 			if (updated && ws.readyState === WebSocket.OPEN) {
 				ws.send(JSON.stringify({game, message: "input"}));
 			}
+		};
+
+		// Attach event listener
+		window.addEventListener('keydown', keydownHandler);
+
+		// Cleanup function
+		const cleanup = () => {
+			window.removeEventListener('keydown', keydownHandler);
+		};
+
+		ws.addEventListener('open', () => {
+			if (ws.readyState === WebSocket.OPEN) {
+				ws.send(JSON.stringify({game, message: "Init"}));
+			}
+		});
+
+		ws.addEventListener('message', (event) => {
+			const serverGame = JSON.parse(event.data);
+			game.updateFromServer(serverGame);
+
+			// Cleanup if game ends
+			if (game.message === "END") {
+				setTimeout(cleanup, 2000);
+			}
+		});
+
+		ws.addEventListener('error', (error) => {
+			console.error('WebSocket error:', error);
+			cleanup();
+		});
+
+		ws.addEventListener('close', () => {
+			console.log('WebSocket connection closed');
+			cleanup();
 		});
 
 		// Start rendering
@@ -492,6 +541,9 @@ function snakeAnimation(game: SnakeGame) {
 	// Set canvas size based on grid
 	canvas.width = game.grid.width * game.grid.cellSize;
 	canvas.height = game.grid.height * game.grid.cellSize;
+
+	// Store animation ID for cancellation
+	let animationId: number;
 
 	const render = () => {
 		// Clear canvas
@@ -581,11 +633,12 @@ function snakeAnimation(game: SnakeGame) {
 		} else if (game.message === "END") {
 			ctx.font = '36px Arial';
 			ctx.fillText(game.displayWinner, canvas.width / 2, canvas.height / 2);
-			// Stop animation
+			// Cancel animation before stopping
+			if (animationId) cancelAnimationFrame(animationId);
 			return;
 		}
 
-		requestAnimationFrame(render);
+		animationId = requestAnimationFrame(render);
 	};
 
 	render();
