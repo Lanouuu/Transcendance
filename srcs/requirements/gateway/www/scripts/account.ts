@@ -2,9 +2,9 @@ const USERS_URL: string = `${window.location.origin}/users`;
 
 export async function displayAccountPage() {
 
-	const userId: string | null = sessionStorage.getItem("userId");
-	const token: string | null = sessionStorage.getItem("jwt");
-	let		accountActiveTab:	string | null = sessionStorage.getItem("accountActiveTab");
+	const	userId: string | null = sessionStorage.getItem("userId");
+	const	token: string | null = sessionStorage.getItem("jwt");
+	let		accountActiveTab:	string | null = null;
 
 	if (!userId || !token) {
 		console.error("Userid or token NULL");
@@ -36,7 +36,7 @@ export async function displayAccountPage() {
 			'tab': document.getElementById("historyTabLi") as HTMLLIElement,
 			'fctn': () => showHistoryTab()
 		}
-	}
+	};
 
 	if (!tabTable.infos.div || !tabTable.infos.btn || !tabTable.infos.tab
 		|| !tabTable.friends.div || !tabTable.friends.btn || !tabTable.friends.tab
@@ -45,11 +45,15 @@ export async function displayAccountPage() {
 		console.error("HTML element not found: tab display / div / button");
 		return;
 	}
-
-	await tabTable['infos'].fctn();
-	await tabTable['friends'].fctn();
-	await tabTable['stats'].fctn();
-	await tabTable['history'].fctn();
+	if (!accountActiveTab || !tabTable[accountActiveTab]) {
+    	sessionStorage.setItem('accountActiveTab', 'infos');
+		accountActiveTab = 'infos';
+		await tabTable['infos'].fctn();
+	}
+	else {
+		accountActiveTab = sessionStorage.getItem("accountActiveTab");
+		if (accountActiveTab) await tabTable[accountActiveTab].fctn();
+	}
 
 	try {
 
@@ -62,7 +66,7 @@ export async function displayAccountPage() {
 					tabTable[key].div.classList.toggle('hidden', key !== tabKey);
 					tabTable[key].tab.classList.toggle('active', key === tabKey);
 				});
-
+				tabTable[tabKey].fctn();
 				sessionStorage.setItem("accountActiveTab", tabKey);
 			});
 		});
@@ -225,17 +229,25 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 }
 
 // #region FriendsTab //
+
 async function showFriendsTab(userId: string, token: string): Promise<void> {
+	
 	const ulFriendsList: HTMLUListElement = document.getElementById("friendsList") as HTMLUListElement;
 	const ulPendingList: HTMLUListElement = document.getElementById("inviteList") as HTMLUListElement;
+	const invitForm: HTMLFormElement = document.getElementById("inviteUserForm") as HTMLFormElement;
 
-	if (!ulFriendsList || !ulPendingList) {
+	if (!ulFriendsList || !ulPendingList || !invitForm) {
 		console.error("HTML Element not found");
 		return;
 	}
 
-	// #region friendList //
+	await displayFriendList(userId, token, ulFriendsList);
+	await displayPendingList(userId, token, ulPendingList, ulFriendsList);
+	await listenSendInvite(userId, token, invitForm, ulFriendsList, ulPendingList);
+}
 
+async function displayFriendList(userId: string, token: string, ulFriendsList: HTMLUListElement): Promise<void> {
+	
 	try {
 		const res = await fetch(`${USERS_URL}/friends-list/${userId}`, {
 			method: "GET",
@@ -286,9 +298,9 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 	} catch (error) {
 		console.error("Error displaying friends Tab:", error); // afficher msg dans une div pour le user
 	}
-	// #endregion friendList //
+}
 
-	// #region inviteList //
+async function displayPendingList(userId: string, token: string, ulPendingList: HTMLUListElement, ulFriendsList: HTMLUListElement): Promise<void> {
 
 	try {
 		const res = await fetch(`${USERS_URL}/get-invits/${userId}`, {
@@ -306,20 +318,18 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 		for (const invite of pendingList) {
 			const senderId: string = invite.sender_id;
 			const senderName: string = invite.sender_name;
-			frag.appendChild(createLiPendingItem(userId, token, senderId, senderName))
+			frag.appendChild(createLiPendingItem(userId, token, senderId, senderName, ulFriendsList))
 		}
 		ulPendingList.appendChild(frag);
 	} catch (error) {
 		console.error("Pending data fetch failed", error);
 	}
-	
-	// #endregion inviteList //
+}
 
-	// #region sendInvit
+async function listenSendInvite(userId: string, token: string, invitForm: HTMLFormElement, ulFriendsList: HTMLUListElement, ulPendingList: HTMLUListElement): Promise<void> {
 
-	const invitForm = document.getElementById("inviteUserForm");
-
-	if (invitForm) {
+	if (invitForm && invitForm.dataset.bound !== "1") {
+		invitForm.dataset.bound = "1";
         invitForm.addEventListener("submit", async (e) => {
             e.preventDefault();
 			
@@ -348,7 +358,8 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
             		}
 				}
 
-				await showFriendsTab(userId, token);
+				await displayFriendList(userId, token, ulFriendsList);
+				await displayPendingList(userId, token, ulPendingList, ulFriendsList);
 			} catch (err) {
 				console.error(err);
 				//ajouter message
@@ -356,8 +367,6 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
             (e.target as HTMLFormElement).reset();
         });
     }
-
-	// #endregion inviteList //
 }
 
 function createLiFriendItem(avatarUrl: string, friendId: string, friendName: string, isOnline: boolean, userId: string, token: string): HTMLLIElement {
@@ -471,7 +480,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	return (li);
 }
 
-function createLiPendingItem(userId: string, token: string, senderId: string, senderName: string): HTMLLIElement {
+function createLiPendingItem(userId: string, token: string, senderId: string, senderName: string, ulFriendsList: HTMLUListElement): HTMLLIElement {
 
 	const li = document.createElement("li");
 
@@ -505,7 +514,7 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 				return ;
 			}
 			li.remove();
-			await showFriendsTab(userId, token);
+			await displayFriendList(userId, token, ulFriendsList);
 			console.log("Invitation accepted");
 		} catch (error) {
 			console.error("Could not accept invitation");
@@ -572,6 +581,7 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 				console.error("Could not block friend");
 				return ;
 			}
+			await displayFriendList(userId, token, ulFriendsList);
 			li.remove();
 			console.log("Friend blocked");
 			// Ajouter une confirmation + un msg d'info
@@ -580,8 +590,6 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 			return ;
 		}
 	};
-
-	
 
 	li.append(nameSpan, acceptFriendButton, declineFriendButton, blockFriendButton);
 	return (li);

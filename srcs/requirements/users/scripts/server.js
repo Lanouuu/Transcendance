@@ -662,7 +662,7 @@ export async function runServer() {
         const blockStmt = usersDB.prepare(`
           UPDATE friends
           SET status = 'blocked', blocked_by = ?
-          WHERE status = 'accepted'
+          WHERE status = 'accepted' OR status = 'pending'
           AND (
             (user_id = ? AND friend_id = ?)
             OR
