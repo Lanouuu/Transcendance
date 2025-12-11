@@ -4,7 +4,7 @@ export async function displayAccountPage() {
 
 	const	userId: string | null = sessionStorage.getItem("userId");
 	const	token: string | null = sessionStorage.getItem("jwt");
-	let		accountActiveTab:	string | null = null;
+	let		accountActiveTab:	string | null = sessionStorage.getItem("accountActiveTab");
 
 	if (!userId || !token) {
 		console.error("Userid or token NULL");
@@ -34,7 +34,7 @@ export async function displayAccountPage() {
 			'div': document.getElementById("historyTab") as HTMLDivElement,
 			'btn': document.getElementById("historyTabButton") as HTMLButtonElement,
 			'tab': document.getElementById("historyTabLi") as HTMLLIElement,
-			'fctn': () => showHistoryTab()
+			'fctn': () => showHistoryTab(userId, token)
 		}
 	};
 
@@ -51,7 +51,6 @@ export async function displayAccountPage() {
 		await tabTable['infos'].fctn();
 	}
 	else {
-		accountActiveTab = sessionStorage.getItem("accountActiveTab");
 		if (accountActiveTab) await tabTable[accountActiveTab].fctn();
 	}
 
@@ -98,8 +97,10 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 	const profilePicButtonConfirm: HTMLButtonElement = document.getElementById('profilePicButtonConfirm') as HTMLButtonElement;
 	const profilePicButtonCancel: HTMLButtonElement = document.getElementById('profilePicButtonCancel') as HTMLButtonElement;
 
+	const pongWinrateSpan: HTMLSpanElement = document.getElementById("accountInfosPongWinrate") as HTMLSpanElement;
 
-	if (!usernameSpan || !mailSpan || !dblFaBox || !profilePic || !profilePicInput || !profilePicButton || !profilePicButtonConfirm || !profilePicButtonCancel) {
+
+	if (!usernameSpan || !mailSpan || !dblFaBox || !profilePic || !profilePicInput || !profilePicButton || !profilePicButtonConfirm || !profilePicButtonCancel || !pongWinrateSpan) {
 		console.error("HTML element not found");
 		return;
 	}
@@ -221,6 +222,13 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 		});
 		// #endregion updateAvatar
 
+		// #region stats //
+		// Proteger les cas 0 / undefined ou jcp quoi
+			const pongWinrate: number = Number(data.pong_wins) * 100 / Number(data.pong_losses);
+			// const snakeWinrate: number = Number(data.snake_wins) * 100 / Number(data.snake_losses);
+			pongWinrateSpan.textContent = `${pongWinrate}%`;
+			// WinrateSpan.textContent = `${pongWinrate}%`;
+		// #endregion stats //
 	} catch (error) {
 		console.error(error);
 		// Faire qqch pour informer 
@@ -235,18 +243,20 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 	const ulFriendsList: HTMLUListElement = document.getElementById("friendsList") as HTMLUListElement;
 	const ulPendingList: HTMLUListElement = document.getElementById("inviteList") as HTMLUListElement;
 	const invitForm: HTMLFormElement = document.getElementById("inviteUserForm") as HTMLFormElement;
+	const ulBlockedList: HTMLUListElement = document.getElementById("blockedList") as HTMLUListElement;
 
-	if (!ulFriendsList || !ulPendingList || !invitForm) {
+	if (!ulFriendsList || !ulPendingList || !invitForm || !ulBlockedList) {
 		console.error("HTML Element not found");
 		return;
 	}
 
-	await displayFriendList(userId, token, ulFriendsList);
-	await displayPendingList(userId, token, ulPendingList, ulFriendsList);
-	await listenSendInvite(userId, token, invitForm, ulFriendsList, ulPendingList);
+	await displayFriendList(userId, token, ulFriendsList, ulBlockedList);
+	await displayPendingList(userId, token, ulPendingList, ulFriendsList, ulBlockedList);
+	await listenSendInvite(userId, token, invitForm, ulFriendsList, ulPendingList, ulBlockedList);
+	await displayBlockedList(userId, token, ulBlockedList);
 }
 
-async function displayFriendList(userId: string, token: string, ulFriendsList: HTMLUListElement): Promise<void> {
+async function displayFriendList(userId: string, token: string, ulFriendsList: HTMLUListElement, ulBlockedList: HTMLUListElement): Promise<void> {
 	
 	try {
 		const res = await fetch(`${USERS_URL}/friends-list/${userId}`, {
@@ -292,15 +302,15 @@ async function displayFriendList(userId: string, token: string, ulFriendsList: H
 				console.error("Friend data fetch failed for", friendId, err);
 			}
 
-			frag.appendChild(createLiFriendItem(avatarUrl,friendId, friendName, isOnline, userId, token));
+			frag.appendChild(createLiFriendItem(avatarUrl,friendId, friendName, isOnline, userId, token, ulBlockedList));
 		}
 		ulFriendsList.appendChild(frag);
 	} catch (error) {
-		console.error("Error displaying friends Tab:", error); // afficher msg dans une div pour le user
+		console.error("Error displaying friends list:", error); // afficher msg dans une div pour le user
 	}
 }
 
-async function displayPendingList(userId: string, token: string, ulPendingList: HTMLUListElement, ulFriendsList: HTMLUListElement): Promise<void> {
+async function displayPendingList(userId: string, token: string, ulPendingList: HTMLUListElement, ulFriendsList: HTMLUListElement, ulBlockedList: HTMLUListElement): Promise<void> {
 
 	try {
 		const res = await fetch(`${USERS_URL}/get-invits/${userId}`, {
@@ -318,15 +328,15 @@ async function displayPendingList(userId: string, token: string, ulPendingList: 
 		for (const invite of pendingList) {
 			const senderId: string = invite.sender_id;
 			const senderName: string = invite.sender_name;
-			frag.appendChild(createLiPendingItem(userId, token, senderId, senderName, ulFriendsList))
+			frag.appendChild(createLiPendingItem(userId, token, senderId, senderName, ulFriendsList, ulBlockedList))
 		}
 		ulPendingList.appendChild(frag);
 	} catch (error) {
-		console.error("Pending data fetch failed", error);
+		console.error("Error displaying pending list", error);
 	}
 }
 
-async function listenSendInvite(userId: string, token: string, invitForm: HTMLFormElement, ulFriendsList: HTMLUListElement, ulPendingList: HTMLUListElement): Promise<void> {
+async function listenSendInvite(userId: string, token: string, invitForm: HTMLFormElement, ulFriendsList: HTMLUListElement, ulPendingList: HTMLUListElement, ulBlockedList: HTMLUListElement): Promise<void> {
 
 	if (invitForm && invitForm.dataset.bound !== "1") {
 		invitForm.dataset.bound = "1";
@@ -358,8 +368,10 @@ async function listenSendInvite(userId: string, token: string, invitForm: HTMLFo
             		}
 				}
 
-				await displayFriendList(userId, token, ulFriendsList);
-				await displayPendingList(userId, token, ulPendingList, ulFriendsList);
+				if (res.ok) {
+					await displayFriendList(userId, token, ulFriendsList, ulBlockedList);
+					await displayPendingList(userId, token, ulPendingList, ulFriendsList, ulBlockedList);
+				}
 			} catch (err) {
 				console.error(err);
 				//ajouter message
@@ -369,7 +381,34 @@ async function listenSendInvite(userId: string, token: string, invitForm: HTMLFo
     }
 }
 
-function createLiFriendItem(avatarUrl: string, friendId: string, friendName: string, isOnline: boolean, userId: string, token: string): HTMLLIElement {
+async function displayBlockedList(userId: string, token: string, ulBlockedList: HTMLUListElement) {
+	
+	try {
+		const res = await fetch(`${USERS_URL}/blocked-users/${userId}`, {
+			method: "GET",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId
+			},
+		});
+		if (!res.ok) throw new Error(`Blocked list not found`);
+		const { blockedUsers } = (await res.json());
+
+		ulBlockedList.innerHTML = "";
+		const frag = document.createDocumentFragment();
+		for (const blocked of blockedUsers) {
+			const blockedId: string = blocked.id;
+			const blockedName: string = blocked.name;
+
+			frag.appendChild(createLiBlockedItem(blockedId, blockedName, userId, token));
+		}
+		ulBlockedList.appendChild(frag);
+	} catch (error) {
+		console.error("Error displaying blocked list:", error); // afficher msg dans une div pour le user
+	}
+}
+
+function createLiFriendItem(avatarUrl: string, friendId: string, friendName: string, isOnline: boolean, userId: string, token: string, ulBlockedList: HTMLUListElement): HTMLLIElement {
 	// creation balise li
 	const li = document.createElement("li");
 	li.style.display = "grid";
@@ -467,6 +506,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 			}
 			li.remove();
 			console.log("Friend blocked");
+			await displayBlockedList(userId, token, ulBlockedList)
 			// Ajouter une confirmation + un msg d'info
 		} catch (error) {
 			console.error("Could not block friend");
@@ -480,7 +520,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	return (li);
 }
 
-function createLiPendingItem(userId: string, token: string, senderId: string, senderName: string, ulFriendsList: HTMLUListElement): HTMLLIElement {
+function createLiPendingItem(userId: string, token: string, senderId: string, senderName: string, ulFriendsList: HTMLUListElement, ulBlockedList: HTMLUListElement): HTMLLIElement {
 
 	const li = document.createElement("li");
 
@@ -514,7 +554,7 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 				return ;
 			}
 			li.remove();
-			await displayFriendList(userId, token, ulFriendsList);
+			await displayFriendList(userId, token, ulFriendsList, ulBlockedList);
 			console.log("Invitation accepted");
 		} catch (error) {
 			console.error("Could not accept invitation");
@@ -581,7 +621,8 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 				console.error("Could not block friend");
 				return ;
 			}
-			await displayFriendList(userId, token, ulFriendsList);
+			await displayFriendList(userId, token, ulFriendsList, ulBlockedList);
+			await displayBlockedList(userId, token, ulBlockedList);
 			li.remove();
 			console.log("Friend blocked");
 			// Ajouter une confirmation + un msg d'info
@@ -595,6 +636,49 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 	return (li);
 }
 
+function createLiBlockedItem(blockedId: string, blockedName: string, userId: string, token: string): HTMLLIElement {
+	const li = document.createElement("li");
+
+	const nameSpan = document.createElement("span");
+	nameSpan.textContent = blockedName;
+	nameSpan.className = "text-center";
+
+	const unblockFriendButton = document.createElement("button");
+	const unblockFriendIcon = document.createElement("img");
+	
+	// blockFriendButton.id = "fInListBlockFriendButton"; // Same
+	unblockFriendIcon.src = "./assets/other/unblock-user.svg";
+	unblockFriendIcon.width = 24;
+	unblockFriendIcon.height = 24;
+	unblockFriendIcon.className = "invert"
+	unblockFriendButton.appendChild(unblockFriendIcon);
+	unblockFriendButton.onclick = async () => {
+		try {
+			if (!confirm(`Unblock ${blockedName} ?`)) return ;
+			const res = await fetch(`${USERS_URL}/unblock-user`, {
+				method: "POST",
+				headers: {
+					"x-user-id": userId,
+					"authorization": `Bearer ${token}`,	
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({friendID: blockedId})
+			});
+			if (!res.ok) {
+				console.error("Could not unblock friend");
+				return ;
+			}
+			li.remove();
+			console.log("Friend unblocked");
+			// Ajouter une confirmation + un msg d'info
+		} catch (error) {
+			console.error("Could not unblock friend");
+			return ;
+		}
+	};
+	li.append(nameSpan, unblockFriendButton);
+	return (li);
+}
 // #endregion FriendsTab //
 
 async function showStatsTab(): Promise<void> {
@@ -602,7 +686,80 @@ async function showStatsTab(): Promise<void> {
 }
 
 
-async function showHistoryTab(): Promise<void> {
-	console.log('showHistoryTab function called');
+async function showHistoryTab(userId: string, token: string): Promise<void> {
 
+	const ulHistoryList: HTMLUListElement = document.getElementById("gameHistoryList") as HTMLUListElement;
+
+	if (!ulHistoryList) {
+		console.error("Could not get HTML Element");
+		return ;
+	}
+
+	try {
+		const res = await fetch(`${USERS_URL}/get-matches/${userId}`, {
+			method: "GET",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId
+			},
+		});
+		if (!res.ok) throw new Error(`Match history not found`);
+		const { matchList } = (await res.json());
+
+		ulHistoryList.innerHTML = "";
+		const frag = document.createDocumentFragment();
+		for (const match of matchList) {
+			const p1Id: string = match.player1_id;
+			const p1Name: string = match.player1_name;
+			const p2Id: string = match.player2_id;
+			const p2Name: string = match.player2_name;
+			const winnerId: string = match.winner_id;
+			const p1Score: string = match.score_p1;
+			const p2Score: string = match.score_p2;
+			const gameType: string = match.game_type;
+			const matchType: string = match.match_type;
+			const playedAt: string = match.played_at;
+			
+			frag.appendChild(createLiHistoryItem(p1Id, p1Name, p2Id, p2Name, p1Score, p2Score, gameType, matchType, playedAt));
+		}
+		ulHistoryList.appendChild(frag);
+	} catch (error) {
+		console.error("Error displaying friends list:", error); // afficher msg dans une div pour le user
+	}
+}
+
+function createLiHistoryItem(p1Id: string, p1Name: string, p2Id: string, p2Name: string, p1Score: string, p2Score: string, gameType: string, matchType: string, playedAt: string): HTMLLIElement {
+
+	const li: HTMLLIElement = document.createElement('li');
+
+
+	const p1NameSpan: HTMLSpanElement = document.createElement('span');
+	p1NameSpan.textContent = p1Name;
+
+	const p2NameSpan: HTMLSpanElement = document.createElement('span');
+	p2NameSpan.textContent = p2Name;
+
+	const p1ScoreSpan: HTMLSpanElement = document.createElement('span');
+	p1ScoreSpan.textContent = p1Score;
+
+	const p2ScoreSpan: HTMLSpanElement = document.createElement('span');
+	p2ScoreSpan.textContent = p2Score;
+
+	const gameTypeIcon: HTMLImageElement = document.createElement('img');
+	if (gameType === 'pong')
+		gameTypeIcon.src = './assets/other/challenge-user.svg';
+	else if (gameType === 'snake')
+		gameTypeIcon.src = './assets/other/snake.svg';
+	gameTypeIcon.width = 24;
+	gameTypeIcon.height = 24;
+
+	const matchTypeSpan: HTMLSpanElement = document.createElement('span');
+	matchTypeSpan.textContent = matchType;
+
+	const playedAtSpan: HTMLSpanElement = document.createElement('span');
+	playedAtSpan.textContent = playedAt;
+	
+	li.append(gameTypeIcon, p1Name, p1Score, p2Score, p2Name, matchType, playedAtSpan);
+
+	return (li);
 }

@@ -217,10 +217,10 @@ export async function runServer() {
         const reqID = req.headers["x-user-id"];
 
         let stmt = null;
-        if (reqID !== id) {
-          stmt = usersDB.prepare("SELECT id, name, wins, losses FROM users WHERE id = ?");
+        if (reqID !== id) {pong_
+          stmt = usersDB.prepare("SELECT id, name, pong_wins, pong_losses, snake_wins, snake_losses FROM users WHERE id = ?");
         } else {
-          stmt = usersDB.prepare("SELECT id, name, mail, wins, losses, created_at FROM users WHERE id = ?");
+          stmt = usersDB.prepare("SELECT id, name, mail, pong_wins, pong_losses, snake_wins, snake_losses, created_at FROM users WHERE id = ?");
         }
         const user = stmt.get(id);
         if (!user) {
@@ -231,8 +231,10 @@ export async function runServer() {
           id: user.id,
           name: user.name,
           mail: reqID === id ? user.mail : undefined,
-          wins: user.wins,
-          losses: user.losses,
+          pong_wins: user.pong_wins,
+          pong_losses: user.pong_losses,
+          snake_wins: user.snake_wins,
+          snake_losses: user.snake_losses,
           createdAt: reqID === id ? user.created_at : undefined
         };
 
@@ -662,7 +664,7 @@ export async function runServer() {
         const blockStmt = usersDB.prepare(`
           UPDATE friends
           SET status = 'blocked', blocked_by = ?
-          WHERE status = 'accepted' OR status = 'pending'
+          WHERE (status = 'accepted' OR status = 'pending')
           AND (
             (user_id = ? AND friend_id = ?)
             OR
@@ -693,8 +695,7 @@ export async function runServer() {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         const unblockStmt = usersDB.prepare(`
-          UPDATE friends
-          SET status = 'accepted', blocked_by = 0
+          DELETE FROM friends
           WHERE status = 'blocked' AND blocked_by = ?
           AND (
             (user_id = ? AND friend_id = ?)
@@ -728,13 +729,13 @@ export async function runServer() {
   
         const listStmt = usersDB.prepare(`
           SELECT
-            f.friend_id AS id, u.name, u.wins, u.losses
+            f.friend_id AS id, u.name
           FROM friends f
           JOIN users u ON f.friend_id = u.id
           WHERE f.user_id = ? AND f.status = 'accepted'
           UNION
           SELECT
-            f.user_id AS id, u.name, u.wins, u.losses
+            f.user_id AS id, u.name
           FROM friends f
           JOIN users u ON f.user_id = u.id
           WHERE f.friend_id = ? AND f.status = 'accepted'
@@ -762,13 +763,20 @@ export async function runServer() {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         const blockedStmt = usersDB.prepare(`
-          SELECT f.friends_id AS id, u.name
+          SELECT 
+            CASE 
+              WHEN f.user_id = ? THEN f.friend_id 
+              ELSE f.user_id 
+            END AS id,
+            u.name
           FROM friends f
-          JOIN users ON
-            (u.id = f.friend_id OR u.id = f.user_id)
-          WHERE f.blocked_by = ?`
+          JOIN users u ON u.id = CASE 
+            WHEN f.user_id = ? THEN f.friend_id 
+            ELSE f.user_id 
+          END
+          WHERE f.blocked_by = ? AND f.status = 'blocked'`
         );
-        const blockedUsers = blockedStmt.all(userID);
+        const blockedUsers = blockedStmt.all(userID, userID, userID);
 
         reply.status(200).send({ blockedUsers });
       } catch (err) {
@@ -787,14 +795,42 @@ export async function runServer() {
 
     fastify.post("/save-match", async (req, reply) => {
       try {
-        const { player1ID, player2ID, winnerID, scoreP1, scoreP2, matchType } = req.body;
+        const { player1ID, player2ID, winnerID, scoreP1, scoreP2, matchType, gameType } = req.body;
+
+        const p1NameStmt = usersDB.prepare('SELECT name FROM users WHERE id = ?');
+        const player1Name = p1NameStmt.get(player1ID);
+        if (!player1Name) {
+          return reply.status(404).send({ error: "Player 1 not found" });
+        }
+
+        const p2NameStmt = usersDB.prepare('SELECT name FROM users WHERE id = ?');
+        const player2Name = p2NameStmt.get(player2ID);
+        if (!player2Name) {
+          return reply.status(404).send({ error: "Player 2 not found" });
+        }
 
         const saveStmt = usersDB.prepare(`
           INSERT INTO matches 
-            (player1_id, player2_id, winner_id, score_p1, score_p2, match_type)
-          VALUES (?, ?, ?, ?, ?, ?)
+            (player1_id, player1_name, player2_id, player2_name, winner_id, score_p1, score_p2, match_type, game_type)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
-        saveStmt.run(player1ID, player2ID, winnerID, scoreP1, scoreP2, matchType);
+        saveStmt.run(player1ID, player1Name.name, player2ID, player2Name.name, winnerID, scoreP1, scoreP2, matchType, gameType);
+
+        const updateWinnerStmt = usersDB.prepare(`
+          UPDATE users 
+          SET pong_wins = pong_wins + CASE WHEN ? = 'pong' THEN 1 ELSE 0 END,
+            snake_wins = snake_wins + CASE WHEN ? = 'snake' THEN 1 ELSE 0 END
+          WHERE id = ?
+        `);
+        updateWinnerStmt.run(gameType, gameType, winnerID);
+          
+        const updateLoserStmt = usersDB.prepare(`
+          UPDATE users 
+          SET pong_losses = pong_losses + CASE WHEN ? = 'pong' THEN 1 ELSE 0 END,
+            snake_losses = snake_losses + CASE WHEN ? = 'snake' THEN 1 ELSE 0 END
+          WHERE id = ?
+        `);
+        updateLoserStmt.run(gameType, gameType, loserID);
 
         return reply.status(201).send({ success: true, message: "Match saved" });
       } catch (err) {
@@ -824,7 +860,7 @@ export async function runServer() {
         if (!sessionsJson.valid) {
           return reply.status(401).send({ error: "Invalid session" });
         }
-        if (sessionsJson.userId && String(sessionsJson.userId) !== String(id)) {
+        if (sessionsJson.userId && String(sessionsJson.userId) !== String(userID)) {
           return reply.status(403).send({ error: "Can only view your own matches list" });
         }
 
@@ -833,9 +869,9 @@ export async function runServer() {
           WHERE player1_id = ? OR player2_id = ? 
           ORDER BY played_at DESC
         `); 
-        const macthList = getStmt.all(userID, userID);
+        const matchList = getStmt.all(userID, userID);
       
-        return reply.status(200).send({ macthList });
+        return reply.status(200).send({ matchList });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(500).send({ error: "Internal Server Error" });

@@ -77,7 +77,8 @@ async function sendResult(game) {
                winnerID: winner_id,
                scoreP1: game.player1.score,
                scoreP2: game.player2.score,
-               matchType: "remote"
+               matchType: "remote",
+               gameType: "pong",
              }),
            });
 

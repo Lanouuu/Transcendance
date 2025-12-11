@@ -57,10 +57,13 @@ export default async function routes(fastify, options) {
           console.error("Error while creating user :", text);
           return reply.code(400).send({error: "User creation failed"})
         }
+        const userRes = await fetch(`http://users:3000/mail/${profile.email}`);
+        if (!userRes.ok) {
+          console.error("User not found after creation");
+          return reply.code(400).send({ error: "User not found after creation" });
+        }
+        user = await userRes.json();
       }
-
-      const userRes = await fetch(`http://users:3000/mail/${profile.email}`);
-      user = await userRes.json();
 
       if(!user || !user.id) {
         console.error("User not found after creation");
@@ -72,6 +75,8 @@ export default async function routes(fastify, options) {
       const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(jwt).digest("hex");
       await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
       
+      await redis.set(`user:${user.id}:online`, "1", "EX", 30);
+
       //reply.code(200).send({ token:jwt, id: user.id });
       reply.redirect(`https://localhost:8443/#/oauth42-success?token=${jwt}&id=${user.id}`);
 

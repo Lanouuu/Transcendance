@@ -165,16 +165,7 @@
 					Basic stats
 				</h2>
 
-				<div id="accountStatsWinrate" class="
-					col-start-1 col-end-2 row-start-2 row-end-4
-					flex flex-col place-content-center place-items-center
-				">
-
-					<h3 class="text-3xl">Winrate</h3>
-
-					No data
-
-				</div>
+				<span id="accountInfosPongWinrate">No Data</span>
 
 				<div id="accountStatsGraph" class="
 					col-start-2 col-end-3 row-start-2 row-end-4
@@ -269,16 +260,11 @@
 					Blocked User list
 				</h1>
 
-				<form id="blockUserForm" class="flex flex-col items-center">
-
-					<input id="blockUserInput" type="text" name="Username" placeholder="Username" class="
-						w-3/4
-						text-dark
-					"required>
-
-				</form>
-
-				<button id="blockUserButton" type="submit">Confirm</button>
+				<ul id="blockedList" class="
+					overflow-y-auto
+				">
+					No user blocked
+				</ul>
 
 			</div>
 
@@ -295,7 +281,14 @@
 		<!-- Onglet historique -->
 		<div id="historyTab" class="historyLayout hidden">
 
-			OUAI L'HISTORIQUE
+			<h1>OUAI L'HISTORIQUE</h1>
+			
+			<ul id="gameHistoryList" class="
+				flex flex-col items-center justify-center p-2
+				overflow-y-auto
+			">
+				No game History
+			</ul>
 
 		</div>
 
