@@ -346,31 +346,55 @@ async function loadSprites(game: Game) {
 }
 
 
-// Snake Game Functions
+// ============================================================================
+// FONCTIONS DU JEU SNAKE - FRONTEND
+// ============================================================================
 
+/**
+ * Lance une partie de Snake en mode local (2 joueurs, 1 clavier)
+ *
+ * @description Flux de lancement :
+ *   1. Récupère le token JWT et l'ID utilisateur depuis sessionStorage
+ *   2. Envoie une requête HTTP GET au serveur second_game (/local)
+ *   3. Reçoit l'état initial de la partie (serpents spawnés)
+ *   4. Crée une instance SnakeGame côté client
+ *   5. Lance la boucle de jeu (WebSocket + rendu)
+ *
+ * MODE LOCAL :
+ *   - 2 joueurs sur le même clavier
+ *   - Joueur 1 : touches WASD
+ *   - Joueur 2 : touches fléchées
+ *   - Pas de matchmaking
+ */
 async function launchSnakeLocalGame() {
+	// Récupère les credentials depuis le session storage
 	const token: string | null = sessionStorage.getItem("jwt");
 	const userId: string | null = sessionStorage.getItem("userId");
 
+	// Vérifie que l'utilisateur est authentifié
 	if (userId === null || token === null) {
 		console.error('Could not fetch user id/token');
 		return;
 	}
 
 	try {
+		// Requête HTTP pour créer une partie locale
 		const res = await fetch(`${snake_route}/local`, {
 			method: "GET",
 			headers: {
-				"authorization": `Bearer ${token}`,
-				"x-user-id": userId
+				"authorization": `Bearer ${token}`,  // Authentification JWT
+				"x-user-id": userId                 // ID de l'utilisateur
 			},
 		});
+
+		// Gestion des erreurs HTTP
 		if (!res.ok) {
 			const text = await res.text();
 			console.error(`Server error ${res.status}:`, text);
 			throw new Error(`Failed to load Snake game`);
 		}
 
+		// Vérifie que la réponse est du JSON
 		const contentType = res.headers.get("content-type");
 		if (!contentType || !contentType.includes("application/json")) {
 			const text = await res.text();
@@ -378,37 +402,65 @@ async function launchSnakeLocalGame() {
 			throw new Error(`Server response is not JSON`);
 		}
 
+		// Parse l'état initial de la partie
 		const gameData = await res.json();
-		const game = new SnakeGame(gameData);
+		const game = new SnakeGame(gameData);  // Crée l'instance locale
+
+		// Lance la boucle de jeu (WebSocket + rendu Canvas)
 		snakeGameLoop(game);
 	} catch (err) {
 		console.error(err);
 	}
 }
 
+/**
+ * Lance une partie de Snake en mode remote (en ligne, matchmaking)
+ *
+ * @description Flux de lancement :
+ *   1. Récupère le token JWT et l'ID utilisateur depuis sessionStorage
+ *   2. Envoie une requête HTTP GET au serveur second_game (/remote)
+ *   3. Matchmaking côté serveur :
+ *      - Premier joueur : Crée une partie en attente (Player 1)
+ *      - Deuxième joueur : Rejoint la partie existante (Player 2)
+ *   4. Reçoit l'état initial de la partie
+ *   5. Crée une instance SnakeGame côté client
+ *   6. Lance la boucle de jeu (WebSocket + rendu)
+ *
+ * MODE REMOTE :
+ *   - Chaque joueur sur son propre appareil
+ *   - Joueur 1 : touches WASD
+ *   - Joueur 2 : touches fléchées
+ *   - Résultats sauvegardés dans le service users
+ */
 async function launchSnakeRemoteGame() {
+	// Récupère les credentials depuis le session storage
 	const token: string | null = sessionStorage.getItem("jwt");
 	const userId: string | null = sessionStorage.getItem("userId");
 
+	// Vérifie que l'utilisateur est authentifié
 	if (userId === null || token === null) {
 		console.error('Could not fetch user id/token');
 		return;
 	}
 
 	try {
+		// Requête HTTP pour créer/rejoindre une partie remote
 		const res = await fetch(`${snake_route}/remote`, {
 			method: "GET",
 			headers: {
-				"authorization": `Bearer ${token}`,
-				"x-user-id": userId
+				"authorization": `Bearer ${token}`,  // Authentification JWT
+				"x-user-id": userId                 // Utilisé pour le matchmaking
 			},
 		});
+
+		// Gestion des erreurs HTTP
 		if (!res.ok) {
 			const text = await res.text();
 			console.error(`Server error ${res.status}:`, text);
 			throw new Error(`Failed to load Snake game`);
 		}
 
+		// Vérifie que la réponse est du JSON
 		const contentType = res.headers.get("content-type");
 		if (!contentType || !contentType.includes("application/json")) {
 			const text = await res.text();
@@ -416,142 +468,247 @@ async function launchSnakeRemoteGame() {
 			throw new Error(`Server response is not JSON`);
 		}
 
+		// Parse l'état initial de la partie
 		const gameData = await res.json();
-		const game = new SnakeGame(gameData);
+		const game = new SnakeGame(gameData);  // Crée l'instance locale
+
+		// Lance la boucle de jeu (WebSocket + rendu Canvas)
 		snakeGameLoop(game);
 	} catch (err) {
 		console.error(err);
 	}
 }
 
+/**
+ * Boucle de jeu côté client - Gère WebSocket et inputs clavier
+ *
+ * @param {SnakeGame} game - Instance de la partie (état initial du serveur)
+ *
+ * @description Cette fonction orchestre 3 éléments principaux :
+ *
+ *   1. CONNEXION WEBSOCKET
+ *      - Établit une connexion WebSocket au serveur second_game
+ *      - Envoie "Init" pour s'associer à la partie
+ *      - Écoute les mises à jour d'état du serveur
+ *
+ *   2. GESTION DES INPUTS CLAVIER
+ *      - Joueur 1 (WASD) : W=haut, S=bas, A=gauche, D=droite
+ *      - Joueur 2 (Flèches) : ↑=haut, ↓=bas, ←=gauche, →=droite
+ *      - Les inputs mettent à jour `nextDirection` localement
+ *      - Envoi immédiat au serveur via WebSocket (message "input")
+ *      - Le serveur valide et applique les changements de direction
+ *
+ *   3. RENDU CANVAS
+ *      - Lance snakeAnimation() après connexion WebSocket établie
+ *      - Boucle de rendu à 60 FPS (requestAnimationFrame)
+ *
+ * SYNCHRONISATION :
+ *   - Le serveur est la source de vérité (architecture autoritaire)
+ *   - Le client envoie seulement les inputs
+ *   - Le serveur calcule tout (mouvement, collisions, wrap-around)
+ *   - Le client reçoit l'état mis à jour et l'affiche
+ *
+ * NETTOYAGE :
+ *   - Supprime les event listeners à la fin de la partie
+ *   - Ferme proprement la connexion WebSocket
+ */
 async function snakeGameLoop(game: SnakeGame) {
 	try {
+		// Établit la connexion WebSocket au serveur
 		const ws = new WebSocket(`wss${snake_ws_route}/ws`);
 		game.socket = ws;
 
-		// Store handler reference for cleanup
+		// === GESTIONNAIRE D'INPUTS CLAVIER ===
 		const keydownHandler = (e: KeyboardEvent) => {
-			// Prevent arrow keys from scrolling the page
+			// Empêche le scroll de la page avec les flèches
 			if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
 				e.preventDefault();
 			}
 
-			let updated = false;
+			let updated = false;  // Flag pour savoir si on doit envoyer au serveur
 
-			// Player 1: WASD
+			// JOUEUR 1 : Touches WASD (insensible à la casse)
 			switch(e.key) {
 				case 'w':
 				case 'W':
-					game.player1.nextDirection = {x: 0, y: -1};
+					game.player1.nextDirection = {x: 0, y: -1};  // Haut
 					updated = true;
 					break;
 				case 's':
 				case 'S':
-					game.player1.nextDirection = {x: 0, y: 1};
+					game.player1.nextDirection = {x: 0, y: 1};  // Bas
 					updated = true;
 					break;
 				case 'a':
 				case 'A':
-					game.player1.nextDirection = {x: -1, y: 0};
+					game.player1.nextDirection = {x: -1, y: 0};  // Gauche
 					updated = true;
 					break;
 				case 'd':
 				case 'D':
-					game.player1.nextDirection = {x: 1, y: 0};
+					game.player1.nextDirection = {x: 1, y: 0};  // Droite
 					updated = true;
 					break;
 
-				// Player 2: Arrow keys
+				// JOUEUR 2 : Touches fléchées
 				case 'ArrowUp':
-					game.player2.nextDirection = {x: 0, y: -1};
+					game.player2.nextDirection = {x: 0, y: -1};  // Haut
 					updated = true;
 					break;
 				case 'ArrowDown':
-					game.player2.nextDirection = {x: 0, y: 1};
+					game.player2.nextDirection = {x: 0, y: 1};  // Bas
 					updated = true;
 					break;
 				case 'ArrowLeft':
-					game.player2.nextDirection = {x: -1, y: 0};
+					game.player2.nextDirection = {x: -1, y: 0};  // Gauche
 					updated = true;
 					break;
 				case 'ArrowRight':
-					game.player2.nextDirection = {x: 1, y: 0};
+					game.player2.nextDirection = {x: 1, y: 0};  // Droite
 					updated = true;
 					break;
 			}
 
+			// Si une direction a été modifiée, envoie au serveur
 			if (updated && ws.readyState === WebSocket.OPEN) {
-				ws.send(JSON.stringify({game, message: "input"}));
+				// Envoie seulement l'ID et les directions des joueurs
+				// Évite d'envoyer l'objet game complet (problème de sérialisation WebSocket)
+				ws.send(JSON.stringify({
+					game: {
+						id: game.id,
+						player1: { nextDirection: game.player1.nextDirection },
+						player2: { nextDirection: game.player2.nextDirection }
+					},
+					message: "input"
+				}));
 			}
 		};
 
-		// Attach event listener
+		// Attache le gestionnaire d'événements clavier
 		window.addEventListener('keydown', keydownHandler);
 
-		// Cleanup function
+		// Fonction de nettoyage (appelée en fin de partie)
 		const cleanup = () => {
 			window.removeEventListener('keydown', keydownHandler);
 		};
 
+		// === EVENT LISTENERS WEBSOCKET ===
+
+		// OPEN : Connexion établie
 		ws.addEventListener('open', () => {
 			if (ws.readyState === WebSocket.OPEN) {
-				ws.send(JSON.stringify({game, message: "Init"}));
+				// Envoie le message d'initialisation au serveur
+				// Note : On envoie seulement l'ID du jeu, pas l'objet complet
+				// car game.socket (WebSocket) n'est pas sérialisable en JSON
+				ws.send(JSON.stringify({game: {id: game.id}, message: "Init"}));
 			}
+			// IMPORTANT : Démarre le rendu seulement APRÈS connexion établie
+			// Fix de la race condition où le rendu démarrait avant l'envoi de "Init"
+			snakeAnimation(game);
 		});
 
+		// MESSAGE : Réception d'un état mis à jour du serveur
 		ws.addEventListener('message', (event) => {
+			// Parse l'état du jeu envoyé par le serveur
 			const serverGame = JSON.parse(event.data);
+
+			// Met à jour l'état local avec les données du serveur
 			game.updateFromServer(serverGame);
 
-			// Cleanup if game ends
+			// Si la partie est terminée, nettoie après 2 secondes
 			if (game.message === "END") {
 				setTimeout(cleanup, 2000);
 			}
 		});
 
+		// ERROR : Erreur WebSocket
 		ws.addEventListener('error', (error) => {
 			console.error('WebSocket error:', error);
-			cleanup();
+			cleanup();  // Nettoie en cas d'erreur
 		});
 
+		// CLOSE : Fermeture de la connexion
 		ws.addEventListener('close', () => {
 			console.log('WebSocket connection closed');
-			cleanup();
+			cleanup();  // Nettoie à la fermeture
 		});
-
-		// Start rendering
-		snakeAnimation(game);
 	} catch (error) {
 		console.error(error);
 	}
 }
 
+/**
+ * Boucle de rendu Canvas - Affiche le jeu Snake à 60 FPS
+ *
+ * @param {SnakeGame} game - Instance de la partie (mise à jour via WebSocket)
+ *
+ * @description Système de rendu en 5 couches (ordre de dessin) :
+ *
+ *   1. FOND NOIR
+ *      - Efface le canvas à chaque frame
+ *
+ *   2. GRILLE
+ *      - Lignes grises subtiles (#1a1a1a) pour visualiser les cellules
+ *      - Espacement : cellSize pixels (20px par défaut)
+ *
+ *   3. SERPENTS
+ *      - Joueur 1 : Couleur verte (#7ed27eff)
+ *      - Joueur 2 : Couleur rose (#cd6bb3ff)
+ *      - Tête : Opacité 100% (alpha = 1.0) - Plus visible
+ *      - Corps : Opacité 80% (alpha = 0.8) - Légèrement transparent
+ *      - Effet de gap : padding de 1px entre les segments
+ *
+ *   4. SCORES
+ *      - Format : "Nom du joueur: Longueur du serpent"
+ *      - Position : En haut du canvas
+ *      - Joueur 1 : 1/4 de la largeur
+ *      - Joueur 2 : 3/4 de la largeur
+ *
+ *   5. MESSAGES D'ÉTAT
+ *      - "Countdown" : Affiche 3, 2, 1, GO!
+ *      - "Waiting" : "Waiting for opponent..." (mode remote)
+ *      - "END" : Affiche le gagnant et arrête le rendu
+ *
+ * PERFORMANCE :
+ *   - Utilise requestAnimationFrame pour un rendu fluide à 60 FPS
+ *   - Le serveur envoie des updates à ~3.3 FPS (300ms)
+ *   - Le rendu interpole visuellement (affiche le dernier état connu)
+ *
+ * ARRÊT :
+ *   - Quand game.message === "END", annule l'animation et sort
+ */
 function snakeAnimation(game: SnakeGame) {
+	// Récupère le canvas HTML et son contexte 2D
 	const canvas = document.getElementById("snakeCanvas") as HTMLCanvasElement;
 	const ctx = canvas.getContext('2d');
 
+	// Vérification de disponibilité
 	if (!ctx || !canvas) {
 		console.error('Could not fetch snake canvas or context');
 		return;
 	}
 
-	// Show canvas
+	// Affiche le canvas (retire la classe 'hidden')
 	canvas.classList.remove('hidden');
 
-	// Set canvas size based on grid
+	// Configure la taille du canvas selon la grille
+	// Ex: 30 cellules × 20 pixels = 600×600px
 	canvas.width = game.grid.width * game.grid.cellSize;
 	canvas.height = game.grid.height * game.grid.cellSize;
 
-	// Store animation ID for cancellation
+	// ID de l'animation pour pouvoir l'annuler
 	let animationId: number;
 
+	// === FONCTION DE RENDU (appelée à ~60 FPS) ===
 	const render = () => {
-		// Clear canvas
+		// COUCHE 1 : FOND NOIR
+		// Efface tout le canvas
 		ctx.fillStyle = '#000000';
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-		// Draw grid (optional - subtle)
-		ctx.strokeStyle = '#1a1a1a';
+		// COUCHE 2 : GRILLE
+		// Lignes verticales
+		ctx.strokeStyle = '#1a1a1a';  // Gris très sombre (subtil)
 		ctx.lineWidth = 1;
 		for (let x = 0; x <= game.grid.width; x++) {
 			ctx.beginPath();
@@ -559,6 +716,7 @@ function snakeAnimation(game: SnakeGame) {
 			ctx.lineTo(x * game.grid.cellSize, canvas.height);
 			ctx.stroke();
 		}
+		// Lignes horizontales
 		for (let y = 0; y <= game.grid.height; y++) {
 			ctx.beginPath();
 			ctx.moveTo(0, y * game.grid.cellSize);
@@ -566,27 +724,33 @@ function snakeAnimation(game: SnakeGame) {
 			ctx.stroke();
 		}
 
-		// Draw Player 1 snake
+		// COUCHE 3A : SERPENT JOUEUR 1
 		if (game.player1.snake && game.player1.snake.length > 0) {
 			game.player1.snake.forEach((segment, index) => {
-				const alpha = index === 0 ? 1 : 0.8; // Head brighter
+				// Tête plus opaque que le corps
+				const alpha = index === 0 ? 1 : 0.8;
 				ctx.globalAlpha = alpha;
 				ctx.fillStyle = game.player1.color;
+
+				// Dessine un rectangle avec gap de 1px
 				ctx.fillRect(
-					segment.x * game.grid.cellSize + 1,
+					segment.x * game.grid.cellSize + 1,  // Décalage de 1px
 					segment.y * game.grid.cellSize + 1,
-					game.grid.cellSize - 2,
+					game.grid.cellSize - 2,               // 2px plus petit (gap)
 					game.grid.cellSize - 2
 				);
 			});
 		}
 
-		// Draw Player 2 snake
+		// COUCHE 3B : SERPENT JOUEUR 2
 		if (game.player2.snake && game.player2.snake.length > 0) {
 			game.player2.snake.forEach((segment, index) => {
-				const alpha = index === 0 ? 1 : 0.8; // Head brighter
+				// Tête plus opaque que le corps
+				const alpha = index === 0 ? 1 : 0.8;
 				ctx.globalAlpha = alpha;
 				ctx.fillStyle = game.player2.color;
+
+				// Dessine un rectangle avec gap de 1px
 				ctx.fillRect(
 					segment.x * game.grid.cellSize + 1,
 					segment.y * game.grid.cellSize + 1,
@@ -596,26 +760,32 @@ function snakeAnimation(game: SnakeGame) {
 			});
 		}
 
+		// Réinitialise l'opacité pour le texte
 		ctx.globalAlpha = 1;
 
-		// Draw UI text
-		ctx.fillStyle = '#FFFFFF';
+		// COUCHE 4 : SCORES
+		ctx.fillStyle = '#FFFFFF';  // Texte blanc
 		ctx.font = '24px Arial';
 		ctx.textAlign = 'center';
 
-		// Draw scores at top
+		// Score Joueur 1 (à gauche)
 		ctx.fillText(
 			`${game.player1.name || 'Player 1'}: ${game.player1.snake.length}`,
 			canvas.width / 4,
 			30
 		);
+
+		// Score Joueur 2 (à droite)
 		ctx.fillText(
 			`${game.player2.name || 'Player 2'}: ${game.player2.snake.length}`,
 			(canvas.width * 3) / 4,
 			30
 		);
 
-		// Draw game state messages
+		// COUCHE 5 : MESSAGES D'ÉTAT
+		// Affichés au centre du canvas
+
+		// COUNTDOWN : 3, 2, 1, GO!
 		if (game.message === "Countdown") {
 			ctx.font = '48px Arial';
 			ctx.fillText(
@@ -623,23 +793,30 @@ function snakeAnimation(game: SnakeGame) {
 				canvas.width / 2,
 				canvas.height / 2
 			);
-		} else if (game.message === "Waiting") {
+		}
+		// WAITING : En attente d'adversaire (mode remote)
+		else if (game.message === "Waiting") {
 			ctx.font = '36px Arial';
 			ctx.fillText(
 				"Waiting for opponent...",
 				canvas.width / 2,
 				canvas.height / 2
 			);
-		} else if (game.message === "END") {
+		}
+		// END : Partie terminée, affiche le gagnant
+		else if (game.message === "END") {
 			ctx.font = '36px Arial';
 			ctx.fillText(game.displayWinner, canvas.width / 2, canvas.height / 2);
-			// Cancel animation before stopping
+
+			// ARRÊTE LA BOUCLE DE RENDU
 			if (animationId) cancelAnimationFrame(animationId);
-			return;
+			return;  // Sort de la fonction
 		}
 
+		// Planifie la prochaine frame (~60 FPS)
 		animationId = requestAnimationFrame(render);
 	};
 
+	// Démarre la boucle de rendu
 	render();
 }
