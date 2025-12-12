@@ -97,29 +97,10 @@ export default async function routes(fastify, options) {
         
         const decoded = await verifyToken(fastify, token);
 
+        reply.header("X-User-ID", String(decoded.id));
         reply.code(200).send({ user: decoded });
       } catch {
         reply.code(401).send({ error: "Invalid token" });
-      }
-    });
-
-    fastify.post('/sessions/validate', async (req, reply) => {
-      try {
-        const auth = req.headers.authorization || '';
-        const token = auth.startsWith('Bearer ') ? auth.slice(7) : auth;
-        if (!token) return reply.code(401).send({ valid: false });
-      
-        let payload;
-        try {
-          payload = await verifyToken(fastify, token);
-        } catch (_) {
-          return reply.code(401).send({ valid: false });
-        }
-      
-        return reply.code(200).send({ valid: true, userId: String(payload.id) });
-      } catch (err) {
-        fastify.log.error(err);
-        return reply.code(500).send({ valid: false });
       }
     });
 

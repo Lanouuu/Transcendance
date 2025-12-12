@@ -33,8 +33,6 @@ export async function runServer() {
       limits: { fileSize: 2 * 1024 * 1024 },
     });
 
-    const AUTH_URL = "http://auth_service:3001";
-
     //#endregion init_users_server
     
     /****************************************************************************/
@@ -112,21 +110,8 @@ export async function runServer() {
           return reply.status(400).send({ error: "ID required" });
         }
 
-        const authHeader = req.headers.authorization || '';
-        const sessionsCheck = await fetch(`${AUTH_URL}/sessions/validate`, {
-          method : 'POST',
-          headers: {
-            authorization: authHeader, 
-          }
-        });
-        if (!sessionsCheck.ok) {
-          return reply.status(500).send({ error: "Session verification failed" });
-        }
-        const sessionsJson = await sessionsCheck.json();
-        if (!sessionsJson.valid) {
-          return reply.status(401).send({ error: "Invalid session" });
-        }
-        if (sessionsJson.userId && String(sessionsJson.userId) !== String(id)) {
+        const userID = req.headers["x-user-id"];
+        if (!userID || String(userID) !== String(id)) {
           return reply.status(403).send({ error: "Can only modify your own avatar" });
         }
   
@@ -252,21 +237,8 @@ export async function runServer() {
           return reply.status(400).send({ error: "ID required" });
         }
         
-        const authHeader = req.headers.authorization || '';
-        const sessionsCheck = await fetch(`${AUTH_URL}/sessions/validate`, {
-          method : 'POST',
-          headers: {
-            authorization: authHeader, 
-          }
-        });
-        if (!sessionsCheck.ok) {
-          return reply.status(500).send({ error: "Session verification failed" });
-        }
-        const sessionsJson = await sessionsCheck.json();
-        if (!sessionsJson.valid) {
-          return reply.status(401).send({ error: "Invalid session" });
-        }
-        if (sessionsJson.userId && String(sessionsJson.userId) !== String(id)) {
+        const userID = req.headers["x-user-id"];
+        if (!userID || String(userID) !== String(id)) {
           return reply.status(403).send({ error: "Can only change your name" });
         }
 
@@ -298,21 +270,8 @@ export async function runServer() {
           return reply.status(400).send({ error: "ID required" });
         }
 
-        const authHeader = req.headers.authorization || '';
-        const sessionsCheck = await fetch(`${AUTH_URL}/sessions/validate`, {
-          method : 'POST',
-          headers: {
-            authorization: authHeader, 
-          }
-        });
-        if (!sessionsCheck.ok) {
-          return reply.status(500).send({ error: "Session verification failed" });
-        }
-        const sessionsJson = await sessionsCheck.json();
-        if (!sessionsJson.valid) {
-          return reply.status(401).send({ error: "Invalid session" });
-        }
-        if (sessionsJson.userId && String(sessionsJson.userId) !== String(id)) {
+        const userID = req.headers["x-user-id"];
+        if (!userID || String(userID) !== String(id)) {
           return reply.status(403).send({ error: "Can only change your mail" });
         }
 
@@ -364,21 +323,8 @@ export async function runServer() {
           return reply.status(400).send({ error: "ID required" });
         }
 
-        const authHeader = req.headers.authorization || '';
-        const sessionsCheck = await fetch(`${AUTH_URL}/sessions/validate`, {
-          method : 'POST',
-          headers: {
-            authorization: authHeader, 
-          }
-        });
-        if (!sessionsCheck.ok) {
-          return reply.status(500).send({ error: "Session verification failed" });
-        }
-        const sessionsJson = await sessionsCheck.json();
-        if (!sessionsJson.valid) {
-          return reply.status(401).send({ error: "Invalid session" });
-        }
-        if (sessionsJson.userId && String(sessionsJson.userId) !== String(id)) {
+        const userID = req.headers["x-user-id"];
+        if (!userID || String(userID) !== String(id)) {
           return reply.status(403).send({ error: "Can only change your password" });
         }
 
@@ -440,7 +386,6 @@ export async function runServer() {
 
     fastify.post("/send-invit", async (req, reply) => {
       try {
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const userID = req.headers["x-user-id"];
         const { friendName } = req.body;
         if (!userID) {
@@ -458,7 +403,6 @@ export async function runServer() {
         if (Number(userID) === friendID) {
           return reply.status(400).send({ error: "You cannot invite yourself" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const blockedStmt = usersDB.prepare(`
           SELECT blocked_by FROM friends
           WHERE status = 'blocked'
@@ -534,12 +478,12 @@ export async function runServer() {
         if (!userID) {
           return reply.status(400).send({ error: "ID required" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         const reqID = req.headers["x-user-id"];
         if (userID !== reqID) {
           return reply.status(403).send({ error: "Can only view your invitations" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         const listStmt = usersDB.prepare(`
           SELECT
             f.user_id AS sender_id,
@@ -816,6 +760,8 @@ export async function runServer() {
         `);
         saveStmt.run(player1ID, player1Name.name, player2ID, player2Name.name, winnerID, scoreP1, scoreP2, matchType, gameType);
 
+        const loserID = winnerID === player1ID ? player2ID : player1ID;
+
         const updateWinnerStmt = usersDB.prepare(`
           UPDATE users 
           SET pong_wins = pong_wins + CASE WHEN ? = 'pong' THEN 1 ELSE 0 END,
@@ -846,23 +792,10 @@ export async function runServer() {
             return reply.status(400).send({ error: "userID required" });
           }
 
-        const authHeader = req.headers.authorization || '';
-        const sessionsCheck = await fetch(`${AUTH_URL}/sessions/validate`, {
-          method : 'POST',
-          headers: {
-            authorization: authHeader, 
-          }
-        });
-        if (!sessionsCheck.ok) {
-          return reply.status(500).send({ error: "Session verification failed" });
-        }
-        const sessionsJson = await sessionsCheck.json();
-        if (!sessionsJson.valid) {
-          return reply.status(401).send({ error: "Invalid session" });
-        }
-        if (sessionsJson.userId && String(sessionsJson.userId) !== String(userID)) {
+        const reqID = req.headers["x-user-id"];
+        if (!reqID || String(reqID) !== String(userID)) {
           return reply.status(403).send({ error: "Can only view your own matches list" });
-        }
+        }   
 
         const getStmt = usersDB.prepare(`
           SELECT * FROM matches 
