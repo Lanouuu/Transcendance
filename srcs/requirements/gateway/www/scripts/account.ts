@@ -749,9 +749,9 @@ function createLiHistoryItem(p1Id: string, p1Name: string, p2Id: string, p2Name:
 
 	const gameTypeIcon: HTMLImageElement = document.createElement('img');
 	if (gameType === 'pong')
-		gameTypeIcon.src = './assets/other/challenge-user.svg';
+		gameTypeIcon.src = './assets/other/pong.png';
 	else if (gameType === 'snake')
-		gameTypeIcon.src = './assets/other/snake.svg';
+		gameTypeIcon.src = './assets/other/snake.png';
 	gameTypeIcon.width = 24;
 	gameTypeIcon.height = 24;
 
