@@ -6,27 +6,27 @@ export async function initDB() {
     ///// REMETTRE WIN ET LOSSES A DEFAULT 0 !!!!!!!!!!!!!!!!!!!!!!!!!!
     usersDB.exec(
         `CREATE TABLE IF NOT EXISTS users (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            name        TEXT NOT NULL UNIQUE,
-            mail        TEXT NOT NULL UNIQUE,
-            password    TEXT NOT NULL,
-            enable2FA   BOOLEAN DEFAULT 0,
-            secret2FA   TEXT,
-            auth_type   TEXT DEFAULT 'local',
-            avatar_path TEXT NOT NULL DEFAULT 'default.png',
-            pong_wins        INTEGER DEFAULT 2,
-            pong_losses      INTEGER DEFAULT 2,
-            snake_wins        INTEGER DEFAULT 1,
-            snake_losses      INTEGER DEFAULT 1,
-            created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+            id          	INTEGER PRIMARY KEY AUTOINCREMENT,
+            name        	TEXT NOT NULL UNIQUE,
+            mail        	TEXT NOT NULL UNIQUE,
+            password    	TEXT NOT NULL,
+            enable2FA   	BOOLEAN DEFAULT 0,
+            secret2FA   	TEXT,
+            auth_type   	TEXT DEFAULT 'local',
+            avatar_path 	TEXT NOT NULL DEFAULT 'default.png',
+            pong_wins       INTEGER DEFAULT 2,
+            pong_losses     INTEGER DEFAULT 2,
+            snake_wins      INTEGER DEFAULT 1,
+            snake_losses    INTEGER DEFAULT 1,
+            created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
         );
         CREATE TABLE IF NOT EXISTS friends (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id     INTEGER NOT NULL,
-            friend_id   INTEGER NOT NULL,
-            status      TEXT NOT NULL DEFAULT 'pending',
-            created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-            blocked_by  INTEGER DEFAULT 0,
+            id          	INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     	INTEGER NOT NULL,
+            friend_id   	INTEGER NOT NULL,
+            status      	TEXT NOT NULL DEFAULT 'pending',
+            created_at  	DATETIME DEFAULT CURRENT_TIMESTAMP,
+            blocked_by  	INTEGER DEFAULT 0,
             UNIQUE(user_id, friend_id)
         );
         CREATE TABLE IF NOT EXISTS matches (
