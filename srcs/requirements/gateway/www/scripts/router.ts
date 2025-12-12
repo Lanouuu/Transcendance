@@ -7,7 +7,7 @@ const	PAGE_BACKGROUNDS: Record<string, string> = {
 	'logout': '/img/Background1.png',
 	'signup': '/img/Background1.png',
 	'tournament': '/img/Background1.png',
-}
+};
 
 // permet de recuperer l'ID et le Token depuis la connection oAuth 42
 // et redirige vers account
@@ -198,6 +198,12 @@ class Router {
 
 		try {
 
+				if (page === 'error') {
+					const params = new URLSearchParams(window.location.hash.split('?')[1]);
+					const errorCode = params.get('code');
+					this.displayError(errorCode || '500');
+				}
+
 				const	nextBackgroundUrl: string = PAGE_BACKGROUNDS[page] || PAGE_BACKGROUNDS['home'];
 				const	transitionDirection: string = this.getTransitionDirection(page);
 				// await this.animateBgTransition(nextBackgroundUrl, transitionDirection);
@@ -255,6 +261,37 @@ class Router {
 			this.mainContent.innerHTML = '<h1>Page not found</h1>'; // A changer ?
 		}
 	}
+
+	private displayError(code: string): void {
+		const errorMessages: Record<string, { title: string, message: string}> = {
+			'401': {
+				title: 'Unauthorized',
+				message: 'You need to be logged in to access this page.'
+			},
+			'403': {
+				title: 'Forbidden',
+				message: 'You do not have permission to access this resource.'
+			},
+			'500': {
+				title: 'Internal Server Error',
+				message: 'Something went wrong. Please try again later.'
+			}
+		};
+
+		const error = errorMessages[code] || errorMessages['500'];
+
+		this.mainContent.innerHTML = `
+			<div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
+				<h1 class="text-6xl font-bold text-red-500 mb-4">${code}</h1>
+				<h2 class="text-3xl font-semibold mb-4">${error.title}</h2>
+				<p class="text-xl mb-8">${error.message}</p>
+				<a href="#home" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+					Return to Home
+				</a>
+			</div>
+		`;
+	}
+
 }
 
 // A SUPPRIMER (TESTS) /////////////////////////////////////////////////////////////////////////////////
