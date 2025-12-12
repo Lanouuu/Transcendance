@@ -223,11 +223,13 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 		// #endregion updateAvatar
 
 		// #region stats //
-		// Proteger les cas 0 / undefined ou jcp quoi
-			const pongWinrate: number = Number(data.pong_wins) * 100 / Number(data.pong_losses);
-			// const snakeWinrate: number = Number(data.snake_wins) * 100 / Number(data.snake_losses);
-			pongWinrateSpan.textContent = `${pongWinrate}%`;
-			// WinrateSpan.textContent = `${pongWinrate}%`;
+
+		const pongWins = Number(data.pong_wins) || 0;
+		const pongLosses = Number(data.pong_losses) || 0;
+		const totalPongMatches = pongWins + pongLosses;
+		const pongWinrate = totalPongMatches === 0 ? 0 : Math.round((pongWins / totalPongMatches) * 100);
+		pongWinrateSpan.textContent = `${pongWinrate}%`;
+
 		// #endregion stats //
 	} catch (error) {
 		console.error(error);

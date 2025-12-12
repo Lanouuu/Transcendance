@@ -202,7 +202,7 @@ export async function runServer() {
         const reqID = req.headers["x-user-id"];
 
         let stmt = null;
-        if (reqID !== id) {pong_
+        if (reqID !== id) {
           stmt = usersDB.prepare("SELECT id, name, pong_wins, pong_losses, snake_wins, snake_losses FROM users WHERE id = ?");
         } else {
           stmt = usersDB.prepare("SELECT id, name, mail, pong_wins, pong_losses, snake_wins, snake_losses, created_at FROM users WHERE id = ?");
@@ -215,12 +215,12 @@ export async function runServer() {
         const sanitizedUser = {
           id: user.id,
           name: user.name,
-          mail: reqID === id ? user.mail : undefined,
+          mail: String(reqID) === String(id) ? user.mail : undefined,
           pong_wins: user.pong_wins,
           pong_losses: user.pong_losses,
           snake_wins: user.snake_wins,
           snake_losses: user.snake_losses,
-          createdAt: reqID === id ? user.created_at : undefined
+          createdAt: String(reqID) === String(id) ? user.created_at : undefined
         };
 
         reply.send(sanitizedUser);

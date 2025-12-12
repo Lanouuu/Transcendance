@@ -97,8 +97,10 @@ export default async function routes(fastify, options) {
         
         const decoded = await verifyToken(fastify, token);
 
-        reply.header("X-User-ID", String(decoded.id));
-        reply.code(200).send({ user: decoded });
+        return reply
+         .code(200)
+         .header("X-User-ID", String(decoded.id))
+         .send({ user: decoded });
       } catch {
         reply.code(401).send({ error: "Invalid token" });
       }
