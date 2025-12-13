@@ -55,8 +55,12 @@ export async function runServer() {
 
     fastify.post('/tournamentCreate', async (request, reply) => {
       const { name, creator_id, nb_max_players } = request.body || {};
-
+      console.log("event detected")
       if (!name || !creator_id || !nb_max_players) {
+        console.log("name: ", name)
+        console.log("creator_id: ", creator_id)
+        console.log("nb_max_player: ", nb_max_players)
+        console.log("MIssing information")
         return reply.code(400).send({ error: "name, creator_id, nb_max_players required" });
       }
 
