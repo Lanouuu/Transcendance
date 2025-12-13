@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import { initDB } from "./database.js";
 import { WebSocketServer } from 'ws'
-
+import fs from 'fs'
 
 class tournoi {
   constructor({ id, name, creator_id, nb_max_players }) {
@@ -33,7 +33,16 @@ async function getUserName(id) {
 
 export async function runServer() {
 
-    const fastify = Fastify({ logger: true });
+    const fastify = Fastify({
+      logger: true,
+      connectionTimeout: 120000,
+      keepAliveTimeout: 120000,
+      https: {
+          key: fs.readFileSync('/etc/ssl/transcendence.key'),
+          cert: fs.readFileSync('/etc/ssl/transcendence.crt') 
+      }
+    });
+
     const PORT = parseInt(process.env.TOURNAMENT_PORT, 10);
     const HOST = process.env.TOURNAMENT_HOST;
 

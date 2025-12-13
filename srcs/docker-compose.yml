@@ -73,6 +73,8 @@ services:
     expose: ["3004"]
     env_file:
       - .env
+    volumes:
+      - ssl_certifs:/etc/ssl:ro
     networks:
       - pong_app
     restart: always
