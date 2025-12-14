@@ -7,6 +7,11 @@ const ws_route: string = `://${window.location.host}/game`;
 const snake_route: string = `${window.location.origin}/second_game`;
 const snake_ws_route: string = `://${window.location.host}/second_game`;
 
+// Variables globales pour gérer le replay
+let currentSnakeGameMode: 'local' | 'remote' | null = null;
+let currentWebSocket: WebSocket | null = null;
+let currentAnimationId: number | null = null;
+
 export async function setupGamePage(): Promise<void> {
 	
 	const initButtons = () => {
@@ -14,6 +19,7 @@ export async function setupGamePage(): Promise<void> {
 		const localButton: HTMLButtonElement = document.getElementById('gameLocalGameButton') as HTMLButtonElement;
 		const snakeLocalButton: HTMLButtonElement = document.getElementById('snakeLocalGameButton') as HTMLButtonElement;
 		const snakeRemoteButton: HTMLButtonElement = document.getElementById('snakeRemoteGameButton') as HTMLButtonElement;
+		const snakeReplayButton: HTMLButtonElement = document.getElementById('snakeReplayButton') as HTMLButtonElement;
 		const gameMenu: HTMLElement = document.getElementById('gameSelectionMenu') as HTMLElement;
 
 
@@ -23,7 +29,7 @@ export async function setupGamePage(): Promise<void> {
 		}
 
 		localButton.addEventListener('click', async () => {
-			console.log("localGameBUtton");	
+			console.log("localGameBUtton");
 			localButton.classList.add('hidden');
 			remoteButton.classList.add('hidden');
 			launchLocalGame();
@@ -32,7 +38,7 @@ export async function setupGamePage(): Promise<void> {
 			launchRemoteGame();
 			localButton.classList.add('hidden');
 			remoteButton.classList.add('hidden');
-			console.log("remoteGameBUtton");	
+			console.log("remoteGameBUtton");
 		});
 		snakeLocalButton.addEventListener('click', async () => {
 			console.log("snakeLocalGameButton");
@@ -44,6 +50,14 @@ export async function setupGamePage(): Promise<void> {
 			if (gameMenu) gameMenu.classList.add('hidden');
 			launchSnakeRemoteGame();
 		});
+
+		// Gestionnaire pour le bouton replay
+		if (snakeReplayButton) {
+			snakeReplayButton.addEventListener('click', async () => {
+				console.log("snakeReplayButton");
+				replaySnakeGame();
+			});
+		}
 	};
 
 
@@ -406,6 +420,9 @@ async function launchSnakeLocalGame() {
 		const gameData = await res.json();
 		const game = new SnakeGame(gameData);  // Crée l'instance locale
 
+		// Stocke le mode pour le replay
+		currentSnakeGameMode = 'local';
+
 		// Lance la boucle de jeu (WebSocket + rendu Canvas)
 		snakeGameLoop(game);
 	} catch (err) {
@@ -472,10 +489,86 @@ async function launchSnakeRemoteGame() {
 		const gameData = await res.json();
 		const game = new SnakeGame(gameData);  // Crée l'instance locale
 
+		// Stocke le mode pour le replay
+		currentSnakeGameMode = 'remote';
+
 		// Lance la boucle de jeu (WebSocket + rendu Canvas)
 		snakeGameLoop(game);
 	} catch (err) {
 		console.error(err);
+	}
+}
+
+/**
+ * Relance une partie de Snake dans le même mode que la partie précédente
+ *
+ * @description Fonction de replay qui :
+ *   1. Vérifie qu'une partie a déjà été jouée (currentSnakeGameMode défini)
+ *   2. Nettoie l'état de la partie précédente (WebSocket, canvas, bouton)
+ *   3. Relance une nouvelle partie dans le même mode (local ou remote)
+ *
+ * NETTOYAGE :
+ *   - Ferme la connexion WebSocket si elle existe
+ *   - Cache le bouton replay
+ *   - Efface le canvas
+ *
+ * RELANCEMENT :
+ *   - Mode local : Lance launchSnakeLocalGame()
+ *   - Mode remote : Lance launchSnakeRemoteGame()
+ */
+async function replaySnakeGame() {
+	// Vérifie qu'un mode de jeu a été défini
+	if (!currentSnakeGameMode) {
+		console.error('No previous game mode found');
+		return;
+	}
+
+	// Nettoie l'état de la partie précédente
+	cleanupSnakeGame();
+
+	// Relance une nouvelle partie dans le même mode
+	if (currentSnakeGameMode === 'local') {
+		await launchSnakeLocalGame();
+	} else if (currentSnakeGameMode === 'remote') {
+		await launchSnakeRemoteGame();
+	}
+}
+
+/**
+ * Nettoie l'état de la partie Snake précédente
+ *
+ * @description Fonction de nettoyage qui :
+ *   1. Ferme la connexion WebSocket si elle est ouverte
+ *   2. Annule l'animation en cours
+ *   3. Cache le bouton replay
+ *   4. Efface le canvas
+ *
+ * Appelée avant de lancer une nouvelle partie (replay)
+ */
+function cleanupSnakeGame() {
+	// Ferme la connexion WebSocket si elle existe
+	if (currentWebSocket && currentWebSocket.readyState === WebSocket.OPEN) {
+		currentWebSocket.close();
+		currentWebSocket = null;
+	}
+
+	// Annule l'animation en cours
+	if (currentAnimationId !== null) {
+		cancelAnimationFrame(currentAnimationId);
+		currentAnimationId = null;
+	}
+
+	// Cache le bouton replay
+	const replayButton = document.getElementById("snakeReplayButton") as HTMLButtonElement;
+	if (replayButton) {
+		replayButton.classList.add('hidden');
+	}
+
+	// Efface le canvas
+	const canvas = document.getElementById("snakeCanvas") as HTMLCanvasElement;
+	const ctx = canvas?.getContext('2d');
+	if (ctx && canvas) {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
 	}
 }
 
@@ -517,6 +610,7 @@ async function snakeGameLoop(game: SnakeGame) {
 		// Établit la connexion WebSocket au serveur
 		const ws = new WebSocket(`wss${snake_ws_route}/ws`);
 		game.socket = ws;
+		currentWebSocket = ws;  // Stocke pour le nettoyage
 
 		// === GESTIONNAIRE D'INPUTS CLAVIER ===
 		const keydownHandler = (e: KeyboardEvent) => {
@@ -615,8 +709,14 @@ async function snakeGameLoop(game: SnakeGame) {
 			// Met à jour l'état local avec les données du serveur
 			game.updateFromServer(serverGame);
 
-			// Si la partie est terminée, nettoie après 2 secondes
+			// Si la partie est terminée, affiche le bouton replay
 			if (game.message === "END") {
+				// Affiche le bouton replay immédiatement
+				const replayButton = document.getElementById("snakeReplayButton") as HTMLButtonElement;
+				if (replayButton) {
+					replayButton.classList.remove('hidden');
+				}
+
 				setTimeout(cleanup, 2000);
 			}
 		});
@@ -701,6 +801,10 @@ function snakeAnimation(game: SnakeGame) {
 
 	// === FONCTION DE RENDU (appelée à ~60 FPS) ===
 	const render = () => {
+		// Stocke l'ID pour le nettoyage global
+		if (animationId) {
+			currentAnimationId = animationId;
+		}
 		// COUCHE 1 : FOND NOIR
 		// Efface tout le canvas
 		ctx.fillStyle = '#000000';

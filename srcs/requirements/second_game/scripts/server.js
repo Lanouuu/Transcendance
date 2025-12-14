@@ -654,13 +654,27 @@ export function runServer() {
                     game.socket.push(ws);
                     games.set(game.id, game);
 
-                    // Start game loop on first connection (300ms tick)
+                    // Start game loop only when conditions are met
                     if (game.loopId === null) {
-                        game.loopId = setInterval(() => snakeGameLoop(game), 300);
-                    }
+                        // For remote games, wait for both players to connect
+                        if (game.mode === "remote" && game.socket.length < 2) {
+                            // Don't start yet, waiting for second player
+                            ws.send(JSON.stringify(serializeGameState(game)));
+                        } else {
+                            // Start the game loop (local mode or remote with 2 players)
+                            game.loopId = setInterval(() => snakeGameLoop(game), 300);
 
-                    // Send initial state
-                    ws.send(JSON.stringify(serializeGameState(game)));
+                            // Send initial state to all connected sockets
+                            game.socket.forEach(socket => {
+                                if (socket.readyState === 1) {
+                                    socket.send(JSON.stringify(serializeGameState(game)));
+                                }
+                            });
+                        }
+                    } else {
+                        // Loop already started, just send current state
+                        ws.send(JSON.stringify(serializeGameState(game)));
+                    }
 
                 }
                 else if (res.message === "input") {
