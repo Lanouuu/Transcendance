@@ -896,22 +896,20 @@ function snakeAnimation(game: SnakeGame) {
 			ctx.stroke();
 		}
 
-		// COUCHE 3A : SERPENT JOUEUR 1 (avec interpolation)
+		// COUCHE 3A : SERPENT JOUEUR 1 (avec interpolation et segments continus)
 		if (game.player1.snake && game.player1.snake.length > 0) {
-			game.player1.snake.forEach((segment, index) => {
-				// Opacité : tête = 100%, corps = 80%
-				const opacity = index === 0 ? 1 : 0.8;
-				ctx.globalAlpha = opacity;
-				ctx.fillStyle = game.player1.color;
+			// Tableau des positions interpolées
+			const interpolatedPositions: {x: number, y: number}[] = [];
 
-				// Position à dessiner (interpolée ou directe)
+			// Calcul des positions interpolées pour tous les segments
+			game.player1.snake.forEach((segment, index) => {
 				let drawX = segment.x;
 				let drawY = segment.y;
 
 				// INTERPOLATION : si on a une position précédente pour ce segment
 				if (game.player1.previousSnake &&
 					game.player1.previousSnake.length > index &&
-					game.message === "Playing") {  // N'interpoler qu'en mode Playing
+					game.message === "Playing") {
 
 					const prevSegment = game.player1.previousSnake[index];
 					const interpolated = getInterpolatedPosition(
@@ -925,32 +923,88 @@ function snakeAnimation(game: SnakeGame) {
 					drawY = interpolated.y;
 				}
 
+				interpolatedPositions.push({x: drawX, y: drawY});
+			});
+
+			// Dessin du serpent avec segments séparés (gaps)
+			interpolatedPositions.forEach((pos, index) => {
+				// Opacité : tête = 100%, corps = 80%
+				const opacity = index === 0 ? 1 : 1;
+				ctx.globalAlpha = opacity;
+				ctx.fillStyle = game.player1.color;
+
 				// Dessine le segment avec gap de 1px
 				ctx.fillRect(
-					drawX * game.grid.cellSize + 1,
-					drawY * game.grid.cellSize + 1,
+					pos.x * game.grid.cellSize + 1,
+					pos.y * game.grid.cellSize + 1,
 					game.grid.cellSize - 2,
 					game.grid.cellSize - 2
 				);
+
+				// Dessine les yeux sur la tête
+				if (index === 0) {
+					ctx.globalAlpha = 1;
+					ctx.fillStyle = '#000000'; // Yeux noirs
+
+					// Direction du regard basée sur la direction du serpent
+					const direction = game.player1.direction;
+
+					// Taille des yeux
+					const eyeSize = game.grid.cellSize / 8;
+					const centerX = pos.x * game.grid.cellSize + game.grid.cellSize / 2;
+					const centerY = pos.y * game.grid.cellSize + game.grid.cellSize / 2;
+
+					// Position des yeux selon la direction
+					let eye1X: number, eye1Y: number, eye2X: number, eye2Y: number;
+
+					if (direction.x === 1) { // Droite
+						eye1X = centerX + game.grid.cellSize / 4;
+						eye1Y = centerY - game.grid.cellSize / 4;
+						eye2X = centerX + game.grid.cellSize / 4;
+						eye2Y = centerY + game.grid.cellSize / 4;
+					} else if (direction.x === -1) { // Gauche
+						eye1X = centerX - game.grid.cellSize / 4;
+						eye1Y = centerY - game.grid.cellSize / 4;
+						eye2X = centerX - game.grid.cellSize / 4;
+						eye2Y = centerY + game.grid.cellSize / 4;
+					} else if (direction.y === -1) { // Haut
+						eye1X = centerX - game.grid.cellSize / 4;
+						eye1Y = centerY - game.grid.cellSize / 4;
+						eye2X = centerX + game.grid.cellSize / 4;
+						eye2Y = centerY - game.grid.cellSize / 4;
+					} else { // Bas ou défaut
+						eye1X = centerX - game.grid.cellSize / 4;
+						eye1Y = centerY + game.grid.cellSize / 4;
+						eye2X = centerX + game.grid.cellSize / 4;
+						eye2Y = centerY + game.grid.cellSize / 4;
+					}
+
+					// Dessine les yeux
+					ctx.beginPath();
+					ctx.arc(eye1X, eye1Y, eyeSize, 0, Math.PI * 2);
+					ctx.fill();
+
+					ctx.beginPath();
+					ctx.arc(eye2X, eye2Y, eyeSize, 0, Math.PI * 2);
+					ctx.fill();
+				}
 			});
 		}
 
-		// COUCHE 3B : SERPENT JOUEUR 2 (avec interpolation)
+		// COUCHE 3B : SERPENT JOUEUR 2 (avec interpolation et segments continus)
 		if (game.player2.snake && game.player2.snake.length > 0) {
-			game.player2.snake.forEach((segment, index) => {
-				// Opacité : tête = 100%, corps = 80%
-				const opacity = index === 0 ? 1 : 0.8;
-				ctx.globalAlpha = opacity;
-				ctx.fillStyle = game.player2.color;
+			// Tableau des positions interpolées
+			const interpolatedPositions: {x: number, y: number}[] = [];
 
-				// Position à dessiner (interpolée ou directe)
+			// Calcul des positions interpolées pour tous les segments
+			game.player2.snake.forEach((segment, index) => {
 				let drawX = segment.x;
 				let drawY = segment.y;
 
 				// INTERPOLATION : si on a une position précédente pour ce segment
 				if (game.player2.previousSnake &&
 					game.player2.previousSnake.length > index &&
-					game.message === "Playing") {  // N'interpoler qu'en mode Playing
+					game.message === "Playing") {
 
 					const prevSegment = game.player2.previousSnake[index];
 					const interpolated = getInterpolatedPosition(
@@ -964,13 +1018,71 @@ function snakeAnimation(game: SnakeGame) {
 					drawY = interpolated.y;
 				}
 
+				interpolatedPositions.push({x: drawX, y: drawY});
+			});
+
+			// Dessin du serpent avec segments séparés (gaps)
+			interpolatedPositions.forEach((pos, index) => {
+				// Opacité : tête = 100%, corps = 100%
+				const opacity = index === 0 ? 1 : 1;
+				ctx.globalAlpha = opacity;
+				ctx.fillStyle = game.player2.color;
+
 				// Dessine le segment avec gap de 1px
 				ctx.fillRect(
-					drawX * game.grid.cellSize + 1,
-					drawY * game.grid.cellSize + 1,
+					pos.x * game.grid.cellSize + 1,
+					pos.y * game.grid.cellSize + 1,
 					game.grid.cellSize - 2,
 					game.grid.cellSize - 2
 				);
+
+				// Dessine les yeux sur la tête
+				if (index === 0) {
+					ctx.globalAlpha = 1;
+					ctx.fillStyle = '#000000'; // Yeux noirs
+
+					// Direction du regard basée sur la direction du serpent
+					const direction = game.player2.direction;
+
+					// Taille des yeux
+					const eyeSize = game.grid.cellSize / 8;
+					const centerX = pos.x * game.grid.cellSize + game.grid.cellSize / 2;
+					const centerY = pos.y * game.grid.cellSize + game.grid.cellSize / 2;
+
+					// Position des yeux selon la direction
+					let eye1X: number, eye1Y: number, eye2X: number, eye2Y: number;
+
+					if (direction.x === 1) { // Droite
+						eye1X = centerX + game.grid.cellSize / 4;
+						eye1Y = centerY - game.grid.cellSize / 4;
+						eye2X = centerX + game.grid.cellSize / 4;
+						eye2Y = centerY + game.grid.cellSize / 4;
+					} else if (direction.x === -1) { // Gauche
+						eye1X = centerX - game.grid.cellSize / 4;
+						eye1Y = centerY - game.grid.cellSize / 4;
+						eye2X = centerX - game.grid.cellSize / 4;
+						eye2Y = centerY + game.grid.cellSize / 4;
+					} else if (direction.y === -1) { // Haut
+						eye1X = centerX - game.grid.cellSize / 4;
+						eye1Y = centerY - game.grid.cellSize / 4;
+						eye2X = centerX + game.grid.cellSize / 4;
+						eye2Y = centerY - game.grid.cellSize / 4;
+					} else { // Bas ou défaut
+						eye1X = centerX - game.grid.cellSize / 4;
+						eye1Y = centerY + game.grid.cellSize / 4;
+						eye2X = centerX + game.grid.cellSize / 4;
+						eye2Y = centerY + game.grid.cellSize / 4;
+					}
+
+					// Dessine les yeux
+					ctx.beginPath();
+					ctx.arc(eye1X, eye1Y, eyeSize, 0, Math.PI * 2);
+					ctx.fill();
+
+					ctx.beginPath();
+					ctx.arc(eye2X, eye2Y, eyeSize, 0, Math.PI * 2);
+					ctx.fill();
+				}
 			});
 		}
 
