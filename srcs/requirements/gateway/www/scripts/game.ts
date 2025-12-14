@@ -1,5 +1,5 @@
 import { Game, Sprite, Vector2D, KeyBind, ImgSize } from "./gameClass.js"
-import { SnakeGame } from "./snakeGame.js"
+import { SnakeGame, GridPosition } from "./snakeGame.js"
 
 
 const route: string = `${window.location.origin}/game`;
@@ -738,6 +738,63 @@ async function snakeGameLoop(game: SnakeGame) {
 }
 
 /**
+ * Calcule la position interpolée entre deux positions de grille
+ *
+ * @param {GridPosition} current - Position actuelle (cible)
+ * @param {GridPosition} previous - Position précédente (origine)
+ * @param {number} alpha - Facteur d'interpolation (0 à 1)
+ * @param {number} gridWidth - Largeur de la grille (pour détecter le wrap-around)
+ * @param {number} gridHeight - Hauteur de la grille (pour détecter le wrap-around)
+ * @returns {{x: number, y: number}} Position interpolée (peut être décimale)
+ *
+ * @description Interpole linéairement entre deux positions :
+ *   - alpha = 0 : retourne la position précédente
+ *   - alpha = 1 : retourne la position actuelle
+ *   - alpha = 0.5 : retourne la position au milieu
+ *
+ * GESTION DU WRAP-AROUND :
+ *   Détecte quand un segment a traversé un bord (téléportation)
+ *   Ex : Si le serpent passe de x=29 à x=0 (bord droit → bord gauche)
+ *   Au lieu d'interpoler 29 → 0 (recul de 29 cellules)
+ *   On interpole 29 → 30 (avance d'1 cellule) avec modulo
+ */
+function getInterpolatedPosition(
+	current: GridPosition,
+	previous: GridPosition,
+	alpha: number,
+	gridWidth: number,
+	gridHeight: number
+): {x: number, y: number} {
+	// Calcule la différence de position
+	let dx = current.x - previous.x;
+	let dy = current.y - previous.y;
+
+	// DÉTECTION DU WRAP-AROUND HORIZONTAL
+	// Si la différence est > la moitié de la grille, c'est un wrap-around
+	if (Math.abs(dx) > gridWidth / 2) {
+		// Ajuste la direction pour interpoler "dans le bon sens"
+		dx = dx > 0 ? dx - gridWidth : dx + gridWidth;
+	}
+
+	// DÉTECTION DU WRAP-AROUND VERTICAL
+	if (Math.abs(dy) > gridHeight / 2) {
+		dy = dy > 0 ? dy - gridHeight : dy + gridHeight;
+	}
+
+	// Interpole linéairement
+	let interpX = previous.x + dx * alpha;
+	let interpY = previous.y + dy * alpha;
+
+	// Applique le modulo pour rester dans la grille (gère le wrap-around)
+	if (interpX < 0) interpX += gridWidth;
+	if (interpX >= gridWidth) interpX -= gridWidth;
+	if (interpY < 0) interpY += gridHeight;
+	if (interpY >= gridHeight) interpY -= gridHeight;
+
+	return {x: interpX, y: interpY};
+}
+
+/**
  * Boucle de rendu Canvas - Affiche le jeu Snake à 60 FPS
  *
  * @param {SnakeGame} game - Instance de la partie (mise à jour via WebSocket)
@@ -805,6 +862,17 @@ function snakeAnimation(game: SnakeGame) {
 		if (animationId) {
 			currentAnimationId = animationId;
 		}
+
+		// CALCUL DU FACTEUR D'INTERPOLATION (alpha)
+		// alpha = progression entre la dernière mise à jour serveur et maintenant
+		// 0.0 = juste après une mise à jour, 1.0 = juste avant la prochaine
+		const now = performance.now();
+		const timeSinceUpdate1 = now - game.player1.lastUpdateTime;
+		const timeSinceUpdate2 = now - game.player2.lastUpdateTime;
+		const TICK_RATE = 300; // Serveur envoie des updates toutes les 300ms
+		const alpha1 = Math.min(timeSinceUpdate1 / TICK_RATE, 1.0);
+		const alpha2 = Math.min(timeSinceUpdate2 / TICK_RATE, 1.0);
+
 		// COUCHE 1 : FOND NOIR
 		// Efface tout le canvas
 		ctx.fillStyle = '#000000';
@@ -828,36 +896,78 @@ function snakeAnimation(game: SnakeGame) {
 			ctx.stroke();
 		}
 
-		// COUCHE 3A : SERPENT JOUEUR 1
+		// COUCHE 3A : SERPENT JOUEUR 1 (avec interpolation)
 		if (game.player1.snake && game.player1.snake.length > 0) {
 			game.player1.snake.forEach((segment, index) => {
-				// Tête plus opaque que le corps
-				const alpha = index === 0 ? 1 : 0.8;
-				ctx.globalAlpha = alpha;
+				// Opacité : tête = 100%, corps = 80%
+				const opacity = index === 0 ? 1 : 0.8;
+				ctx.globalAlpha = opacity;
 				ctx.fillStyle = game.player1.color;
 
-				// Dessine un rectangle avec gap de 1px
+				// Position à dessiner (interpolée ou directe)
+				let drawX = segment.x;
+				let drawY = segment.y;
+
+				// INTERPOLATION : si on a une position précédente pour ce segment
+				if (game.player1.previousSnake &&
+					game.player1.previousSnake.length > index &&
+					game.message === "Playing") {  // N'interpoler qu'en mode Playing
+
+					const prevSegment = game.player1.previousSnake[index];
+					const interpolated = getInterpolatedPosition(
+						segment,
+						prevSegment,
+						alpha1,
+						game.grid.width,
+						game.grid.height
+					);
+					drawX = interpolated.x;
+					drawY = interpolated.y;
+				}
+
+				// Dessine le segment avec gap de 1px
 				ctx.fillRect(
-					segment.x * game.grid.cellSize + 1,  // Décalage de 1px
-					segment.y * game.grid.cellSize + 1,
-					game.grid.cellSize - 2,               // 2px plus petit (gap)
+					drawX * game.grid.cellSize + 1,
+					drawY * game.grid.cellSize + 1,
+					game.grid.cellSize - 2,
 					game.grid.cellSize - 2
 				);
 			});
 		}
 
-		// COUCHE 3B : SERPENT JOUEUR 2
+		// COUCHE 3B : SERPENT JOUEUR 2 (avec interpolation)
 		if (game.player2.snake && game.player2.snake.length > 0) {
 			game.player2.snake.forEach((segment, index) => {
-				// Tête plus opaque que le corps
-				const alpha = index === 0 ? 1 : 0.8;
-				ctx.globalAlpha = alpha;
+				// Opacité : tête = 100%, corps = 80%
+				const opacity = index === 0 ? 1 : 0.8;
+				ctx.globalAlpha = opacity;
 				ctx.fillStyle = game.player2.color;
 
-				// Dessine un rectangle avec gap de 1px
+				// Position à dessiner (interpolée ou directe)
+				let drawX = segment.x;
+				let drawY = segment.y;
+
+				// INTERPOLATION : si on a une position précédente pour ce segment
+				if (game.player2.previousSnake &&
+					game.player2.previousSnake.length > index &&
+					game.message === "Playing") {  // N'interpoler qu'en mode Playing
+
+					const prevSegment = game.player2.previousSnake[index];
+					const interpolated = getInterpolatedPosition(
+						segment,
+						prevSegment,
+						alpha2,
+						game.grid.width,
+						game.grid.height
+					);
+					drawX = interpolated.x;
+					drawY = interpolated.y;
+				}
+
+				// Dessine le segment avec gap de 1px
 				ctx.fillRect(
-					segment.x * game.grid.cellSize + 1,
-					segment.y * game.grid.cellSize + 1,
+					drawX * game.grid.cellSize + 1,
+					drawY * game.grid.cellSize + 1,
 					game.grid.cellSize - 2,
 					game.grid.cellSize - 2
 				);

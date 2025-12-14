@@ -46,10 +46,12 @@ export class SnakePlayer {
     name: string | undefined;          // Nom du joueur (récupéré du service users)
     id: number | undefined;            // ID utilisateur
     snake: GridPosition[];             // Array des segments du serpent (index 0 = tête)
+    previousSnake: GridPosition[];     // Positions précédentes (pour interpolation fluide)
     direction: Direction;              // Direction actuelle de déplacement
     nextDirection: Direction;          // Direction demandée (buffer anti-retour 180°)
     alive: boolean;                    // true = en vie, false = collision
     color: string;                     // Couleur du serpent en hexadécimal (#RRGGBBAA)
+    lastUpdateTime: number;            // Timestamp de la dernière mise à jour (pour interpolation)
 
     /**
      * Construit un joueur à partir des données serveur
@@ -59,10 +61,12 @@ export class SnakePlayer {
         this.name = data.name;
         this.id = data.id;
         this.snake = data.snake || [];                                         // Vide au départ
+        this.previousSnake = [];                                               // Initialisé vide
         this.direction = data.direction || {x: 0, y: 0};                      // Immobile au départ
         this.nextDirection = data.nextDirection || {x: 0, y: 0};              // Aucune direction
         this.alive = data.alive !== undefined ? data.alive : true;             // Vivant par défaut
         this.color = data.color || "#00FF00";                                  // Vert par défaut
+        this.lastUpdateTime = performance.now();                               // Initialise le timestamp
     }
 }
 
@@ -118,6 +122,7 @@ export class SnakeGame {
      * @description Synchronise l'état local avec le serveur (source de vérité)
      *   Appelée à chaque message WebSocket reçu (~300ms)
      *   Met à jour : état de la partie, serpents, timer, gagnant
+     *   Sauvegarde les positions précédentes pour l'interpolation fluide
      */
     updateFromServer(serverData: any) {
         // === État de la partie ===
@@ -130,6 +135,10 @@ export class SnakeGame {
 
         // === Mise à jour Joueur 1 ===
         if (serverData.player1) {
+            // Sauvegarde les anciennes positions AVANT de les remplacer (pour interpolation)
+            this.player1.previousSnake = this.player1.snake.slice();
+            this.player1.lastUpdateTime = performance.now();
+
             this.player1.snake = serverData.player1.snake;           // Nouvelles positions
             this.player1.alive = serverData.player1.alive;           // Statut vivant/mort
             this.player1.direction = serverData.player1.direction;   // Direction actuelle
@@ -138,6 +147,10 @@ export class SnakeGame {
 
         // === Mise à jour Joueur 2 ===
         if (serverData.player2) {
+            // Sauvegarde les anciennes positions AVANT de les remplacer (pour interpolation)
+            this.player2.previousSnake = this.player2.snake.slice();
+            this.player2.lastUpdateTime = performance.now();
+
             this.player2.snake = serverData.player2.snake;           // Nouvelles positions
             this.player2.alive = serverData.player2.alive;           // Statut vivant/mort
             this.player2.direction = serverData.player2.direction;   // Direction actuelle
