@@ -626,12 +626,14 @@ export function runServer() {
             try {
                 const res = JSON.parse(data.toString());
 
-                if (!res.game || !res.game.id) {
+                // ✅ CORRECTIF : Vérifier avec !== undefined au lieu de !res.game.id
+                if (!res.game || res.game.id === undefined || res.game.id === null) {
                     ws.send(JSON.stringify({ message: "Error", error: "Invalid game data" }));
                     return;
                 }
 
                 const gameId = parseInt(res.game.id, 10);
+                
                 if (!games.has(gameId)) {
                     ws.send(JSON.stringify({ message: "Error", error: "Game not found" }));
                     return;
@@ -653,16 +655,15 @@ export function runServer() {
                     games.set(game.id, game);
 
                     // Start game loop on first connection (300ms tick)
-                    // Note : On vérifie seulement que la loop n'est pas déjà démarrée
-                    // (plus de vérification de game.message qui peut avoir changé)
-                    if (!game.loopId) {
+                    if (game.loopId === null) {
                         game.loopId = setInterval(() => snakeGameLoop(game), 300);
                     }
 
                     // Send initial state
                     ws.send(JSON.stringify(serializeGameState(game)));
 
-                } else if (res.message === "input") {
+                }
+                else if (res.message === "input") {
                     // Handle direction changes
                     if (game.mode === "remote") {
                         // Remote mode: only accept inputs from paired player
