@@ -15,6 +15,14 @@ class tournoi {
   created_at
 }
 
+class match {
+  constructor({ player_1_id, player_2_id }) {
+    this.player_1_id = player_1_id
+    this.player_2_id = player_2_id
+    this.status = "pending"
+  }
+}
+
 const userSocket = new Map();
 
 async function getUserName(id) {
@@ -31,6 +39,35 @@ async function getUserName(id) {
         console.log("getUserName error: ", e.message);
         return `User_${id}`;
     }
+}
+
+function generateRoundRobin(teams) {
+    if (teams.length % 2 !== 0) {
+        teams.push("bye");
+    }
+
+    const n = teams.length;
+    const rounds = n - 1;
+    const half = n / 2;
+    const schedule = [];
+
+    for (let i = 0; i < rounds; i++) {
+        const round = [];
+
+        for (let j = 0; j < half; j++) {
+            const t1 = teams[j];
+            const t2 = teams[n - 1 - j];
+            if (t1 !== "bye" && t2 !== "bye") {
+                round.push([t1, t2]);
+            }
+        }
+
+        schedule.push(round);
+
+        teams = [teams[0]].concat([teams[n - 1]], teams.slice(1, n - 1));
+    }
+
+    return schedule;
 }
 
 export async function runServer() {
@@ -99,6 +136,8 @@ export async function runServer() {
     const { idTour } = request.body || {};
     if (!idTour) return reply.code(400).send({ error: "tournament id required" });
 
+    //ajouter un check avec le nb_max_player
+
     try {
       const playerId = request.headers["x-user-id"];
       const playerName = await getUserName(playerId);
@@ -123,6 +162,50 @@ export async function runServer() {
     }
   });
 
+  fastify.post('/tournamentStart', async (request, reply) => {
+    const creator = request.headers["x-user-id"];
+    if(!creator) return reply.code(400).send({ error: "creator_id required" });
+
+    try {
+
+    const res = await dbtour.get(
+      "SELECT players_ids, nb_current_players FROM tournament WHERE creator_id = ? ORDER BY created_at DESC LIMIT 1",
+      [creator]
+    );
+    
+      const nbPlayers = res.nb_current_players.map(id => parseInt(id, 10));
+
+      const tour_ids = res.players_ids || '';
+      const playersIds = tour_ids.split(',')
+      .filter(Boolean)
+      .map(id => parseInt(id, 10));
+      console.log(playersIds);
+
+      const schedule = generateRoundRobin(playersIds);
+      console.log(schedule);
+      
+      for ( i = 0; i < schedule.length; i++) {
+        
+        for(j = 0; j < schedule[i].length; j++) {
+          // int res1 = await fetch(`http://users:3002/game/${match}`)
+          // int res2 = await fetch(`http://users:3002/game/${match}`)
+          // int res3 = await fetch(`http://users:3002/game/${match}`)
+
+        }
+
+      }
+
+      // clef 1 -> match
+      // clef 2 -> match
+
+
+
+    } catch (err) {
+      request.log.error({ err }, "tournamentStart failed");
+      return reply.code(400).send({ error: "Database read failed" });
+    }
+
+  });
 
   wss.on('listening', () => {
     console.log("WebSocket server running on ws://localhost:3004/ws");
