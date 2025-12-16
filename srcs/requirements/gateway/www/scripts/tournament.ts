@@ -112,10 +112,11 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
                 const data = JSON.parse(event.data);
                 console.log("WebSocket message:", data);
                 
-                if (data.message === "StartMatch") {
+                if (data.message === "start") {
                     // Lancer le match
                     console.log("Starting match:", data);
                     // TODO: Appeler launchTournamentMatch(data)
+					gameLoop(data.game)
                 }
             });
 
@@ -252,10 +253,6 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 			
 			const ws = new WebSocket(`wss${ws_route}/ws`);
 
-			await new Promise<void>((resolve, reject) => {
-				const timeout = setTimeout(() => {
-					reject(new Error("Websocket connection timeout"))
-				}, 5000)
 
 				ws.addEventListener('open', (event) => {
 					console.log("Connection to server");
@@ -276,19 +273,14 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 					const res = JSON.parse(event.data)
 					if (res.message === "Initialized") {
 						console.log("Connected to server")
-						clearTimeout(timeout)
-						resolve()
-					} else {
-						clearTimeout(timeout)
-						reject(new Error(res.error))
+
+					} else if(res.message === "start") {
+						gameLoop(res.game);
 					}
 				});
 				
 				ws.addEventListener('error', (error) => {
-					console.error("WebSocket error:", error);
-				});
-			})
-			// gameLoop(game);
+					console.error("WebSocket error:", error)});
 		} catch (err) {
 			console.error(err);
 		}

@@ -1,7 +1,10 @@
 import Fastify from "fastify";
 import { initDB } from "./database.js";
 // import { WebSocketServer } from 'ws'
-// import fs from 'fs'
+import fs from 'fs'
+
+// Désactiver la vérification SSL pour appels inter-services
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 class tournoi {
   constructor({ id, name, creator_id, nb_max_players }) {
@@ -70,7 +73,15 @@ function generateRoundRobin(teams) {
 
 export async function runServer() {
 
-  const fastify = Fastify({ logger: true });
+  const fastify = Fastify({
+      logger: true,
+      connectionTimeout: 120000,
+      keepAliveTimeout: 120000,
+      https: {
+          key: fs.readFileSync('/etc/ssl/transcendence.key'),
+          cert: fs.readFileSync('/etc/ssl/transcendence.crt') 
+      }
+    });
 
   const PORT = parseInt(process.env.TOURNAMENT_PORT, 10);
   const HOST = process.env.TOURNAMENT_HOST;
@@ -154,7 +165,7 @@ export async function runServer() {
         [creator]
       );
     
-      const nbPlayers = res.nb_current_players.map(id => parseInt(id, 10));
+      // const nbPlayers = parseInt(res.nb_current_players, 10);
 
       const tour_ids = res.players_ids || '';
       const playersIds = tour_ids.split(',')
@@ -165,25 +176,15 @@ export async function runServer() {
       const schedule = generateRoundRobin(playersIds);
       console.log(schedule);
       
-      for ( i = 0; i < schedule.length; i++) {
+      for (let i = 0; i < schedule.length; i++) {
         let match = schedule[i]
-        for(const ids of match) {
-          // const [player_1_id, player_2_id] = match
-          // res1 = await fetch(`https://game:3002/remoteTournament`, {
-          //   method: "POST",
-          //   header: {
-          //     "Content-Type": "application/json"
-          //   },
-          //   body: JSON.stringify({
-          //     player_1_id: player_1_id,
-          //     player_2_id: player_2_id,
-          //   })
-          // })
-          // int res2 = await fetch(`http://users:3002/game/${match}`)
-          // int res3 = await fetch(`http://users:3002/game/${match}`)
-
-        }
-
+        const res1 = await fetch(`https://game:3002/remoteTournament`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ match })
+        })
       }
 
       // clef 1 -> match

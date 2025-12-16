@@ -91,6 +91,15 @@ async function sendResult(game) {
     }
 }
 
+async function replyToTournament(game) {
+    game.reply.send({
+        player1ID: game.player1.id,
+        player2ID: game.player2.id,
+        status: "finished",
+        tournament_id: game.socket[0].gameId
+    })
+}
+
 function gameLoop(game) {
     if (game.board === undefined || game.socket === undefined) {
         console.log("Game not ready yet")
@@ -176,6 +185,8 @@ function gameLoop(game) {
     if (game.message === "END") {
         if (game.mode === "remote")
             sendResult(game)
+        else if (game.mode === "tournament")
+            replyToTournament(game)
         clearInterval(game.loopId)
     }
 }
@@ -239,7 +250,7 @@ wss.on('connection', function connection(ws) {
             ws.initialized = true
             ws.userId = res.game.creator_id
             ws.gameId = res.game.id
-            tournamentSocket.set(ws.userId, ws)
+            tournamentSocket.set(parseInt(ws.userId, 10), ws)
             console.log("When user send initSocket: ", tournamentSocket)
             console.log("When user send initSocket: ", tournamentSocket.get(ws.userId))
             ws.send(JSON.stringify({message: "Initialized"}))
@@ -414,46 +425,32 @@ fastify.get("/remote", async (request, reply) => {
 
 
 fastify.post("/remoteTournament", async (request, reply) => {
-    // try {
-    //     if (findRemotePendingGame() === false) {
-    //         const {player1ID, player2ID} = request.body || {}
-    //         const game = new Game({
-    //             id: gameId++,
-    //             socket: [],
-    //             mode: 'tournament',
-    //             message: "Waiting"
-    //         })
-    //         loadSprite(game)
-    //         game.player1.id = player1ID
-    //         game.player1.name = await getUserName(player1ID)
-    //         game.player2.id = player2ID
-    //         game.player2.name = await getUserName(player2ID)
-    //         games.set(game.id, game)
-    //         // reply.send(game)
-    //     }
-    //     else {
-    //         const gameTemp = pendingRemoteGame.shift()
-    //         const game = games.get(gameTemp.id)
-    //         game.player2.id = queue[0][0]
-    //         game.player2.name = queue[0][1]
-    //         game.message = "start"
-    //         games.set(game.id, game)
-    //         reply.send(game)
-    //         if (game.socket[0].readyState === WebSocket.OPEN) {
-    //             game.socket.forEach(socket => {
-    //                if (socket.readyState === 1) {
-    //                    socket.send(JSON.stringify(game));
-    //                }
-    //            })
-    //         }
-    //     }
-    //     queue.shift()
-    // } catch (e) {
-    //     console.log(e.message)
-    //     // a supprimer
-    //     console.log("Error creating local game")
-    //     reply.send([])
-    // }
+    const res = request.body || {}
+    const game = new Game({
+        id: gameId++,
+        socket: [],
+        mode: 'tournament',
+        status: 'Playing',
+        message: "start",
+        reply: reply
+    })
+    loadSprite(game)
+    game.player1.id = res.match[0][0]
+    game.player1.name = await getUserName(res.match[0][0])
+    game.player2.id = res.match[0][1]
+    game.player2.name = await getUserName(res.match[0][1])
+    game.socket.push(tournamentSocket.get(parseInt(res.match[0][0], 10)))
+    game.socket.push(tournamentSocket.get(parseInt(res.match[0][1], 10)))
+    console.log("res: ", res)
+    console.log("res.match00: ", res.match[0][0])
+    console.log("res.match01: ", res.match[0][1])
+    // console.log("tournamentSocket: ", tournamentSocket)
+    console.log("gameSocket: ", game.socket)
+    games.set(game.id, game)
+    // reply.send(game)
+    game.socket.forEach(socket => {
+        socket.send(JSON.stringify({game, message: "start"}));
+    })
 })
 
 
