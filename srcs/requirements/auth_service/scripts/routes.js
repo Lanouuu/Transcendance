@@ -14,6 +14,11 @@ export default async function routes(fastify, options) {
     
     fastify.get("/login/42/callback", async function (request, reply) {
       try {
+
+        if (!request.query.code) {
+          return reply.status(400).send({ error: "Authorization code is missing." });
+        }
+
         const token = await this.fortyTwoOauth2.getAccessTokenFromAuthorizationCodeFlow(request);
         // console.log("Token reçu :", token);
         // console.log("access Token :", token.token.access_token);

@@ -2,6 +2,7 @@ const BASE_URL: string = `${window.location.origin}/users`;
 
 async function updateName(userId: string, token: string) {
     const newName: string = (document.getElementById("editUsernameInput") as HTMLInputElement).value;
+    const msg = document.getElementById("editName-msg");
 
     try {
         const res = await fetch(`${BASE_URL}/update-name/${userId}`, {
@@ -14,7 +15,7 @@ async function updateName(userId: string, token: string) {
         });
 
         const data = await res.json();
-        const msg = document.getElementById("editName-msg");
+        
         if (msg) {
             if (res.ok) {
                 msg.textContent = data.message;
@@ -27,7 +28,7 @@ async function updateName(userId: string, token: string) {
     } catch (err) {
         console.error(err);
 		const errMsg = (document.getElementById("editName-msg") as HTMLInputElement);
-        errMsg.textContent = "Erreur de communication avec le serveur";
+        errMsg.textContent = "Can only change your name";
         errMsg.style.color = "red";
     }
 }

@@ -1,6 +1,7 @@
 const	PAGE_BACKGROUNDS: Record<string, string> = {
 	'account': '/img/Background1.png',
 	'editProfile': '/img/Background1.png',
+	'error': '/img/Background1.png',
 	'game': '/img/Background1.png',
 	'home': '/img/Background2.png',
 	'login': '/img/Background1.png',
@@ -107,7 +108,8 @@ class Router {
 	// Get the name of the page clean and call loadPage
 	private handleRoute(): void {
 		
-		const page = window.location.hash.slice(1) || 'home';
+		const fullHash = window.location.hash.slice(1) || 'home';
+		const page = fullHash.split('?')[0];
 		this.loadPage(page);
 	}
 
@@ -202,6 +204,26 @@ class Router {
 					const params = new URLSearchParams(window.location.hash.split('?')[1]);
 					const errorCode = params.get('code');
 					this.displayError(errorCode || '500');
+					this.currentPage = 'error';
+					return;
+				}
+
+				if (document.body.classList.contains('loggedIn') && 
+                	(page === 'login' || page === 'signup')) {
+                	window.location.hash = '#account';
+                	return;
+            	}
+
+				if (!document.body.classList.contains('loggedIn') && 
+					(page === 'logout' || page === 'editProfile' || page === 'account')) {
+					this.displayError('401');
+					return ;
+				}
+
+				if (!PAGE_BACKGROUNDS[page] && page !== 'error') {
+					this.displayError('404');
+					this.currentPage = 'error';
+					return;
 				}
 
 				const	nextBackgroundUrl: string = PAGE_BACKGROUNDS[page] || PAGE_BACKGROUNDS['home'];
@@ -216,6 +238,8 @@ class Router {
 
 				// Updates the <main> of index.html
 				this.mainContent.innerHTML = content;
+
+				this.currentPage = page;
 
 				await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -264,6 +288,10 @@ class Router {
 
 	private displayError(code: string): void {
 		const errorMessages: Record<string, { title: string, message: string}> = {
+			'400': {
+				title: 'Bad Request',
+				message: 'The server could not process the request due to a client error.'
+			},
 			'401': {
 				title: 'Unauthorized',
 				message: 'You need to be logged in to access this page.'
@@ -271,6 +299,10 @@ class Router {
 			'403': {
 				title: 'Forbidden',
 				message: 'You do not have permission to access this resource.'
+			},
+			'404': {
+				title: 'Page Not Found',
+				message: 'This is not the web page you are looking for'
 			},
 			'500': {
 				title: 'Internal Server Error',
@@ -281,18 +313,36 @@ class Router {
 		const error = errorMessages[code] || errorMessages['500'];
 
 		this.mainContent.innerHTML = `
-			<div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
+			<div class="flex flex-col 
+				items-center justify-center 
+				min-h-[60vh] 
+				text-center 
+				font-geo text-base">
+
 				<h1 class="text-6xl font-bold text-red-500 mb-4">${code}</h1>
+
 				<h2 class="text-3xl font-semibold mb-4">${error.title}</h2>
+
 				<p class="text-xl mb-8">${error.message}</p>
-				<a href="#home" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-					Return to Home
+
+				<a href="#${code === '401' ? 'login' : 'home'}" 
+					class="mx-auto py-3 w-40
+                		rounded-xl
+                		bg-prim bg-opacity-90 hover:bg-opacity-100
+                		text-white font-semibold font-geo
+                		shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                		hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+                		transition">
+					${code === '401' ? 'Return to Login' : 'Return to Home'}
 				</a>
+
 			</div>
 		`;
 	}
 
 }
+
+
 
 // A SUPPRIMER (TESTS) /////////////////////////////////////////////////////////////////////////////////
 (async () => {
