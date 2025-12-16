@@ -116,7 +116,7 @@ async function launchRemoteGame() {
 	}
 }
 
-async function gameLoop(game: Game) { // BIZARRE LE TYPE
+export async function gameLoop(game: Game) { // BIZARRE LE TYPE
 
 	try {
 		await loadSprites(game);

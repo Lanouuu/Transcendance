@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import { initDB } from "./database.js";
-import { WebSocketServer } from 'ws'
-import fs from 'fs'
+// import { WebSocketServer } from 'ws'
+// import fs from 'fs'
 
 class tournoi {
   constructor({ id, name, creator_id, nb_max_players }) {
@@ -22,8 +22,6 @@ class match {
     this.status = "pending"
   }
 }
-
-const userSocket = new Map();
 
 async function getUserName(id) {
     try {
@@ -72,31 +70,14 @@ function generateRoundRobin(teams) {
 
 export async function runServer() {
 
-  const fastify = Fastify({
-    logger: true,
-    connectionTimeout: 120000,
-    keepAliveTimeout: 120000,
-    https: {
-        key: fs.readFileSync('/etc/ssl/transcendence.key'),
-        cert: fs.readFileSync('/etc/ssl/transcendence.crt') 
-    }
-  });
+  const fastify = Fastify({ logger: true });
 
   const PORT = parseInt(process.env.TOURNAMENT_PORT, 10);
   const HOST = process.env.TOURNAMENT_HOST;
 
   const dbtour = await initDB();
 
-  const wss = new WebSocketServer({ 
-      server: fastify.server,
-      path: '/ws'
-  })
-
   fastify.post('/tournamentCreate', async (request, reply) => {
-    if (!userSocket.has(request.headers["x-user-id"])) {
-      return reply.code(400).send({error: "You must be connected via websocket first to create a tournament"})
-    }
-    const socket = userSocket.get(request.headers["x-user-id"])
     const { name, creator_id, nb_max_players } = request.body || {};
     console.log("event detected")
     if (!name || !creator_id || !nb_max_players) {
@@ -168,10 +149,10 @@ export async function runServer() {
 
     try {
 
-    const res = await dbtour.get(
-      "SELECT players_ids, nb_current_players FROM tournament WHERE creator_id = ? ORDER BY created_at DESC LIMIT 1",
-      [creator]
-    );
+      const res = await dbtour.get(
+        "SELECT players_ids, nb_current_players FROM tournament WHERE creator_id = ? ORDER BY created_at DESC LIMIT 1",
+        [creator]
+      );
     
       const nbPlayers = res.nb_current_players.map(id => parseInt(id, 10));
 
@@ -185,9 +166,19 @@ export async function runServer() {
       console.log(schedule);
       
       for ( i = 0; i < schedule.length; i++) {
-        
-        for(j = 0; j < schedule[i].length; j++) {
-          // int res1 = await fetch(`http://users:3002/game/${match}`)
+        let match = schedule[i]
+        for(const ids of match) {
+          // const [player_1_id, player_2_id] = match
+          // res1 = await fetch(`https://game:3002/remoteTournament`, {
+          //   method: "POST",
+          //   header: {
+          //     "Content-Type": "application/json"
+          //   },
+          //   body: JSON.stringify({
+          //     player_1_id: player_1_id,
+          //     player_2_id: player_2_id,
+          //   })
+          // })
           // int res2 = await fetch(`http://users:3002/game/${match}`)
           // int res3 = await fetch(`http://users:3002/game/${match}`)
 
@@ -205,42 +196,6 @@ export async function runServer() {
       return reply.code(400).send({ error: "Database read failed" });
     }
 
-  });
-
-  wss.on('listening', () => {
-    console.log("WebSocket server running on ws://localhost:3004/ws");
-  })
-
-  wss.on('connection', function connection(ws) {
-    ws.on('error', console.error);
-    console.log("Connection detected")
-    ws.initialized = false
-
-    ws.on('message', function message(data) {
-      const res = JSON.parse(data.toString())
-      if (!ws.initialized) {
-        if (res.message !== "Init") {
-          ws.send(JSON.stringify({
-            message: "Error",
-            error: "Your first message has to be Init and send your userId"
-          }))
-          ws.close()
-        } else {
-          ws.initialized = true
-          ws.userId = res.creator_id
-          userSocket.set(ws.userId, ws)
-          ws.send(JSON.stringify({message: "Initialized"}))
-        }
-      }
-
-    });
-  
-    ws.on('close', () => {
-      if (ws.userId) {
-        userSocket.delete(ws.userId)
-        console.log("User deleted from userSocket")
-      }
-    })
   });
 
 
