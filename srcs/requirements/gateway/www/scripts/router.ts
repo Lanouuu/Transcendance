@@ -49,6 +49,40 @@ class Router {
 		this.initRouter();
 	}
 
+	private async checkAuth(): Promise<boolean> {
+    	const token = sessionStorage.getItem("jwt");
+
+    	if (!token) {
+    	    return false;
+    	}
+
+    	try {
+    	    const response = await fetch(`${this.BASE_URL}auth_service/verify`, {
+    	        headers: { "Authorization": `Bearer ${token}` }
+    	    });
+
+    	    if (!response.ok) {
+    	        this.cleanupSession();
+    	        return false;
+    	    }
+
+    	    return true;
+
+    	} catch (error) {
+    	    console.error("Auth check failed:", error);
+    	    this.cleanupSession();
+    	    return false;
+    	}
+	}
+
+	private cleanupSession(): void {
+	    sessionStorage.removeItem("jwt");
+	    sessionStorage.removeItem("userId");
+	    sessionStorage.removeItem("accountActiveTab");
+	    document.body.classList.remove("loggedIn");
+	    window.dispatchEvent(new Event("user:logout"));
+	}
+
 	private async initRouter(): Promise<void> {
 
 		// First load (supposed to launch main i guess)
@@ -208,17 +242,20 @@ class Router {
 					return;
 				}
 
-				if (document.body.classList.contains('loggedIn') && 
-                	(page === 'login' || page === 'signup')) {
-                	window.location.hash = '#account';
-                	return;
-            	}
+        		const needsAuth = ['account', 'editProfile', 'logout'];
+        		const isAuthPage = ['login', 'signup'];
 
-				if (!document.body.classList.contains('loggedIn') && 
-					(page === 'logout' || page === 'editProfile' || page === 'account')) {
-					this.displayError('401');
-					return ;
-				}
+        		const isAuthenticated = await this.checkAuth();
+
+        		if (isAuthenticated && isAuthPage.includes(page)) {
+        		    window.location.hash = '#account';
+        		    return;
+        		}
+			
+        		if (!isAuthenticated && needsAuth.includes(page)) {
+        		    this.displayError('401');
+        		    return;
+        		}
 
 				if (!PAGE_BACKGROUNDS[page] && page !== 'error') {
 					this.displayError('404');
