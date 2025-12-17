@@ -107,7 +107,7 @@ export async function runServer() {
         [name, creator_id, nb_max_players, `${creator_id}`, playerName, 1]
       );
       console.log(`✓ Tournament created: "${name}" (ID: ${result.lastID}) by user ${creator_id}`);
-      reply.send({ message: "Success", tournament_id: result.lastID, name });
+      reply.send({ message: "Success", tournament_id: result.lastID, name , id: creator_id});
     } catch (err) {
       fastify.log.error({ err }, "Tournament creation failed");
       reply.code(500).send({ error: "Database insertion failed" });
@@ -146,8 +146,12 @@ export async function runServer() {
         nb_current_players = nb_current_players + 1
         WHERE id = ?`, [playerId, playerId, playerName, playerName, idTour]
       );
+      const res = await dbtour.get(
+        "SELECT creator_id FROM tournament WHERE id = ? ORDER BY created_at DESC LIMIT 1",
+        [idTour]
+      );
       console.log(`✓ Player ${playerId} joined tournament ${idTour}`);
-      reply.send({ message: "Success", text: "Player added to tournament" });
+      reply.send({ message: "Success", text: "Player added to tournament", tournament_id: idTour, id: res.creator_id });
     } catch (err) {
       fastify.log.error({ err }, "Add player to tournament failed");
       reply.code(500).send({ error: "Database update failed" });

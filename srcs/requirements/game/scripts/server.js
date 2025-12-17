@@ -91,14 +91,14 @@ async function sendResult(game) {
     }
 }
 
-async function replyToTournament(game) {
-    game.reply.send({
-        player1ID: game.player1.id,
-        player2ID: game.player2.id,
-        status: "finished",
-        tournament_id: game.socket[0].gameId
-    })
-}
+// async function replyToTournament(game) {
+//     game.reply.send({
+//         player1ID: game.player1.id,
+//         player2ID: game.player2.id,
+//         status: "finished",
+//         tournament_id: game.socket[0].gameId
+//     })
+// }
 
 function gameLoop(game) {
     if (game.board === undefined || game.socket === undefined) {
@@ -110,6 +110,7 @@ function gameLoop(game) {
         startTimer(game)
     }
     if (game.started === true) {
+        console.log("Playing")
         // Player 1
         if (game.player1.key.up) {
 
@@ -185,8 +186,8 @@ function gameLoop(game) {
     if (game.message === "END") {
         if (game.mode === "remote")
             sendResult(game)
-        else if (game.mode === "tournament")
-            replyToTournament(game)
+        // else if (game.mode === "tournament")
+        //     replyToTournament(game)
         clearInterval(game.loopId)
     }
 }
@@ -223,6 +224,68 @@ function gameLoop(game) {
 //     }
 // }
 
+function localGamehandler(id, ws) {
+    if (!games.has(parseInt(id, 10))) {
+        ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
+        return
+    }
+    const game = games.get(parseInt(id, 10))
+    game.socket.push(ws)
+    ws.send(JSON.stringify({game, message: "Init"}))
+    if (game.message === "start")
+        game.loopId = setInterval(() => gameLoop(game), 16)
+}
+
+function RemoteGamehandler(id, ws) {
+    if (!games.has(parseInt(id, 10))) {
+        ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
+        return
+    }
+
+    const game = games.get(parseInt(id, 10))
+    
+    if (ws.userId === undefined && game.socket.length === 0) {
+        console.log("PARING WEBSOCKET WITH PLAYER1")
+        ws.userId = game.player1.id
+        console.log("websocket is = ", ws.userId)
+    } else if (ws.userId === undefined && game.socket.length === 1) {
+        console.log("PARING WEBSOCKET WITH PLAYER2")
+        ws.userId = game.player2.id
+        console.log("websocket is = ", ws.userId)
+        game.message = "start"
+    }
+    game.socket.push(ws)
+
+    ws.send(JSON.stringify({game, message: "Init"}))
+    if (game.message === "start")
+        game.loopId = setInterval(() => gameLoop(game), 16)
+}
+
+function RemoteTournamentHandler(id, gameId, tournament_id, ws) {
+    ws.userId = id
+    ws.gameId = gameId
+    ws.tournament_id = tournament_id
+    tournamentSocket.set(parseInt(id, 10), ws)
+}
+
+function localInputHandler(game, res) {
+    game.player1.key.up = res.game.player1.key.up
+    game.player1.key.down = res.game.player1.key.down
+    game.player2.key.up = res.game.player2.key.up
+    game.player2.key.down = res.game.player2.key.down
+}
+
+function remoteInputHandler(game, res, ws) {
+    if (ws.userId === game.player1.id) {
+        game.player1.key.up = res.game.player1.key.up
+        game.player1.key.down = res.game.player1.key.down
+    } else if (ws.userId === game.player2.id) {
+        game.player2.key.up = res.game.player2.key.up
+        game.player2.key.down = res.game.player2.key.down
+    }
+}
+
+
 const wss = new WebSocketServer({ 
     server: fastify.server,
     path: '/ws'
@@ -238,65 +301,83 @@ wss.on('connection', function connection(ws) {
   ws.initialized = false
   ws.on('message', function message(data) {
     const res = JSON.parse(data.toString())
-    if (res.game.mode === "tournament" && !ws.initialized) {
-        if (res.message !== "InitSocket") {
-            ws.send(JSON.stringify({
-                message: "Error",
-                error: "Your first message has to be InitSocket and send your userId"
-            }))
-            ws.close()
-            return
-        } else {
-            ws.initialized = true
-            ws.userId = res.game.creator_id
-            ws.gameId = res.game.id
-            tournamentSocket.set(parseInt(ws.userId, 10), ws)
-            console.log("When user send initSocket: ", tournamentSocket)
-            console.log("When user send initSocket: ", tournamentSocket.get(ws.userId))
-            ws.send(JSON.stringify({message: "Initialized"}))
+    if (res.message === "InitLocal") 
+        localGamehandler(res.id, ws)
+    else if (res.message === "InitRemote") 
+        RemoteGamehandler(res.id, ws)
+    else if (res.message === "InitRemoteTournament")
+        RemoteTournamentHandler(res.id, res.gameId, res.tournament_id, ws)
+    else if (res.message === "input") {
+        if (!games.has(parseInt(res.game.id, 10))) {
+            ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
             return
         }
+        const game = games.get(parseInt(res.game.id, 10))
+        if (game.mode === "local")
+            localInputHandler(game, res)
+        else if (game.mode === "remote" || game.mode === "tournament")
+            remoteInputHandler(game, res, ws)
+        games.set(game.id, game)
     }
-    if (!games.has(parseInt(res.game.id, 10))) {
-        ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
-        return
-    }
-    const game = games.get(parseInt(res.game.id, 10))
+    // if (res.game.mode === "tournament" && !ws.initialized) {
+    //     if (res.message !== "InitSocket") {
+    //         ws.send(JSON.stringify({
+    //             message: "Error",
+    //             error: "Your first message has to be InitSocket and send your userId"
+    //         }))
+    //         ws.close()
+    //         return
+    //     } else {
+    //         ws.initialized = true
+    //         ws.userId = res.game.creator_id
+    //         ws.gameId = res.game.id
+    //         tournamentSocket.set(parseInt(ws.userId, 10), ws)
+    //         // console.log("When user send initSocket: ", tournamentSocket)
+    //         // console.log("When user send initSocket: ", tournamentSocket.get(ws.userId))
+    //         ws.send(JSON.stringify({message: "Initialized"}))
+    //         return
+    //     }
+    // }
+    // if (!games.has(parseInt(res.game.id, 10))) {
+    //     ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
+    //     return
+    // }
+    // const game = games.get(parseInt(res.game.id, 10))
 
-    if (res.message == "Init")
-    {
-        if (game.mode === "remote") {
-            if (ws.userId === undefined && game.socket.length === 0) {
-                console.log("PARING WEBSOCKET WITH PLAYER1")
-                ws.userId = game.player1.id
-                console.log("websocket is = ", ws.userId)
-            } else if (ws.userId === undefined && game.socket.length === 1) {
-                console.log("PARING WEBSOCKET WITH PLAYER2")
-                ws.userId = game.player2.id
-                console.log("websocket is = ", ws.userId)
-            }
-        }
-        game.socket.push(ws)
-        if (game.message === "start")
-            game.loopId = setInterval(() => gameLoop(game), 16)
-    }
-    else {
-        if (game.mode === "remote") {
-            if (ws.userId === game.player1.id) {
-                game.player1.key.up = res.game.player1.key.up
-                game.player1.key.down = res.game.player1.key.down
-            } else if (ws.userId === game.player2.id) {
-                game.player2.key.up = res.game.player2.key.up
-                game.player2.key.down = res.game.player2.key.down
-            }
-        } else {
-            game.player1.key.up = res.game.player1.key.up
-            game.player1.key.down = res.game.player1.key.down
-            game.player2.key.up = res.game.player2.key.up
-            game.player2.key.down = res.game.player2.key.down
-        }
-    }
-    games.set(game.id, game)
+    // if (res.message == "Init")
+    // {
+    //     if (game.mode === "remote") {
+    //         if (ws.userId === undefined && game.socket.length === 0) {
+    //             console.log("PARING WEBSOCKET WITH PLAYER1")
+    //             ws.userId = game.player1.id
+    //             console.log("websocket is = ", ws.userId)
+    //         } else if (ws.userId === undefined && game.socket.length === 1) {
+    //             console.log("PARING WEBSOCKET WITH PLAYER2")
+    //             ws.userId = game.player2.id
+    //             console.log("websocket is = ", ws.userId)
+    //         }
+    //     }
+    //     game.socket.push(ws)
+    //     if (game.message === "start")
+    //         game.loopId = setInterval(() => gameLoop(game), 16)
+    // }
+    // else {
+    //     if (game.mode === "remote") {
+    //         if (ws.userId === game.player1.id) {
+    //             game.player1.key.up = res.game.player1.key.up
+    //             game.player1.key.down = res.game.player1.key.down
+    //         } else if (ws.userId === game.player2.id) {
+    //             game.player2.key.up = res.game.player2.key.up
+    //             game.player2.key.down = res.game.player2.key.down
+    //         }
+    //     } else {
+    //         game.player1.key.up = res.game.player1.key.up
+    //         game.player1.key.down = res.game.player1.key.down
+    //         game.player2.key.up = res.game.player2.key.up
+    //         game.player2.key.down = res.game.player2.key.down
+    //     }
+    // }
+    // games.set(game.id, game)
     // console.log("GAME AFTER SET IN WS CONNECTION = ", game)
   })
 })
@@ -336,7 +417,7 @@ function loadSprite(game) {
 fastify.get("/local", async (request, reply) => {
     try {
         const game = new Game({
-          id: gameId++,
+          id: parseInt(request.headers["x-user-id"], 10),
           socket: [],
           mode: 'local',
           message: 'start'
@@ -345,7 +426,7 @@ fastify.get("/local", async (request, reply) => {
         console.log("GAME AT CREATION = ", game)
         games.set(game.id, game)
         console.log("Local game created with id:", game.id)
-        reply.send(game)
+        reply.send({message: "Success"})
     } catch (e) {
         console.log(e.message)
         // a supprimer
@@ -395,23 +476,23 @@ fastify.get("/remote", async (request, reply) => {
             game.player1.name = queue[0][1]
             pendingRemoteGame.push(game)
             games.set(game.id, game)
-            reply.send(game)
+            reply.send({message: "Success", id: game.id})
         }
         else {
             const gameTemp = pendingRemoteGame.shift()
             const game = games.get(gameTemp.id)
             game.player2.id = queue[0][0]
             game.player2.name = queue[0][1]
-            game.message = "start"
+            // game.message = "start"
             games.set(game.id, game)
-            reply.send(game)
-            if (game.socket[0].readyState === WebSocket.OPEN) {
-                game.socket.forEach(socket => {
-                   if (socket.readyState === 1) {
-                       socket.send(JSON.stringify(game));
-                   }
-               })
-            }
+            reply.send({message: "Success", id: game.id})
+            // if (game.socket[0].readyState === WebSocket.OPEN) {
+            //     game.socket.forEach(socket => {
+            //        if (socket.readyState === 1) {
+            //            socket.send(JSON.stringify(game));
+            //        }
+            //    })
+            // }
         }
         queue.shift()
     } catch (e) {
@@ -427,7 +508,7 @@ fastify.get("/remote", async (request, reply) => {
 fastify.post("/remoteTournament", async (request, reply) => {
     const res = request.body || {}
     const game = new Game({
-        id: gameId++,
+        id: parseInt(res.match[0][0], 10),
         socket: [],
         mode: 'tournament',
         status: 'Playing',
@@ -439,18 +520,22 @@ fastify.post("/remoteTournament", async (request, reply) => {
     game.player1.name = await getUserName(res.match[0][0])
     game.player2.id = res.match[0][1]
     game.player2.name = await getUserName(res.match[0][1])
-    game.socket.push(tournamentSocket.get(parseInt(res.match[0][0], 10)))
-    game.socket.push(tournamentSocket.get(parseInt(res.match[0][1], 10)))
+    game.socket.push(tournamentSocket.get(res.match[0][0]))
+    game.socket.push(tournamentSocket.get(res.match[0][1]))
     console.log("res: ", res)
-    console.log("res.match00: ", res.match[0][0])
-    console.log("res.match01: ", res.match[0][1])
+    console.log("res.match00: ", parseInt(res.match[0][0], 10))
+    console.log("res.match01: ", parseInt(res.match[0][1], 10))
     // console.log("tournamentSocket: ", tournamentSocket)
     console.log("gameSocket: ", game.socket)
+    game.tournament_id = game.socket[0].tournament_id
     games.set(game.id, game)
     // reply.send(game)
     game.socket.forEach(socket => {
-        socket.send(JSON.stringify({game, message: "start"}));
+        if (socket.readyState === 1) {
+            socket.send(JSON.stringify({game, message: "Init"}));
+        }
     })
+    game.loopId = setInterval(() => gameLoop(game), 16)
 })
 
 

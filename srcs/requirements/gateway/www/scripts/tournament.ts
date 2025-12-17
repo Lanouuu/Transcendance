@@ -1,4 +1,5 @@
 import { gameLoop } from './game.js'
+import { Game, Sprite, Vector2D, KeyBind, ImgSize } from "./gameClass.js"
 
 const ws_route: string = `://${window.location.host}/game`
 const route: string = `${window.location.origin}/tournament`;
@@ -88,41 +89,52 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
                 throw new Error(error.error || "Failed to join tournament");
             }
 
-            const result = await res.json();
-            console.log("Joined tournament:", result);
+            const response = await res.json();
+            console.log("Joined tournament:", response);
             alert("Successfully joined tournament!");
 
-            // Ouvrir WebSocket pour recevoir les matchs
-            const ws = new WebSocket(`wss${ws_route}/ws`);
-
-            ws.addEventListener('open', () => {
-                console.log("WebSocket connected");
-                ws.send(JSON.stringify({
-                    game: {
-                        id: tournamentId,
-                        creator_id: userId,
-                        mode: "tournament",
-                        action: "join"
-                    },
-                    message: "InitSocket"
-                }));
-            });
+        if (response.message === "Success") {
+            let game : Game;
+            const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
+            ws.addEventListener('open', (event) => {
+                if (ws.readyState === WebSocket.OPEN)
+                    ws.send(JSON.stringify({gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "InitRemoteTournament"}))
+            })
 
             ws.addEventListener('message', (event) => {
-                const data = JSON.parse(event.data);
-                console.log("WebSocket message:", data);
-                
-                if (data.message === "start") {
-                    // Lancer le match
-                    console.log("Starting match:", data);
-                    // TODO: Appeler launchTournamentMatch(data)
-					gameLoop(data.game)
+                const serverGame = JSON.parse(event.data)
+                if (serverGame.message === "Init") {
+                    game = serverGame.game;
+                    gameLoop(game, ws);
                 }
-            });
+                else if (game && serverGame.message === "Countdown") {
+                    game.message = serverGame.message
+                    game.timer = serverGame.timer
+                }
+                else if (game && serverGame.message === "Playing") {
+                    game.message = serverGame.message
+                    game.started = serverGame.started
+                    game.player1.sprite.position.y = serverGame.player1.sprite.position.y
+                    game.player2.sprite.position.y = serverGame.player2.sprite.position.y
+                    game.ball.position.x = serverGame.ball.position.x
+                    game.ball.position.y = serverGame.ball.position.y
+                    game.player1.score = serverGame.player1.score
+                    game.player2.score = serverGame.player2.score
+                }
+                else if (game && serverGame.message === "END") {
+                    game.message = serverGame.message
+                    game.winner = serverGame.winner
+                    game.displayWinner = serverGame.displayWinner
+                    game.player1.score = serverGame.player1.score
+                    game.player2.score = serverGame.player2.score
+                }
+            })
 
             ws.addEventListener('error', (error) => {
                 console.error("WebSocket error:", error);
             });
+        }
+
 
         } catch (err) {
             console.error("Failed to join tournament:", err);
@@ -251,36 +263,47 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 			
 			const response = await res.json();
 			
-			const ws = new WebSocket(`wss${ws_route}/ws`);
+        if (response.message === "Success") {
+            let game : Game;
+            const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
+            ws.addEventListener('open', (event) => {
+                if (ws.readyState === WebSocket.OPEN)
+                    ws.send(JSON.stringify({gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "InitRemoteTournament"}))
+            })
 
+            ws.addEventListener('message', (event) => {
+                const serverGame = JSON.parse(event.data)
+                if (serverGame.message === "Init") {
+                    game = serverGame.game;
+                    gameLoop(game, ws);
+                }
+                else if (game && serverGame.message === "Countdown") {
+                    game.message = serverGame.message
+                    game.timer = serverGame.timer
+                }
+                else if (game && serverGame.message === "Playing") {
+                    game.message = serverGame.message
+                    game.started = serverGame.started
+                    game.player1.sprite.position.y = serverGame.player1.sprite.position.y
+                    game.player2.sprite.position.y = serverGame.player2.sprite.position.y
+                    game.ball.position.x = serverGame.ball.position.x
+                    game.ball.position.y = serverGame.ball.position.y
+                    game.player1.score = serverGame.player1.score
+                    game.player2.score = serverGame.player2.score
+                }
+                else if (game && serverGame.message === "END") {
+                    game.message = serverGame.message
+                    game.winner = serverGame.winner
+                    game.displayWinner = serverGame.displayWinner
+                    game.player1.score = serverGame.player1.score
+                    game.player2.score = serverGame.player2.score
+                }
+            })
 
-				ws.addEventListener('open', (event) => {
-					console.log("Connection to server");
-					if (ws.readyState === WebSocket.OPEN) {
-						const game = {
-							creator_id: userId,
-							id: response.tournament_id,
-							mode: "tournament",
-							action: "create"
-						};
-						console.log("Sending:", game);
-						ws.send(JSON.stringify({game, message: "InitSocket"}));
-					}
-				});
-				
-				ws.addEventListener('message', (event) => {
-					console.log("Response:", event.data);
-					const res = JSON.parse(event.data)
-					if (res.message === "Initialized") {
-						console.log("Connected to server")
-
-					} else if(res.message === "start") {
-						gameLoop(res.game);
-					}
-				});
-				
-				ws.addEventListener('error', (error) => {
-					console.error("WebSocket error:", error)});
+            ws.addEventListener('error', (error) => {
+                console.error("WebSocket error:", error);
+            });
+        }
 		} catch (err) {
 			console.error(err);
 		}
