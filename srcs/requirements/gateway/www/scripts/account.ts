@@ -525,6 +525,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 function createLiPendingItem(userId: string, token: string, senderId: string, senderName: string, ulFriendsList: HTMLUListElement, ulBlockedList: HTMLUListElement): HTMLLIElement {
 
 	const li = document.createElement("li");
+	li.className = 'flex items-center justify-evenly';
 
 	const nameSpan = document.createElement("span");
 	nameSpan.textContent = senderName;
@@ -640,6 +641,7 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 
 function createLiBlockedItem(blockedId: string, blockedName: string, userId: string, token: string): HTMLLIElement {
 	const li = document.createElement("li");
+	li.className = 'flex items-center justify-evenly';
 
 	const nameSpan = document.createElement("span");
 	nameSpan.textContent = blockedName;
