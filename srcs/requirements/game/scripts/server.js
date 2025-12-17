@@ -20,7 +20,6 @@ const fastify = Fastify({
 const PORT = parseInt(process.env.GAME_PORT, 10)
 const HOST = process.env.GAME_HOST
 const games = new Map()
-// const tournaments = new Map()
 let gameId = 0
 const filename = fileURLToPath(import.meta.url)
 const dirname = join(filename, '..')
@@ -78,7 +77,7 @@ async function sendResult(game) {
                winnerID: winner_id,
                scoreP1: game.player1.score,
                scoreP2: game.player2.score,
-               matchType: "remote"
+               matchType: game.mode
              }),
            });
 
@@ -184,9 +183,9 @@ function gameLoop(game) {
         })
     }
     if (game.message === "END") {
-        if (game.mode === "remote")
+        if (game.mode === "remote" || game.mode === "tournament")
             sendResult(game)
-        // else if (game.mode === "tournament")
+        // if (game.mode === "tournament")
         //     replyToTournament(game)
         clearInterval(game.loopId)
     }
@@ -276,10 +275,10 @@ function localInputHandler(game, res) {
 }
 
 function remoteInputHandler(game, res, ws) {
-    if (ws.userId === game.player1.id) {
+    if (parseInt(ws.userId, 10) === parseInt(game.player1.id, 10)) {
         game.player1.key.up = res.game.player1.key.up
         game.player1.key.down = res.game.player1.key.down
-    } else if (ws.userId === game.player2.id) {
+    } else if (parseInt(ws.userId, 10) === parseInt(game.player2.id, 10)) {
         game.player2.key.up = res.game.player2.key.up
         game.player2.key.down = res.game.player2.key.down
     }
@@ -513,21 +512,17 @@ fastify.post("/remoteTournament", async (request, reply) => {
         mode: 'tournament',
         status: 'Playing',
         message: "start",
-        reply: reply
     })
     loadSprite(game)
     game.player1.id = res.match[0][0]
     game.player1.name = await getUserName(res.match[0][0])
     game.player2.id = res.match[0][1]
     game.player2.name = await getUserName(res.match[0][1])
-    game.socket.push(tournamentSocket.get(res.match[0][0]))
-    game.socket.push(tournamentSocket.get(res.match[0][1]))
-    console.log("res: ", res)
-    console.log("res.match00: ", parseInt(res.match[0][0], 10))
-    console.log("res.match01: ", parseInt(res.match[0][1], 10))
-    // console.log("tournamentSocket: ", tournamentSocket)
-    console.log("gameSocket: ", game.socket)
+    game.socket.push(tournamentSocket.get(parseInt(res.match[0][0])))
+    game.socket.push(tournamentSocket.get(parseInt(res.match[0][1])))
+    console.log("SOCKETTTTTTTTTTTTT: ", game.socket)
     game.tournament_id = game.socket[0].tournament_id
+    // game.reply = reply
     games.set(game.id, game)
     // reply.send(game)
     game.socket.forEach(socket => {
