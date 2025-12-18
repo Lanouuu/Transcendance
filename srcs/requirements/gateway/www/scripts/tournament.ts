@@ -45,6 +45,11 @@ export async function displayTournamentPage () {
     tournamentListContainer.id = 'tournamentListContainer';
     tournamentListContainer.className = 'hidden mt-6 p-4 bg-gray-100 rounded-lg';
 
+    // Ajouter après le bouton Join
+    const startButton = document.createElement('button');
+    startButton.id = 'gameTournamentStartButton';
+    startButton.className = 'bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 ml-4';
+    startButton.textContent = 'Start Tournament';
 
 	// Ajouter après le h1
 	const h1 = tournamentPage.querySelector('h1');
@@ -53,11 +58,13 @@ export async function displayTournamentPage () {
 		select.insertAdjacentElement('afterend', button);
         button.insertAdjacentElement('afterend', joinButton);
         joinButton.insertAdjacentElement('afterend', tournamentListContainer);
+        joinButton.insertAdjacentElement('afterend', startButton);  // AJOUTER CETTE LIGNE
     } else {
         tournamentPage.appendChild(select);
         tournamentPage.appendChild(button);
         tournamentPage.appendChild(joinButton);
         tournamentPage.appendChild(tournamentListContainer);
+        tournamentPage.appendChild(startButton);  // AJOUTER CETTE LIGNE
     }
 	const createTournamentButton: HTMLButtonElement = button;
     const selectMaxPlayer: HTMLSelectElement = select;
@@ -72,7 +79,7 @@ export async function displayTournamentPage () {
     });
 
 //#####################################
-async function joinTournament(tournamentId: number, token: string, userId: string) {
+    async function joinTournament(tournamentId: number, token: string, userId: string) {
         try {
             const res = await fetch(`${route}/tournamentJoin`, {
                 method: "POST",
@@ -310,4 +317,46 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 
 
 	});
+
+    // Ajouter le listener pour le bouton Start (à placer après la fonction joinTournament)
+    startButton.addEventListener('click', async () => {
+        console.log("Start Tournament button clicked");
+        
+        try {
+            const token = sessionStorage.getItem("jwt");
+            const userId = sessionStorage.getItem("userId");
+            
+            if (!userId || !token) {
+                console.error('Could not fetch user id/token');
+                alert('Please login first');
+                return;
+            }
+    
+            // Confirmation avant de lancer
+            if (!confirm('Are you sure you want to start the tournament?')) {
+                return;
+            }
+    
+            const res = await fetch(`${route}/tournamentStart`, {
+                method: "POST",
+                headers: {
+                    "authorization": `Bearer ${token}`,
+                    "x-user-id": userId,
+                }
+            });
+    
+            // if (!res.ok) {
+            //     const errorText = await res.text();
+            //     console.error(`Server error ${res.status}:`, errorText);
+            //     throw new Error(`Failed to start tournament: ${res.status}`);
+            // }
+    
+            console.log("Tournament started successfully!");
+    
+        } catch (err) {
+            console.error("Failed to start tournament:", err);
+            alert(`Error starting tournament: ${err}`);
+        }
+    });
 };
+

@@ -39,12 +39,9 @@ fastify.register(fastifyStatic, {
 function startTimer(game) {
 
     const intervalId = setInterval(() => {
-        console.log("TIMER: ", game.socket.length)
         let i = 0
         game.socket.forEach(socket => {
-            console.log("SOCKET STATE = ", socket.readyState)
             if (socket.readyState === 1) {
-                console.log("COUNTDOWN SENDED ", i)
                 i++
                 socket.send(JSON.stringify({
                     message: "Countdown",
@@ -109,7 +106,6 @@ function gameLoop(game) {
         startTimer(game)
     }
     if (game.started === true) {
-        console.log("Playing")
         // Player 1
         if (game.player1.key.up) {
 
@@ -190,26 +186,6 @@ function gameLoop(game) {
         clearInterval(game.loopId)
     }
 }
-
-// async function createTournament(data, ws){
-//     try {
-//         const game = new Game({
-//             id: gameId++,
-//             tournamentID: data.id,
-//             socket: [],
-//             mode: 'tournament',
-//             message: "Waiting"
-//         })
-//         loadSprite(game)
-//         game.player1.id = data.playerId
-//         game.player1.name = await getUserName(data.playerId)
-//         console.log("When someone created a tournament: ", game.player1.id)
-//         console.log("When someone created a tournament: ", game.player1.name)
-//         tournaments.set(game.tournamentID, game)
-//     }catch(err) {
-//         console.log(err)
-//     }
-// }
 
 // async function joinTournament(data, game, ws) {
 //     try {
@@ -504,23 +480,24 @@ fastify.get("/remote", async (request, reply) => {
 //END remote 
 
 
-fastify.post("/remoteTournament", async (request, reply) => {
-    const res = request.body || {}
+async function createTournament(match) {
+    console.log("match[0]: ", match[0])
+    console.log("match[1]: ", match[1])
     const game = new Game({
-        id: parseInt(res.match[0][0], 10),
+        id: parseInt(match[0], 10),
         socket: [],
         mode: 'tournament',
         status: 'Playing',
         message: "start",
     })
     loadSprite(game)
-    game.player1.id = res.match[0][0]
-    game.player1.name = await getUserName(res.match[0][0])
-    game.player2.id = res.match[0][1]
-    game.player2.name = await getUserName(res.match[0][1])
-    game.socket.push(tournamentSocket.get(parseInt(res.match[0][0])))
-    game.socket.push(tournamentSocket.get(parseInt(res.match[0][1])))
-    console.log("SOCKETTTTTTTTTTTTT: ", game.socket)
+    game.player1.id = match[0]
+    game.player1.name = await getUserName(match[0])
+    game.player2.id = match[1]
+    game.player2.name = await getUserName(match[1])
+    game.socket.push(tournamentSocket.get(parseInt(match[0])))
+    game.socket.push(tournamentSocket.get(parseInt(match[1])))
+    // console.log("SOCKETTTTTTTTTTTTT: ", game.socket)
     game.tournament_id = game.socket[0].tournament_id
     // game.reply = reply
     games.set(game.id, game)
@@ -531,6 +508,19 @@ fastify.post("/remoteTournament", async (request, reply) => {
         }
     })
     game.loopId = setInterval(() => gameLoop(game), 16)
+}
+
+fastify.post("/remoteTournament", async (request, reply) => {
+    const res = request.body || {}
+    res.match.forEach(match => {
+        try {
+            console.log("match in API: ", match)
+            createTournament(match)
+        }catch(err) {
+            console.log(err.message)
+        }
+
+    })
 })
 
 

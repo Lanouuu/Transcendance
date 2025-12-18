@@ -190,7 +190,8 @@ export async function runServer() {
           body: JSON.stringify({ match })
         })
       }
-
+      reply.send({message: "Success"})
+      
       // clef 1 -> match
       // clef 2 -> match
 
