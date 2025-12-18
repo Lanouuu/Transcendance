@@ -112,7 +112,11 @@ export async function displayTournamentPage () {
                 const serverGame = JSON.parse(event.data)
                 if (serverGame.message === "Init") {
                     game = serverGame.game;
-                    gameLoop(game, ws);
+					window.location.hash = '#game';
+					window.dispatchEvent(new Event('hashchange'));
+					setTimeout(() => {
+            			gameLoop(game, ws);
+       				}, 100);
                 }
                 else if (game && serverGame.message === "Countdown") {
                     game.message = serverGame.message
@@ -282,7 +286,11 @@ export async function displayTournamentPage () {
                 const serverGame = JSON.parse(event.data)
                 if (serverGame.message === "Init") {
                     game = serverGame.game;
-                    gameLoop(game, ws);
+					window.location.hash = '#game';
+					window.dispatchEvent(new Event('hashchange'));
+					setTimeout(() => {
+            			gameLoop(game, ws);
+       				}, 1000);
                 }
                 else if (game && serverGame.message === "Countdown") {
                     game.message = serverGame.message

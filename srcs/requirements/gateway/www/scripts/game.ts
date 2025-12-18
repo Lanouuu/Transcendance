@@ -237,31 +237,41 @@ export async function gameLoop(game: Game, ws: WebSocket) { // BIZARRE LE TYPE
 				console.error("WebSocket is not open")
 		})
 		console.log('Sprite loaded');
-		gameAnimation(game);
+		const canvas: HTMLCanvasElement = document.createElement('canvas');
+		const canvasDiv: HTMLDivElement = document.getElementById('canvasDiv') as HTMLDivElement;
+
+		canvas.id = String(game.id);
+    	canvas.width= 802;
+		canvas.height= 455;
+		canvas.className = "bg-color-black";
+
+		// const canvas: HTMLCanvasElement = document.getElementById("canvas") as HTMLCanvasElement;
+		if (!canvas || !canvasDiv) {
+			console.error('Could not fetch canvas div');
+			return;
+		}
+		// canvasDiv.innerHTML = "";
+		canvasDiv.appendChild(canvas);
+		gameAnimation(game, canvas);
 	} catch (error) {
 		console.error(error);
 	}
 }
 
-async function gameAnimation(game: Game) {
+async function gameAnimation(game: Game, canvas: HTMLCanvasElement) {
 
-	const canvas: HTMLCanvasElement = document.getElementById("canvas") as HTMLCanvasElement;
-	if (canvas === null) {
-		console.error('Could not fetch canvas or button');
-		return;
-	}
+	
 	const canvasContext = canvas.getContext('2d');
 	if (canvasContext === null) {
 		console.error('Could not fetch canvas context');
 		return;
 	}
 
-	canvas.classList.remove('hidden');
 	canvasContext.fillStyle = 'white'
 	canvasContext.font = '30px Arial'
 	canvasContext.textAlign = 'center'
 
-	const id = window.requestAnimationFrame(() => gameAnimation(game))
+	const id = window.requestAnimationFrame(() => gameAnimation(game, canvas))
 	canvasContext.drawImage(game.board.image, game.board.position.x, game.board.position.y)
 	canvasContext.drawImage(game.player1.sprite.image, game.player1.sprite.position.x, game.player1.sprite.position.y)
 	canvasContext.drawImage(game.player2.sprite.image, game.player2.sprite.position.x, game.player2.sprite.position.y)

@@ -180,8 +180,8 @@ export async function runServer() {
       const schedule = generateRoundRobin(playersIds);
       console.log(schedule);
       
-      for (let i = 0; i < schedule.length; i++) {
-        let match = schedule[i]
+      // for (let i = 0; i < schedule.length; i++) {
+        let match = schedule[0]
         const res1 = await fetch(`https://game:3002/remoteTournament`, {
           method: "POST",
           headers: {
@@ -189,7 +189,7 @@ export async function runServer() {
           },
           body: JSON.stringify({ match })
         })
-      }
+      // }
       reply.send({message: "Success"})
       
       // clef 1 -> match

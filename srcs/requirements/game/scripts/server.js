@@ -498,7 +498,7 @@ async function createTournament(match) {
     game.socket.push(tournamentSocket.get(parseInt(match[0])))
     game.socket.push(tournamentSocket.get(parseInt(match[1])))
     // console.log("SOCKETTTTTTTTTTTTT: ", game.socket)
-    game.tournament_id = game.socket[0].tournament_id
+    // game.tournament_id = game.socket[0].tournament_id
     // game.reply = reply
     games.set(game.id, game)
     // reply.send(game)
