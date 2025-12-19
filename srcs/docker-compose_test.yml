@@ -76,6 +76,18 @@ services:
       - pong_app
     restart: always
 
+  tournament:
+    container_name: tournament
+    build: ./requirements/tournament
+    expose: ["3004"]
+    env_file:
+      - .env
+    volumes:
+      - ssl_certifs:/etc/ssl:ro
+    networks:
+      - pong_app
+    restart: always
+
   redis:
     image: redis:7-alpine
     container_name: redis

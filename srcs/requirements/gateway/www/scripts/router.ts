@@ -278,7 +278,8 @@ class Router {
 
 				this.currentPage = page;
 
-				await new Promise(resolve => setTimeout(resolve, 0));
+				// Attendre plus longtemps pour laisser le DOM se mettre à jour
+				await new Promise(resolve => setTimeout(resolve, 50));
 
 				// Loads the scripts corresponding the the page loaded
 				switch(page) {
@@ -292,7 +293,7 @@ class Router {
 						break;
 					case 'tournament':
 						const tournamentScript = await import('./tournament.js');
-						// if (tournamentScript.tournament) tournamentScript.tournament();
+						if (tournamentScript.displayTournamentPage) tournamentScript.displayTournamentPage();
 						break;
 					case 'account':
 						const accountScript = await import('./account.js');

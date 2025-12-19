@@ -99,8 +99,44 @@ async function launchLocalGame() {
 			throw new Error(`Server response is not JSON`);
 		}
 
-		const game = await res.json();
-		gameLoop(game);
+		const response = await res.json();
+		if (response.message === "Success") {
+			let game : Game;
+			const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
+			ws.addEventListener('open', (event) => {
+				if (ws.readyState === WebSocket.OPEN)
+					ws.send(JSON.stringify({id: userId, message: "InitLocal"}))
+			})
+
+			ws.addEventListener('message', (event) => {
+				const serverGame = JSON.parse(event.data)
+				if (serverGame.message === "Init") {
+					game = serverGame.game;
+					gameLoop(game, ws);
+				}
+				else if (game && serverGame.message === "Countdown") {
+					game.message = serverGame.message
+					game.timer = serverGame.timer
+				}
+				else if (game && serverGame.message === "Playing") {
+					game.message = serverGame.message
+					game.started = serverGame.started
+					game.player1.sprite.position.y = serverGame.player1.sprite.position.y
+					game.player2.sprite.position.y = serverGame.player2.sprite.position.y
+					game.ball.position.x = serverGame.ball.position.x
+					game.ball.position.y = serverGame.ball.position.y
+					game.player1.score = serverGame.player1.score
+					game.player2.score = serverGame.player2.score
+				}
+				else if (game && serverGame.message === "END") {
+					game.message = serverGame.message
+					game.winner = serverGame.winner
+					game.displayWinner = serverGame.displayWinner
+					game.player1.score = serverGame.player1.score
+					game.player2.score = serverGame.player2.score
+				}
+			})
+		}
 	} catch (err) {
 		console.error(err);
 	}
@@ -138,27 +174,57 @@ async function launchRemoteGame() {
 			throw new Error(`Server response is not JSON`);
 		}
 		
-		const game = await res.json();
+		const response = await res.json();
+		if (response.message === "Success") {
+			let game : Game;
+			const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
+			ws.addEventListener('open', (event) => {
+				if (ws.readyState === WebSocket.OPEN)
+					ws.send(JSON.stringify({id: response.id, message: "InitRemote"}))
+			})
 
-		gameLoop(game);
+			ws.addEventListener('message', (event) => {
+				const serverGame = JSON.parse(event.data)
+				if (serverGame.message === "Init") {
+					game = serverGame.game;
+					gameLoop(game, ws);
+				}
+				else if (game && serverGame.message === "Countdown") {
+					game.message = serverGame.message
+					game.timer = serverGame.timer
+				}
+				else if (game && serverGame.message === "Playing") {
+					game.message = serverGame.message
+					game.started = serverGame.started
+					game.player1.sprite.position.y = serverGame.player1.sprite.position.y
+					game.player2.sprite.position.y = serverGame.player2.sprite.position.y
+					game.ball.position.x = serverGame.ball.position.x
+					game.ball.position.y = serverGame.ball.position.y
+					game.player1.score = serverGame.player1.score
+					game.player2.score = serverGame.player2.score
+				}
+				else if (game && serverGame.message === "END") {
+					game.message = serverGame.message
+					game.winner = serverGame.winner
+					game.displayWinner = serverGame.displayWinner
+					game.player1.score = serverGame.player1.score
+					game.player2.score = serverGame.player2.score
+				}
+			})
+		}
 	} catch (err) {
 		console.error(err);
 	}
 }
 
-async function gameLoop(game: Game) { // BIZARRE LE TYPE
+export async function gameLoop(game: Game, ws: WebSocket) { // BIZARRE LE TYPE
 
 	try {
 		await loadSprites(game);
-		const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
 
-		// Store handler references for cleanup
-		const keydownHandler = (e: KeyboardEvent) => {
-			// Prevent arrow keys from scrolling the page
-			if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-				e.preventDefault();
-			}
 
+		window.addEventListener('keydown', (e) => {
+			console.log("keydown detected")
 			switch (e.key) {
 				case 'a':
 					game.player1.key.up = true
@@ -177,14 +243,10 @@ async function gameLoop(game: Game) { // BIZARRE LE TYPE
 				ws.send(JSON.stringify({game, message: "input"}))
 			else
 				console.error("WebSocket is not open")
-		};
+		})
 
-		const keyupHandler = (e: KeyboardEvent) => {
-			// Prevent arrow keys from scrolling the page
-			if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-				e.preventDefault();
-			}
-
+		window.addEventListener('keyup', (e) => {
+			console.log("keyup detected")
 			switch (e.key) {
 				case 'a':
 					game.player1.key.up = false
@@ -203,80 +265,43 @@ async function gameLoop(game: Game) { // BIZARRE LE TYPE
 				ws.send(JSON.stringify({game, message: "input"}))
 			else
 				console.error("WebSocket is not open")
-		};
-
-		// Attach event listeners
-		window.addEventListener('keydown', keydownHandler);
-		window.addEventListener('keyup', keyupHandler);
-
-		// Cleanup function
-		const cleanup = () => {
-			window.removeEventListener('keydown', keydownHandler);
-			window.removeEventListener('keyup', keyupHandler);
-		};
-
-		ws.addEventListener('open', (event) => {
-			// game.message = "Init"
-			// console.log("GAME IN OPEN ", game)
-			if (ws.readyState === WebSocket.OPEN)
-				ws.send(JSON.stringify({game, message: "Init"}))
 		})
-
-		ws.addEventListener('message', (event) => {
-			const serverGame = JSON.parse(event.data)
-			game.message = serverGame.message
-			if (serverGame.message === "Countdown") {
-				game.timer = serverGame.timer
-			}
-			else if (serverGame.message === "Playing") {
-				game.started = serverGame.started
-				game.player1.sprite.position.y = serverGame.player1.sprite.position.y
-				game.player2.sprite	.position.y = serverGame.player2.sprite.position.y
-				game.ball.position.x = serverGame.ball.position.x
-				game.ball.position.y = serverGame.ball.position.y
-				game.player1.score = serverGame.player1.score
-				game.player2.score = serverGame.player2.score
-			}
-			else if (game.message === "END") {
-				game.winner = serverGame.winner
-				game.displayWinner = serverGame.displayWinner
-				game.player1.score = serverGame.player1.score
-				game.player2.score = serverGame.player2.score
-				// Cleanup after a short delay to allow final animation
-				setTimeout(cleanup, 2000);
-			}
-		})
-
-		// Cleanup on WebSocket close/error
-		ws.addEventListener('close', cleanup);
-		ws.addEventListener('error', cleanup);
-
 		console.log('Sprite loaded');
-		gameAnimation(game);
+		const canvas: HTMLCanvasElement = document.createElement('canvas');
+		const canvasDiv: HTMLDivElement = document.getElementById('canvasDiv') as HTMLDivElement;
+
+		canvas.id = String(game.id);
+    	canvas.width= 802;
+		canvas.height= 455;
+		canvas.className = "bg-color-black";
+
+		// const canvas: HTMLCanvasElement = document.getElementById("canvas") as HTMLCanvasElement;
+		if (!canvas || !canvasDiv) {
+			console.error('Could not fetch canvas div');
+			return;
+		}
+		// canvasDiv.innerHTML = "";
+		canvasDiv.appendChild(canvas);
+		gameAnimation(game, canvas);
 	} catch (error) {
 		console.error(error);
 	}
 }
 
-async function gameAnimation(game: Game) {
+async function gameAnimation(game: Game, canvas: HTMLCanvasElement) {
 
-	const canvas: HTMLCanvasElement = document.getElementById("canvas") as HTMLCanvasElement;
-	if (canvas === null) {
-		console.error('Could not fetch canvas or button');
-		return;
-	}
+	
 	const canvasContext = canvas.getContext('2d');
 	if (canvasContext === null) {
 		console.error('Could not fetch canvas context');
 		return;
 	}
 
-	canvas.classList.remove('hidden');
 	canvasContext.fillStyle = 'white'
 	canvasContext.font = '30px Arial'
 	canvasContext.textAlign = 'center'
 
-	const id = window.requestAnimationFrame(() => gameAnimation(game))
+	const id = window.requestAnimationFrame(() => gameAnimation(game, canvas))
 	canvasContext.drawImage(game.board.image, game.board.position.x, game.board.position.y)
 	canvasContext.drawImage(game.player1.sprite.image, game.player1.sprite.position.x, game.player1.sprite.position.y)
 	canvasContext.drawImage(game.player2.sprite.image, game.player2.sprite.position.x, game.player2.sprite.position.y)

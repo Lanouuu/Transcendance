@@ -23,4 +23,3 @@ export async function verifyToken(fastify, token) {
 
   return decoded;
 }
-
