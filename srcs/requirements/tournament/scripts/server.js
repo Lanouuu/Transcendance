@@ -1,6 +1,5 @@
 import Fastify from "fastify";
 import { initDB } from "./database.js";
-// import { WebSocketServer } from 'ws'
 import fs from 'fs'
 
 // Désactiver la vérification SSL pour appels inter-services
@@ -180,26 +179,22 @@ export async function runServer() {
       const schedule = generateRoundRobin(playersIds);
       console.log(schedule);
       
-      // for (let i = 0; i < schedule.length; i++) {
-        let match = schedule[0]
-        const res1 = await fetch(`https://game:3002/remoteTournament`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ match })
-        })
-      // }
+      const data = await fetch(`https://game:3002/remoteTournament`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ schedule })
+      })
+      // const response = await data.json()
+      // if (response.message !== "Success")
+      //   throw new Error("Fail to create match")
       reply.send({message: "Success"})
       
-      // clef 1 -> match
-      // clef 2 -> match
-
-
-
     } catch (err) {
       request.log.error({ err }, "tournamentStart failed");
-      return reply.code(400).send({ error: "Database read failed" });
+      console.log("tournamentStart ERROR: ", err.message)
+      return reply.code(400).send({ error: err.message });
     }
 
   });

@@ -1,5 +1,5 @@
 import { gameLoop } from './game.js'
-import { Game, Sprite, Vector2D, KeyBind, ImgSize } from "./gameClass.js"
+import { Game } from "./gameClass.js"
 
 const ws_route: string = `://${window.location.host}/game`
 const route: string = `${window.location.origin}/tournament`;
@@ -111,6 +111,7 @@ export async function displayTournamentPage () {
             ws.addEventListener('message', (event) => {
                 const serverGame = JSON.parse(event.data)
                 if (serverGame.message === "Init") {
+                    console.log("Starting match")
                     game = serverGame.game;
 					window.location.hash = '#game';
 					window.dispatchEvent(new Event('hashchange'));
@@ -285,6 +286,7 @@ export async function displayTournamentPage () {
             ws.addEventListener('message', (event) => {
                 const serverGame = JSON.parse(event.data)
                 if (serverGame.message === "Init") {
+                    console.log("Starting match")
                     game = serverGame.game;
 					window.location.hash = '#game';
 					window.dispatchEvent(new Event('hashchange'));

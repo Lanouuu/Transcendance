@@ -1,4 +1,4 @@
-import { Game, Sprite, Vector2D, KeyBind, ImgSize } from "./gameClass.js"
+import { Game, Sprite, Vector2D } from "./gameClass.js"
 
 const route: string = `${window.location.origin}/game`;
 const ws_route: string = `://${window.location.host}/game`;
