@@ -60,10 +60,7 @@ export async function setupGamePage(): Promise<void> {
 		}
 	};
 
-
 	initButtons();
-
-
 }
 
 
@@ -134,6 +131,9 @@ async function launchLocalGame() {
 					game.displayWinner = serverGame.displayWinner
 					game.player1.score = serverGame.player1.score
 					game.player2.score = serverGame.player2.score
+				}
+				else if (serverGame.message === "Error") {
+					console.log(serverGame.error)
 				}
 			})
 		}
