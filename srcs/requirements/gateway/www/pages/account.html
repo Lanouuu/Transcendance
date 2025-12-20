@@ -1,6 +1,6 @@
 <div id="accountPage" class="page accountLayout">
 
-	<h1 class="text-8xl text-dark">
+	<h1 class="text-6xl text-dark">
 		Account
 	</h1>
 	
@@ -63,7 +63,7 @@
 				w-full h-full
 				min-w-0
 
-				grid grid-cols-[1fr_15fr]
+				grid grid-cols-[1fr_10fr]
 			">
 				<!-- Edit profile button Div -->
 				<div class="
@@ -97,9 +97,7 @@
 
 					min-w-0 box-border
 
-					p-6
-
-					flex flex-col items-center justify-evenly gap-16 
+					flex flex-col items-center justify-center gap-16 
 
 					text-7xl
 				">
@@ -116,7 +114,7 @@
 							nada@degun.fr
 						</span>
 					</p>
-					<p id="accountBox2fa" class="text-center w-full">
+					<p id="accountBox2fa" class="text-center w-full flex flex-col items-center justify-normal">
 						2FA<br>
 						<input type="checkbox" disabled>
 					</p>
@@ -136,7 +134,7 @@
 
 				<input id="profilePicInput" type="file" accept="image/*" class="hidden">
 
-				<div class="group relative rounded-full w-fit">
+				<div class="group relative rounded-full w-fit h-fit">
 
 					<img src="img/cristal_profile_base.jpg" class="
 						w-56 h-56
@@ -242,10 +240,24 @@
 		</div>
 
 		<!-- Onglet Amis -->
-		<div id="friendsTab" class="friendsLayout hidden">
+		<div id="friendsTab" class="
+			col-start-1 col-end-2 row-start-1 row-end-2
+	
+			h-full w-full min-h-0
 
-			<!-- Liste des amis (pseudo, (avatar ?), status de connection, bouton defi, bouton suppression, bouton aller au profile) -->
-			<div class="friendsListArea">
+			rounded-l-3xl
+
+			grid grid-cols-[3fr_1fr] grid-rows-[1fr_1fr_1fr_1fr]
+
+			text-white text-xl
+			bg-dark bg-opacity-80
+		">
+
+			<!-- Listes des amis -->
+			<div class="
+				col-start-1 col-end-2 row-span-4
+				flex flex-col items-center
+			">
 				<h1 class="h-1/6 text-center content-center">
 					OUAI LA LISTE D'AMIS
 				</h1>
@@ -254,6 +266,7 @@
 					m-4
 					p-2
 					outline outline-sec
+					min-h-0
 					overflow-y-auto
 				">
 					You have no friends ! (haha)
@@ -262,7 +275,12 @@
 			</div>
 
 			<!-- Listes des invitations a accepter (pseudo, bouton accepter, bouton refuser) -->
-			<div class="friendsInviteListArea">
+			<div class="
+				col-start-2 col-end-3 row-start-1 row-end-3
+				min-h-0
+				m-2
+				outline outline-sec
+			">
 
 				<h1 class="h-1/6 flex items-center justify-center">
 					Friends Invitations
@@ -270,6 +288,7 @@
 
 				<ul id="inviteList" class="
 					h-5/6
+					min-h-0
 					overflow-y-auto
 				">
 					No invitations pending
@@ -279,8 +298,13 @@
 			</div>
 
 			<!-- Bouton ajouter un ami / bloquer (input pseudo, bouton invitation, bouton bloquer) -->
-
-			<div class="friendsInviteArea">
+			<div class="
+				col-start-2 col-end-3 row-start-3 row-end-4
+				flex flex-col items-center justify-evenly
+				min-h-0
+				m-2
+				outline outline-sec
+			">
 
 				<h1>
 					Invite User
@@ -301,15 +325,25 @@
 
 			</div>
 
+			<!-- Liste des users bloques -->
+			<div class="
+				col-start-2 col-end-3 row-start-4 row-end-5
+				flex flex-col items-center justify-center gap-4
+				min-h-0
+				p-2
+				m-2
+				outline outline-sec
+			">
 
-
-			<div class="friendsBlockArea">
-
-				<h1>
+				<h1 class="h-1/6">
 					Blocked User list
 				</h1>
 
 				<ul id="blockedList" class="
+					h-5/6
+					w-5/6
+					min-h-0
+					flex flex-col items-center
 					overflow-y-auto
 				">
 					No user blocked
@@ -328,16 +362,38 @@
 		</div>
 
 		<!-- Onglet historique -->
-		<div id="historyTab" class="historyLayout hidden">
+		<div id="historyTab" class="
+			col-start-1 col-end-2 row-start-1 row-end-2
+
+			rounded-l-3xl
+
+			h-full w-full min-h-0
+
+			flex flex-col items-center justify-center gap-4
+
+			text-white text-6xl
+
+			bg-dark bg-opacity-80
+
+		">
 
 			<h1>OUAI L'HISTORIQUE</h1>
 			
-			<ul id="gameHistoryList" class="
-				flex flex-col items-center justify-center p-2
+			<div class="
+				h-4/5 w-3/4
+				outline outline-accent
+				min-h-0
 				overflow-y-auto
 			">
-				No game History
-			</ul>
+
+				<ul id="gameHistoryList" class="
+					w-full
+					h-full
+				">
+					No game History
+				</ul>
+
+			</div>
 
 		</div>
 

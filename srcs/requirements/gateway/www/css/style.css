@@ -82,7 +82,7 @@ body.loggedIn #signupNavLink {
 /* #region account */
 
 .accountLayout {
-	@apply flex flex-col place-items-center gap-16
+	@apply flex flex-col items-center gap-16
 
 	h-full
 	p-8
@@ -137,64 +137,14 @@ body.loggedIn #signupNavLink {
 
 /* #endregion Tabs ****************************************/
 
-/* #region Friends ****************************************/
-
-.friendsLayout {
-	@apply col-start-1 col-end-2 row-start-1 row-end-2
-	
-	h-full w-full
-
-	rounded-l-3xl
-
-	text-white text-xl
-
-	bg-dark bg-opacity-80
-	;
-
-	display: grid;
-	grid-template-columns: 3fr 1fr;
-	grid-template-rows: 1fr 1fr 1fr 1fr;
-}
-
-.friendsListArea {
-	@apply col-start-1 col-end-2 row-span-4
-
-	flex flex-col items-center
-	
-	;
-}
-
-.friendsInviteListArea {
-	@apply col-start-2 col-end-3 row-start-1 row-end-3
-	m-2
-	outline outline-sec
-	;
-}
-
-.friendsInviteArea {
-	@apply col-start-2 col-end-3 row-start-3 row-end-4
-	flex flex-col items-center justify-evenly
-	m-2
-	outline outline-sec
-	;
-}
-
-.friendsBlockArea {
-	@apply col-start-2 col-end-3 row-start-4 row-end-5
-	flex flex-col items-center justify-evenly
-	m-2
-	outline outline-sec
-	;
-}
-
-/* #endregion Friends *************************************/
-
 /* #region Stats ******************************************/
 
 .statsLayout {
 	@apply col-start-1 col-end-2 row-start-1 row-end-2
 
 	rounded-l-3xl
+
+	h-full
 
 	flex flex-col items-center justify-center
 
@@ -205,24 +155,6 @@ body.loggedIn #signupNavLink {
 }
 
 /* #endregion Stats ***************************************/
-
-/* #region History ****************************************/
-
-.historyLayout {
-	@apply col-start-1 col-end-2 row-start-1 row-end-2
-
-	rounded-l-3xl
-
-	flex flex-col items-center justify-center
-
-	text-white text-6xl
-
-	bg-dark bg-opacity-80
-	;
-}
-
-/* #endregion History *************************************/
-
 
 /* #endregion account */
 
