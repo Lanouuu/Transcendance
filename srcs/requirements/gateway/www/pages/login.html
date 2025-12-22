@@ -13,7 +13,9 @@
         text-white font-geo text-base sm:text-lg lg:text-xl
         hover:outline hover:outline-accent
         hover:shadow-[0_-15px_50px_var(--color-accent)]
-        transition gap-8">
+        transition gap-8
+        overflow-y-scroll
+        ">
 
         <h2 class="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl
             font-geo font-semibold text-light mb-6 text-center">
@@ -84,6 +86,20 @@
             </button>
 
         </form>
+
+        <button id="guestConnectionButton"
+            class="mx-auto py-3 w-full sm:w-4/6
+            flex flex-row items-center justify-evenly
+            rounded-xl
+            bg-accent bg-opacity-90 hover:bg-opacity-100
+            text-white font-semibold font-geo
+            shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+            hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+            transition">
+
+            <span class="text-lg sm:text-xl">Connect as Guest</span>
+
+        </button>
 
         <button id="42ConnectionButton"
             class="mx-auto py-3 w-full sm:w-4/6

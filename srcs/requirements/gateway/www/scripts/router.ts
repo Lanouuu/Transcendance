@@ -342,7 +342,64 @@ class Router {
 
 }
 
+async function notificationHandler(): Promise<void> {
 
+	const	notifNumberBadge:	HTMLDivElement = document.getElementById("notifNumberBadge") as HTMLDivElement;
+	const	notifList:			HTMLUListElement = document.getElementById("notifList") as HTMLUListElement;
+	const	removeAllButton:	HTMLButtonElement = document.getElementById("removeAllButton") as HTMLButtonElement;
+	let		notifNumber:		number = 0;
+
+	if (!notifNumberBadge || !notifList || !removeAllButton) {
+		console.error("Could not get html elements");
+		return ;
+	}
+
+	// const res = await fetch(``);
+	// if (!res.ok) {
+	// 	console.error("Could not fetch game invitations");
+	// 	return ;
+	// }
+
+	// notifList.innerHTML = "";
+	// const frag = document.createDocumentFragment();
+	// for (invite of inviteList)
+	// {
+	// 	const li: HTMLLIElement = document.createElement("li");
+	// 	li.className = "flex flex-row items-center justify-evenly w-full text-white";
+
+	// 	const userNameSpan: HTMLSpanElement = document.createElement("span");
+	// 	userNameSpan.innerHTML = invite.username;
+
+	// 	const acceptButton: HTMLButtonElement = document.createElement("button");
+	// 	acceptButton.innerHTML = "✓";
+	// 	acceptButton.onclick = async () => {
+
+	// 		li.remove();
+	// 		notifNumber--;
+	// 	};
+
+	// 	const denyButton: HTMLButtonElement = document.createElement("button");
+	// 	denyButton.innerHTML = "✗";
+	// 	denyButton.onclick = () => {
+
+	// 		li.remove();
+	// 		notifNumber--;
+	// 	};
+
+	// 	frag.appendChild(li);
+	// 	notifNumber++;
+	// }
+	// notifList.appendChild(frag);
+	// notifNumberBadge.innerHTML = String(notifNumber);
+
+	removeAllButton.onclick = () => {
+		// FETCH POUR LA DB ??
+
+		notifList.innerHTML = "";
+		notifNumber = 0;
+		notifNumberBadge.innerHTML = String(notifNumber);
+	};
+}
 
 // A SUPPRIMER (TESTS) /////////////////////////////////////////////////////////////////////////////////
 (async () => {
@@ -366,4 +423,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	handleOauth42Redirect();
 
 	new Router();
+
+	if (sessionStorage.getItem("jwt")){
+		notificationHandler();
+	}
 });
+

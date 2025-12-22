@@ -423,7 +423,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	img.src = avatarUrl;
 	img.width = 36;
 	img.height = 36;
-	img.className = "rounded-full";
+	img.className = "rounded-full select-none";
 
 	//ajout du username
 	const nameSpan = document.createElement("span");
@@ -433,6 +433,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	// Ajout du status de connexion
 	const statusDot = document.createElement("span");
 	statusDot.textContent = isOnline ? "🟢" : "⚪️";
+	statusDot.className = "select-none";
 
 	// Ajout du bouton de defi
 	const playButton = document.createElement("button");
@@ -440,9 +441,8 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 
 	// playButton.id = "fInListPlayButton"; // Si plusieurs amis id identiques
 	playIcon.src = "./assets/other/challenge-user.svg";
-	playIcon.width = 24;
-	playIcon.height = 24;
-	playIcon.className = "invert"
+	playIcon.className = "h-6 w-6 invert";
+	playButton.className = "w-fit h-fit place-self-center";
 	playButton.appendChild(playIcon);
 
 	// Ajout du bouton de suppression d'un ami
@@ -451,9 +451,8 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 
 	// delFriendButton.id = "fInListDelFriendButton"; // Same
 	delFriendIcon.src = "./assets/other/delete-user.svg";
-	delFriendIcon.width = 24;
-	delFriendIcon.height = 24;
-	delFriendIcon.className = "invert"
+	delFriendIcon.className = "h-6 w-6 invert"
+	delFriendButton.className = "w-fit h-fit place-self-center";
 	delFriendButton.appendChild(delFriendIcon);
 	delFriendButton.onclick = async () => {
 		try {
@@ -486,9 +485,8 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	
 	// blockFriendButton.id = "fInListBlockFriendButton"; // Same
 	blockFriendIcon.src = "./assets/other/block-user.svg";
-	blockFriendIcon.width = 24;
-	blockFriendIcon.height = 24;
-	blockFriendIcon.className = "invert"
+	blockFriendIcon.className = "w-6 h-6 invert"
+	blockFriendButton.className = "w-fit h-fit place-self-center";
 	blockFriendButton.appendChild(blockFriendIcon);
 	blockFriendButton.onclick = async () => {
 		try {
@@ -525,11 +523,11 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 function createLiPendingItem(userId: string, token: string, senderId: string, senderName: string, ulFriendsList: HTMLUListElement, ulBlockedList: HTMLUListElement): HTMLLIElement {
 
 	const li = document.createElement("li");
-	li.className = 'flex items-center justify-evenly';
+	li.className = 'flex items-center justify-between gap-2 w-5/6';
 
 	const nameSpan = document.createElement("span");
 	nameSpan.textContent = senderName;
-	nameSpan.className = "text-center";
+	nameSpan.className = "text-center w-1/2 truncate";
 
 	// Ajout du bouton accept invitation
 	const acceptFriendButton = document.createElement("button");
@@ -733,7 +731,7 @@ async function showHistoryTab(userId: string, token: string): Promise<void> {
 function createLiHistoryItem(p1Name: string, p2Name: string, p1Score: string, p2Score: string, gameType: string, matchType: string, playedAt: string, matchWon: boolean): HTMLLIElement {
 
 	const li: HTMLLIElement = document.createElement('li');
-	li.className = 'w-full grid grid-cols-[1fr_6fr] grid-rows-2 bg-opacity-50 border-b-2 border-accent last:border-b-0';
+	li.className = 'w-full grid grid-cols-[1fr_6fr] grid-rows-2 bg-opacity-50 border-b-2 border-white last:border-b-0';
 
 	matchWon ? li.classList.add('bg-green-600') : li.classList.add('bg-red-600');
 
@@ -747,7 +745,7 @@ function createLiHistoryItem(p1Name: string, p2Name: string, p1Score: string, p2
 		gameTypeIcon.src = './assets/other/pong.png';
 	else if (gameType === 'snake')
 		gameTypeIcon.src = './assets/other/snake.png';
-	gameTypeIcon.className = 'w-1/2 h-1/2';
+	gameTypeIcon.className = 'object-contain h-2/3 w-2/3';
 	
 	const matchTypeIcon: HTMLImageElement = document.createElement('img');
 	if (matchType === 'remote')

@@ -52,10 +52,9 @@
 	;
 }
 
-body:not(.loggedIn) #accountNavLink, body:not(.loggedIn) #logoutNavLink{
+body:not(.loggedIn) #accountNavLink, body:not(.loggedIn) #logoutNavLink, body:not(.loggedIn) #notifDiv{
 	display: none;
 }
-
 
 body.loggedIn #loginNavLink{
 	display: none;
@@ -73,7 +72,7 @@ body.loggedIn #signupNavLink {
 
 .mainLayout{
 	@apply flex grow flex-col
-	h-[calc(100vh-8rem-5rem)]
+	min-h-[calc(100vh-8rem-5rem)]
 	/* Ajouter du responsive */
 }
 
@@ -84,7 +83,8 @@ body.loggedIn #signupNavLink {
 .accountLayout {
 	@apply flex flex-col items-center gap-16
 
-	h-full
+	h-[calc(100vh-8rem-5rem)] w-full
+
 	p-8
 
 	font-geo 
@@ -92,10 +92,9 @@ body.loggedIn #signupNavLink {
 }
 
 .accountBoxLayout {
-	display: grid;
-	grid-template-columns: 19fr 1fr;
+	@apply grid grid-cols-[19fr_1fr]
 	
-	@apply h-4/5 w-3/5
+	h-4/5 w-3/5
 
 	rounded-3xl
 	

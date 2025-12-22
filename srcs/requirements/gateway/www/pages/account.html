@@ -44,16 +44,20 @@
 
 		</ul>
 
-		<!-- Onglet info compte -->
+		<!-- Info compte -->
 		<div id="infosTab" class="
 			col-span-1 row-span-1
 
+			h-full w-full min-h-0
+
+			p-6
+
 			rounded-l-3xl
+
+			grid grid-cols-[7fr_4fr] grid-rows-[3fr_2fr]
 
 			text-white
 			bg-dark bg-opacity-80
-
-			grid grid-cols-[7fr_4fr] grid-rows-2
 		">
 
 			<!-- Profile infos -->
@@ -63,7 +67,7 @@
 				w-full h-full
 				min-w-0
 
-				grid grid-cols-[1fr_10fr]
+				grid grid-cols-[1fr_12fr]
 			">
 				<!-- Edit profile button Div -->
 				<div class="
@@ -137,10 +141,11 @@
 				<div class="group relative rounded-full w-fit h-fit">
 
 					<img src="img/cristal_profile_base.jpg" class="
-						w-56 h-56
+						w-64 h-64
 						rounded-full
 						object-cover
 						cursor-pointer
+						select-none
 					">
 
 					<button id="profilePicButton" class="
@@ -239,11 +244,13 @@
 
 		</div>
 
-		<!-- Onglet Amis -->
+		<!-- Amis -->
 		<div id="friendsTab" class="
 			col-start-1 col-end-2 row-start-1 row-end-2
 	
 			h-full w-full min-h-0
+
+			p-6
 
 			rounded-l-3xl
 
@@ -263,7 +270,6 @@
 				</h1>
 				<ul id="friendsList" class="
 					h-5/6 w-5/6
-					m-4
 					p-2
 					outline outline-sec
 					min-h-0
@@ -278,17 +284,19 @@
 			<div class="
 				col-start-2 col-end-3 row-start-1 row-end-3
 				min-h-0
-				m-2
+				flex flex-col items-center justify-center gap-4
 				outline outline-sec
 			">
 
-				<h1 class="h-1/6 flex items-center justify-center">
+				<h1 class="h-1/6 place-content-center text-center">
 					Friends Invitations
 				</h1>
 
 				<ul id="inviteList" class="
-					h-5/6
+					h-5/6 w-5/6
 					min-h-0
+					p-2
+					flex flex-col items-center gap-1
 					overflow-y-auto
 				">
 					No invitations pending
@@ -302,7 +310,7 @@
 				col-start-2 col-end-3 row-start-3 row-end-4
 				flex flex-col items-center justify-evenly
 				min-h-0
-				m-2
+				my-6
 				outline outline-sec
 			">
 
@@ -331,7 +339,6 @@
 				flex flex-col items-center justify-center gap-4
 				min-h-0
 				p-2
-				m-2
 				outline outline-sec
 			">
 
@@ -354,20 +361,20 @@
 
 		</div>
 
-		<!-- Onglet Stats -->
+		<!-- Stats -->
 		<div id="statsTab" class="statsLayout hidden">
 
 			OUAI LES STATS
 
 		</div>
 
-		<!-- Onglet historique -->
+		<!-- Historique -->
 		<div id="historyTab" class="
 			col-start-1 col-end-2 row-start-1 row-end-2
 
-			rounded-l-3xl
-
 			h-full w-full min-h-0
+
+			rounded-l-3xl
 
 			flex flex-col items-center justify-center gap-4
 
