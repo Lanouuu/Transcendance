@@ -1,29 +1,10 @@
 import Fastify from "fastify";
 import { initDB } from "./database.js";
 import fs from 'fs'
+import { error } from "console";
 
 // Désactiver la vérification SSL pour appels inter-services
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
-class tournoi {
-  constructor({ id, name, creator_id, nb_max_players }) {
-    this.id = id
-    this.name = name
-    this.creator_id = creator_id
-    this.nb_max_players = nb_max_players
-  }
-  winner_id
-  nb_current_players
-  created_at
-}
-
-class match {
-  constructor({ player_1_id, player_2_id }) {
-    this.player_1_id = player_1_id
-    this.player_2_id = player_2_id
-    this.status = "pending"
-  }
-}
 
 async function getUserName(id) {
     try {
@@ -124,7 +105,7 @@ export async function runServer() {
 
   fastify.get('/tournamentList', async (request, reply) => {
     try {
-      const tourList = await dbtour.all("SELECT * FROM tournament ORDER BY created_at DESC");
+      const tourList = await dbtour.all("SELECT * FROM tournament WHERE mode = ? ORDER BY created_at DESC", ["remote"]);
       reply.send(tourList);
     } catch (err) {
       fastify.log.error({ err }, "List tournaments failed");
@@ -136,9 +117,14 @@ export async function runServer() {
     const { idTour } = request.body || {};
     if (!idTour) return reply.code(400).send({ error: "tournament id required" });
 
-    //ajouter un check avec le nb_max_player
-
     try {
+      const res = await dbtour.get(
+        "SELECT creator_id, nb_current_players, nb_max_players FROM tournament WHERE id = ? ORDER BY created_at DESC LIMIT 1",
+        [idTour]
+      );
+      if (parseInt(res.nb_current_players, 10) === parseInt(res.nb_max_players, 10)) {
+        return reply.code(400).send({error: "Tournament already full"});
+      }
       const playerId = request.headers["x-user-id"];
       const playerName = await getUserName(playerId);
       const result = await dbtour.run(
@@ -153,10 +139,6 @@ export async function runServer() {
         END,
         nb_current_players = nb_current_players + 1
         WHERE id = ?`, [playerId, playerId, playerName, playerName, idTour]
-      );
-      const res = await dbtour.get(
-        "SELECT creator_id FROM tournament WHERE id = ? ORDER BY created_at DESC LIMIT 1",
-        [idTour]
       );
       console.log(`✓ Player ${playerId} joined tournament ${idTour}`);
       reply.send({ message: "Success", text: "Player added to tournament", tournament_id: idTour, id: res.creator_id });
@@ -180,7 +162,11 @@ export async function runServer() {
         console.log("current player: ", res.nb_max_players)
         res.players_ids = generateGuestPlayer(res.nb_max_players, res.players_ids, creator)
       }
-      // const nbPlayers = parseInt(res.nb_current_players, 10);
+
+      const nbPlayers = parseInt(res.nb_current_players, 10);
+      if (nbPlayers < 3) {
+        return reply.code(400).send({error: "Minimum 3 players required"});
+      }
       const tour_ids = res.players_ids || '';
       const playersIds = tour_ids.split(',')
       .filter(Boolean)
