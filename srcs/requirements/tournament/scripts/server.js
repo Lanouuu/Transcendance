@@ -43,7 +43,7 @@ async function getUserName(id) {
 
 function generateRoundRobin(teams) {
     if (teams.length % 2 !== 0) {
-        teams.push("bye");
+        teams.push("null");
     }
 
     const n = teams.length;
@@ -57,7 +57,7 @@ function generateRoundRobin(teams) {
         for (let j = 0; j < half; j++) {
             const t1 = teams[j];
             const t2 = teams[n - 1 - j];
-            if (t1 !== "bye" && t2 !== "bye") {
+            if (t1 !== "null" && t2 !== "null") {
                 round.push([t1, t2]);
             }
         }
@@ -68,6 +68,14 @@ function generateRoundRobin(teams) {
     }
 
     return schedule;
+}
+
+function generateGuestPlayer(nbPlayer, ids, creator){
+  for (let i = 0; i < parseInt(nbPlayer, 10) - 1; i++) {
+    ids += "," + String(parseInt(creator, 10) + i + 1)
+  }
+  console.log("IDS FOR LOCAL TOURNAMENT: ", ids)
+  return ids
 }
 
 export async function runServer() {
@@ -88,22 +96,23 @@ export async function runServer() {
   const dbtour = await initDB();
 
   fastify.post('/tournamentCreate', async (request, reply) => {
-    const { name, creator_id, nb_max_players } = request.body || {};
+    const { name, creator_id, nb_max_players, mode } = request.body || {};
     console.log("event detected")
-    if (!name || !creator_id || !nb_max_players) {
+    if (!name || !creator_id || !nb_max_players || !mode) {
       console.log("name: ", name)
       console.log("creator_id: ", creator_id)
       console.log("nb_max_player: ", nb_max_players)
+      console.log("nb_max_player: ", mode)
       console.log("MIssing information")
-      return reply.code(400).send({ error: "name, creator_id, nb_max_players required" });
+      return reply.code(400).send({ error: "name, creator_id, nb_max_players required, mode required" });
     }
 
     try {
       const playerId = request.headers["x-user-id"];
       const playerName = await getUserName(playerId);
       const result = await dbtour.run(
-        "INSERT INTO tournament (name, creator_id, nb_max_players, players_ids, players_names, nb_current_players) VALUES (?, ?, ?, ?, ?, ?)",
-        [name, creator_id, nb_max_players, `${creator_id}`, playerName, 1]
+        "INSERT INTO tournament (name, mode, creator_id, nb_max_players, players_ids, players_names, nb_current_players) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [name, mode, creator_id, nb_max_players, `${creator_id}`, playerName, 1]
       );
       console.log(`✓ Tournament created: "${name}" (ID: ${result.lastID}) by user ${creator_id}`);
       reply.send({ message: "Success", tournament_id: result.lastID, name , id: creator_id});
@@ -164,12 +173,14 @@ export async function runServer() {
     try {
 
       const res = await dbtour.get(
-        "SELECT players_ids, nb_current_players FROM tournament WHERE creator_id = ? ORDER BY created_at DESC LIMIT 1",
+        "SELECT players_ids, mode, nb_current_players, nb_max_players FROM tournament WHERE creator_id = ? ORDER BY created_at DESC LIMIT 1",
         [creator]
       );
-    
+      if (res.mode === "local") {
+        console.log("current player: ", res.nb_max_players)
+        res.players_ids = generateGuestPlayer(res.nb_max_players, res.players_ids, creator)
+      }
       // const nbPlayers = parseInt(res.nb_current_players, 10);
-
       const tour_ids = res.players_ids || '';
       const playersIds = tour_ids.split(',')
       .filter(Boolean)
@@ -179,13 +190,23 @@ export async function runServer() {
       const schedule = generateRoundRobin(playersIds);
       console.log(schedule);
       
-      const data = await fetch(`https://game:3002/remoteTournament`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ schedule })
-      })
+      if (res.mode === "remote") {
+        const data = await fetch(`https://game:3002/remoteTournament`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ schedule, mode: res.mode })
+        })
+      } else if (res.mode === "local") {
+          const data = await fetch(`https://game:3002/localTournament`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ schedule, mode: res.mode, rmId: creator })
+        })
+      }
       // const response = await data.json()
       // if (response.message !== "Success")
       //   throw new Error("Fail to create match")

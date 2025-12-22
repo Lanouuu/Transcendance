@@ -214,7 +214,7 @@ function RemoteGamehandler(id, ws) {
         game.loopId = setInterval(() => gameLoop(game), 16)
 }
 
-function RemoteTournamentHandler(id, gameId, tournament_id, ws) {
+function TournamentHandler(id, gameId, tournament_id, ws) {
     ws.userId = id
     ws.gameId = gameId
     ws.tournament_id = tournament_id
@@ -258,8 +258,8 @@ wss.on('connection', function connection(ws) {
         localGamehandler(res.id, ws)
     else if (res.message === "InitRemote") 
         RemoteGamehandler(res.id, ws)
-    else if (res.message === "InitRemoteTournament")
-        RemoteTournamentHandler(res.id, res.gameId, res.tournament_id, ws)
+    else if (res.message === "InitTournament")
+        TournamentHandler(res.id, res.gameId, res.tournament_id, ws)
     else if (res.message === "input") {
         if (!games.has(parseInt(res.game.id, 10))) {
             ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
@@ -457,8 +457,47 @@ fastify.get("/remote", async (request, reply) => {
 })
 //END remote 
 
+async function createLocalTournament(match, rmId) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const game = new Game({
+                id: parseInt(match[0], 10),
+                socket: [],
+                mode: 'local',
+                status: 'Playing',
+                message: "start",
+            })
+            loadSprite(game)
+            game.player1.id = match[0]
+            game.player1.name = "player1"
+            game.player2.id = match[1]
+            game.player2.name = "player2"
+            game.socket.push(tournamentSocket.get(parseInt(rmId)))
+            // game.tournament_id = game.socket[0].tournament_id
+            games.set(game.id, game)
+            game.socket.forEach(socket => {
+                if (socket.readyState === 1) {
+                    socket.send(JSON.stringify({game, message: "Init"}));
+                }
+            })
+            console.log("Starting match")
+            game.loopId = setInterval(() => gameLoop(game), 16)
+    
+            const intervalId = setInterval(() => {
+                if (game.message === "END") {
+                    clearInterval(intervalId)
+                    resolve()
+                }
+            }, 100)
+        }catch(err) {
+            console.log("ERROR IN CREATE TOURNAMENT: ", err)
+            reject(err)
+        }
 
-async function createTournament(match) {
+    })
+}
+
+async function createRemoteTournament(match) {
     return new Promise(async (resolve, reject) => {
         try {
             const game = new Game({
@@ -499,6 +538,25 @@ async function createTournament(match) {
     })
 }
 
+fastify.post("/localTournament", async (request, reply) => {
+    const { schedule, rmId } = request.body || {}
+
+    if (!schedule || !rmId) {
+        return reply.code(400).send({error: "schedule is empty"})
+    }
+
+    try {
+        for (const round of schedule) {
+            for (const match of round) {
+                    await createLocalTournament(match, rmId)
+            }
+        }
+    }catch(err) {
+        console.log("ERROR IN local TOURNAMENT: ", err.message)
+        reply.code(400).send({error: "Fail to create game"});
+    }
+})
+
 fastify.post("/remoteTournament", async (request, reply) => {
     const { schedule } = request.body || {}
 
@@ -508,7 +566,7 @@ fastify.post("/remoteTournament", async (request, reply) => {
 
     try {
         for (const round of schedule) {
-            await Promise.all(round.map(match => createTournament(match)))
+            await Promise.all(round.map(match => createRemoteTournament(match)))
         }
     }catch(err) {
         console.log("ERROR IN REMOTE TOURNAMENT: ", err.message)

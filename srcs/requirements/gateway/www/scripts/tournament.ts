@@ -32,8 +32,13 @@ export async function displayTournamentPage () {
 	const button = document.createElement('button');
 	button.id = 'gameTournamentButton';
 	button.className = 'bg-prim hover:bg-sec text-white font-bold py-3 px-6 rounded-lg cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95';
-	button.textContent = 'Create tournament';
+	button.textContent = 'Create remote tournament';
 	
+	const localTournamentButton = document.createElement('button');
+	localTournamentButton.id = 'LocalgameTournamentButton';
+	localTournamentButton.className = 'bg-prim hover:bg-sec text-white font-bold py-3 px-6 rounded-lg cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95';
+	localTournamentButton.textContent = 'Create local tournament';
+
     // Créer le bouton Join
     const joinButton = document.createElement('button');
     joinButton.id = 'gameTournamentJoinButton';
@@ -56,12 +61,14 @@ export async function displayTournamentPage () {
 	if (h1) {
 		h1.insertAdjacentElement('afterend', select);
 		select.insertAdjacentElement('afterend', button);
-        button.insertAdjacentElement('afterend', joinButton);
+        button.insertAdjacentElement('afterend', localTournamentButton);
+        localTournamentButton.insertAdjacentElement('afterend', joinButton);
         joinButton.insertAdjacentElement('afterend', tournamentListContainer);
         joinButton.insertAdjacentElement('afterend', startButton);  // AJOUTER CETTE LIGNE
     } else {
         tournamentPage.appendChild(select);
         tournamentPage.appendChild(button);
+        tournamentPage.appendChild(localTournamentButton);
         tournamentPage.appendChild(joinButton);
         tournamentPage.appendChild(tournamentListContainer);
         tournamentPage.appendChild(startButton);  // AJOUTER CETTE LIGNE
@@ -105,7 +112,7 @@ export async function displayTournamentPage () {
             const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
             ws.addEventListener('open', (event) => {
                 if (ws.readyState === WebSocket.OPEN)
-                    ws.send(JSON.stringify({gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "InitRemoteTournament"}))
+                    ws.send(JSON.stringify({gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "InitTournament"}))
             })
 
             ws.addEventListener('message', (event) => {
@@ -258,7 +265,7 @@ export async function displayTournamentPage () {
 					"x-user-id": userId,
 					"Content-Type": "application/json"
 				},
-				body: JSON.stringify({name: tournamentName, creator_id: userId, nb_max_players: selected})
+				body: JSON.stringify({name: tournamentName, creator_id: userId, nb_max_players: selected, mode: "remote"})
 			});
 			if (!res.ok) {
 				const text = await res.text();
@@ -280,7 +287,7 @@ export async function displayTournamentPage () {
             const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
             ws.addEventListener('open', (event) => {
                 if (ws.readyState === WebSocket.OPEN)
-                    ws.send(JSON.stringify({gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "InitRemoteTournament"}))
+                    ws.send(JSON.stringify({gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "InitTournament"}))
             })
 
             ws.addEventListener('message', (event) => {
@@ -328,6 +335,100 @@ export async function displayTournamentPage () {
 
 	});
 
+// LOCAL TOURNAMENT
+    localTournamentButton.addEventListener('click', async () => {
+        console.log("tournoi local bouton cliqué");
+        
+        if (!selected || selected === "") {
+            alert("Please select max number of players");
+            return;
+        }
+
+        const tournamentName = `Tournament ${Date.now()}`; // Générer nom unique
+    
+		try {
+			const token: string | null = sessionStorage.getItem("jwt");
+			const userId: string | null = sessionStorage.getItem("userId");
+			if (userId === null || token === null) {
+				console.error('Could not fetch user id/token');
+				return;
+			}
+
+			const res = await fetch(`${route}/tournamentCreate`, {
+				method: "POST",
+				headers: {
+					"authorization": `Bearer ${token}`,
+					"x-user-id": userId,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({name: tournamentName, creator_id: userId, nb_max_players: selected, mode: "local"})
+			});
+			if (!res.ok) {
+				const text = await res.text();
+				console.error(`Server error ${res.status}:`, text);
+				throw new Error(`Failed to load the game`);
+			}
+			
+			const contentType = res.headers.get("content-type");
+			if (!contentType || !contentType.includes("application/json")) {
+				const text = await res.text();
+				console.error(`Server did not return JSON`, text);
+				throw new Error(`Server response is not JSON`);
+			}
+			
+			const response = await res.json();
+			
+        if (response.message === "Success") {
+            let game : Game;
+            const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
+            ws.addEventListener('open', (event) => {
+                if (ws.readyState === WebSocket.OPEN)
+                    ws.send(JSON.stringify({gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "InitTournament"}))
+            })
+
+            ws.addEventListener('message', (event) => {
+                const serverGame = JSON.parse(event.data)
+                if (serverGame.message === "Init") {
+                    console.log("Starting match")
+                    game = serverGame.game;
+					window.location.hash = '#game';
+					window.dispatchEvent(new Event('hashchange'));
+					setTimeout(() => {
+            			gameLoop(game, ws);
+       				}, 1000);
+                }
+                else if (game && serverGame.message === "Countdown") {
+                    game.message = serverGame.message
+                    game.timer = serverGame.timer
+                }
+                else if (game && serverGame.message === "Playing") {
+                    game.message = serverGame.message
+                    game.started = serverGame.started
+                    game.player1.sprite.position.y = serverGame.player1.sprite.position.y
+                    game.player2.sprite.position.y = serverGame.player2.sprite.position.y
+                    game.ball.position.x = serverGame.ball.position.x
+                    game.ball.position.y = serverGame.ball.position.y
+                    game.player1.score = serverGame.player1.score
+                    game.player2.score = serverGame.player2.score
+                }
+                else if (game && serverGame.message === "END") {
+                    game.message = serverGame.message
+                    game.winner = serverGame.winner
+                    game.displayWinner = serverGame.displayWinner
+                    game.player1.score = serverGame.player1.score
+                    game.player2.score = serverGame.player2.score
+                }
+            })
+
+            ws.addEventListener('error', (error) => {
+                console.error("WebSocket error:", error);
+            });
+        }
+		} catch (err) {
+			console.error(err);
+		}
+	});
+//END
     // Ajouter le listener pour le bouton Start (à placer après la fonction joinTournament)
     startButton.addEventListener('click', async () => {
         console.log("Start Tournament button clicked");

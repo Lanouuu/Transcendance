@@ -15,6 +15,7 @@ export async function initDB() {
             id                  INTEGER PRIMARY KEY AUTOINCREMENT,
             name                TEXT NOT NULL UNIQUE,
             status              TEXT DEFAULT 'pending',
+            mode                TEXT,
             players_ids         TEXT,
             players_names       TEXT,
             creator_id          TEXT,
