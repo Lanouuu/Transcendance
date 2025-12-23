@@ -89,6 +89,23 @@ export async function runServer() {
 
     try {
       const playerId = request.headers["x-user-id"];
+      const playerStr = String(playerId);
+
+      const alreadyIn = await dbtour.get(
+        "SELECT id, name FROM tournament \
+        WHERE status IN ('pending','playing') \
+         AND (',' || IFNULL(players_ids, '') || ',') LIKE '%,' || ? || ',%' \
+        ORDER BY created_at DESC LIMIT 1",
+        [playerStr]
+      );
+      if (alreadyIn) {
+        return reply.code(409).send({
+          error: "User already registered in another tournament",
+          tournament_id: alreadyIn.id,
+          name: alreadyIn.name
+        });
+      }
+
       const playerName = await getUserName(playerId);
       const result = await dbtour.run(
         "INSERT INTO tournament (name, mode, creator_id, nb_max_players, players_ids, players_names, nb_current_players) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -121,11 +138,42 @@ export async function runServer() {
         "SELECT creator_id, nb_current_players, nb_max_players FROM tournament WHERE id = ? ORDER BY created_at DESC LIMIT 1",
         [idTour]
       );
+      if (!res) return reply.code(400).send({ error: "Tournament not found" });
+
       if (parseInt(res.nb_current_players, 10) === parseInt(res.nb_max_players, 10)) {
         return reply.code(400).send({error: "Tournament already full"});
       }
+
       const playerId = request.headers["x-user-id"];
       const playerName = await getUserName(playerId);
+      const playerStr = String(playerId);
+
+      const alreadyHere = await dbtour.get(
+        "SELECT 1 FROM tournament " +
+        "WHERE id = ? " +
+        "  AND (',' || IFNULL(players_ids, '') || ',') LIKE '%,' || ? || ',%'",
+        [idTour, playerStr]
+      );
+      if (alreadyHere) {
+        return reply.code(409).send({ error: "User already registered in this tournament" });
+      }
+
+      const other = await dbtour.get(
+        "SELECT id, name FROM tournament \
+        WHERE id <> ? \
+         AND status IN ('pending','playing') \
+         AND (',' || IFNULL(players_ids, '') || ',') LIKE '%,' || ? || ',%' \
+        ORDER BY created_at DESC LIMIT 1",
+        [idTour, playerStr]
+      );
+      if (other) {
+        return reply.code(409).send({
+          error: "User already registered in another tournament",
+          tournament_id: other.id,
+          name: other.name
+        });
+      }
+
       const result = await dbtour.run(
         `UPDATE tournament
         SET players_ids = CASE
