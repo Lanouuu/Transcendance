@@ -155,14 +155,19 @@ export async function runServer() {
     try {
 
       const res = await dbtour.get(
-        "SELECT players_ids, mode, nb_current_players, nb_max_players FROM tournament WHERE creator_id = ? ORDER BY created_at DESC LIMIT 1",
+        "SELECT players_ids, mode, nb_current_players, nb_max_players, status FROM tournament WHERE creator_id = ? ORDER BY created_at DESC LIMIT 1",
         [creator]
       );
+      if (!res){
+        return reply.code(404).send({error: "Tournament not found"});
+      }
       if (res.mode === "local") {
         console.log("current player: ", res.nb_max_players)
         res.players_ids = generateGuestPlayer(res.nb_max_players, res.players_ids, creator)
       }
-
+      if (res.status !== "pending") {
+        return reply.code(400).send({error: "Tournament is playing or finished"});
+      }
       const nbPlayers = parseInt(res.nb_current_players, 10);
       if (nbPlayers < 3) {
         return reply.code(400).send({error: "Minimum 3 players required"});
@@ -172,6 +177,17 @@ export async function runServer() {
       .filter(Boolean)
       .map(id => parseInt(id, 10));
       console.log(playersIds);
+
+      const upd = await dbtour.run(
+        "UPDATE tournament \
+        SET status = 'playing' \
+        WHERE id = (SELECT id FROM tournament WHERE creator_id = ? ORDER BY created_at DESC LIMIT 1) \
+          AND status = 'pending'",
+        [creator]
+      );
+      if(upd.changes !== 1) {
+        return reply.code(409).send({error: "Tournament not updated"});
+      }
 
       const schedule = generateRoundRobin(playersIds);
       console.log(schedule);
@@ -193,6 +209,7 @@ export async function runServer() {
           body: JSON.stringify({ schedule, mode: res.mode, rmId: creator })
         })
       }
+
       // const response = await data.json()
       // if (response.message !== "Success")
       //   throw new Error("Fail to create match")
@@ -203,9 +220,24 @@ export async function runServer() {
       console.log("tournamentStart ERROR: ", err.message)
       return reply.code(400).send({ error: err.message });
     }
-
+    
   });
-
+  
+  // route a appeler qund un tournoi finit pour set le tournoi a finished
+  fastify.post('/tournamentFinished', async (request, reply) => {
+  const { id, winner_id } = request.body || {};
+  if (!id) {
+    return reply.code(400).send({ error: "Tournament id required" });
+  }
+  const upd = await dbtour.run(
+    "UPDATE tournament SET status='finished', winner_id=? WHERE id=? AND status='playing'",
+    [winner_id ?? null, id]
+  );
+  if (upd.changes !== 1) {
+    return reply.code(409).send({ error: "Tournament is not in playing state" });
+  }
+  reply.send({ message: "Success" });
+});
 
 // fastify.get("/tournament", async (request, reply) => {
 //     try {
