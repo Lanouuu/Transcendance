@@ -1,6 +1,6 @@
 <div id="accountPage" class="page accountLayout">
 
-	<h1 class="text-8xl text-dark">
+	<h1 class="text-6xl text-dark">
 		Account
 	</h1>
 	
@@ -44,37 +44,84 @@
 
 		</ul>
 
-		<!-- Onglet info compte -->
-		<div id="infosTab" class="infosLayout">
+		<!-- Info compte -->
+		<div id="infosTab" class="
+			col-span-1 row-span-1
+
+			h-full w-full min-h-0
+
+			p-6
+
+			rounded-l-3xl
+
+			grid grid-cols-[7fr_4fr] grid-rows-[3fr_2fr]
+
+			text-white
+			bg-dark bg-opacity-80
+		">
 
 			<!-- Profile infos -->
-			<div id="accountBoxInfo" class="accountInfos">
+			<div id="accountBoxInfo" class="
+				col-start-1 col-end-2 row-start-1 row-end-3
 
-				<a id="accountBoxEditProfile" href="#editProfile" role="button" aria-label="Edit profile" class="
-					absolute
-					left-8
+				w-full h-full
+				min-w-0
+
+				grid grid-cols-[1fr_12fr]
+			">
+				<!-- Edit profile button Div -->
+				<div class="
+					col-span-1
 
 					flex items-center justify-center
 
-					h-2/3
-					w-12
-					rounded-full
-
-					text-3xl
-					bg-prim
-					text-gray-200 
-					hover:bg-opacity-80 hover:text-white hover:font-black
+					h-full
+					w-full
 				">
-					🖉
-				</a>
+					<a id="accountBoxEditProfile" href="#editProfile" role="button" aria-label="Edit profile" class="
+						flex items-center justify-center
 
+						rounded-full
+
+						h-2/3
+						w-3/4
+
+						bg-prim
+						text-gray-200 
+						text-3xl
+						hover:bg-opacity-80 hover:text-white hover:font-black
+					">
+						🖉
+					</a>
+				</div>
+				
+				<!-- Infos Div -->
 				<div class="
+					col-span-1
+
+					min-w-0 box-border
+
 					flex flex-col items-center justify-center gap-16 
+
+					text-7xl
 				">
 
-					<p id="accountBoxUsername">Username<br><span>rien</span></p>
-					<p id="accountBoxMail">Mail<br><span>nada@degun.fr</span></p>
-					<p id="accountBox2fa">2FA<br><input type="checkbox" disabled></p>
+					<p id="accountBoxUsername" class="text-center w-full">
+						Username<br>
+						<span class="text-5xl break-words block">
+							rien
+						</span>
+					</p>
+					<p id="accountBoxMail" class="text-center w-full">
+						Mail<br>
+						<span class="text-5xl break-words block">
+							nada@degun.fr
+						</span>
+					</p>
+					<p id="accountBox2fa" class="text-center w-full flex flex-col items-center justify-normal">
+						2FA<br>
+						<input type="checkbox" disabled>
+					</p>
 
 				</div>
 
@@ -82,17 +129,23 @@
 			</div>
 
 			<!-- Profile pic -->
-			<div id="accountBoxProfilePic" class="accountPic">
+			<div id="accountBoxProfilePic" class="
+				col-start-2 col-end-3 row-start-1 row-end-2
+
+				flex flex-col gap-6 justify-center items-center
+
+			">
 
 				<input id="profilePicInput" type="file" accept="image/*" class="hidden">
 
-				<div class="group relative rounded-full w-fit">
+				<div class="group relative rounded-full w-fit h-fit">
 
 					<img src="img/cristal_profile_base.jpg" class="
-						w-56 h-56
+						w-64 h-64
 						rounded-full
 						object-cover
 						cursor-pointer
+						select-none
 					">
 
 					<button id="profilePicButton" class="
@@ -155,20 +208,29 @@
 			</div>
 
 			<!-- Stats -->
-			<div id="accountBoxStats" class="accountStats">
+			<div id="accountBoxStats" class="
+				col-start-2 col-end-3 row-start-2 row-end-3
+
+				grid grid-cols-2 grid-rows-[1fr_4fr]
+			">
 
 				<h2 class="
-					col-span-2 row-start-1 row-end-2
-					text-center
+					col-span-2 row-span-1
+					flex items-center justify-center
 					text-4xl
+					
 				">
 					Basic stats
 				</h2>
 
-				<span id="accountInfosPongWinrate">No Data</span>
+				<span id="accountInfosPongWinrate" class="
+					row-span-1 col-span-1 flex items-center justify-center text-6xl
+				">
+					No Data
+				</span>
 
 				<div id="accountStatsGraph" class="
-					col-start-2 col-end-3 row-start-2 row-end-4
+					col-span-1 row-span-1
 					flex flex-col place-content-center place-items-center
 				">
 
@@ -182,19 +244,35 @@
 
 		</div>
 
-		<!-- Onglet Amis -->
-		<div id="friendsTab" class="friendsLayout hidden">
+		<!-- Amis -->
+		<div id="friendsTab" class="
+			col-start-1 col-end-2 row-start-1 row-end-2
+	
+			h-full w-full min-h-0
 
-			<!-- Liste des amis (pseudo, (avatar ?), status de connection, bouton defi, bouton suppression, bouton aller au profile) -->
-			<div class="friendsListArea">
+			p-6
+
+			rounded-l-3xl
+
+			grid grid-cols-[3fr_1fr] grid-rows-[1fr_1fr_1fr_1fr]
+
+			text-white text-xl
+			bg-dark bg-opacity-80
+		">
+
+			<!-- Listes des amis -->
+			<div class="
+				col-start-1 col-end-2 row-span-4
+				flex flex-col items-center
+			">
 				<h1 class="h-1/6 text-center content-center">
 					OUAI LA LISTE D'AMIS
 				</h1>
 				<ul id="friendsList" class="
 					h-5/6 w-5/6
-					m-4
 					p-2
 					outline outline-sec
+					min-h-0
 					overflow-y-auto
 				">
 					You have no friends ! (haha)
@@ -203,26 +281,24 @@
 			</div>
 
 			<!-- Listes des invitations a accepter (pseudo, bouton accepter, bouton refuser) -->
-			<div class="friendsInviteListArea">
+			<div class="
+				col-start-2 col-end-3 row-start-1 row-end-3
+				min-h-0
+				flex flex-col items-center justify-center gap-4
+				outline outline-sec
+			">
 
-				<h1 class="h-1/6 content-center text-base">
+				<h1 class="h-1/6 place-content-center text-center">
 					Friends Invitations
 				</h1>
 
 				<ul id="inviteList" class="
-					h-5/6
+					h-5/6 w-5/6
+					min-h-0
+					p-2
+					flex flex-col items-center gap-1
 					overflow-y-auto
 				">
-
-					<!-- <li>
-						<div class="flex flex-row items-center justify-between text-sm p-1">
-							<h2 id="iInListPseudo">
-								Pseudo
-							</h2>
-							<button id="iInListAccept">Accept</button>
-							<button id="iInListReject">Reject</button>
-						</div>
-					</li> -->
 					No invitations pending
 				</ul>
 
@@ -230,8 +306,13 @@
 			</div>
 
 			<!-- Bouton ajouter un ami / bloquer (input pseudo, bouton invitation, bouton bloquer) -->
-
-			<div class="friendsInviteArea">
+			<div class="
+				col-start-2 col-end-3 row-start-3 row-end-4
+				flex flex-col items-center justify-evenly
+				min-h-0
+				my-6
+				outline outline-sec
+			">
 
 				<h1>
 					Invite User
@@ -252,15 +333,24 @@
 
 			</div>
 
+			<!-- Liste des users bloques -->
+			<div class="
+				col-start-2 col-end-3 row-start-4 row-end-5
+				flex flex-col items-center justify-center gap-4
+				min-h-0
+				p-2
+				outline outline-sec
+			">
 
-
-			<div class="friendsBlockArea">
-
-				<h1>
+				<h1 class="h-1/6">
 					Blocked User list
 				</h1>
 
 				<ul id="blockedList" class="
+					h-5/6
+					w-5/6
+					min-h-0
+					flex flex-col items-center
 					overflow-y-auto
 				">
 					No user blocked
@@ -271,24 +361,46 @@
 
 		</div>
 
-		<!-- Onglet Stats -->
+		<!-- Stats -->
 		<div id="statsTab" class="statsLayout hidden">
 
 			OUAI LES STATS
 
 		</div>
 
-		<!-- Onglet historique -->
-		<div id="historyTab" class="historyLayout hidden">
+		<!-- Historique -->
+		<div id="historyTab" class="
+			col-start-1 col-end-2 row-start-1 row-end-2
+
+			h-full w-full min-h-0
+
+			rounded-l-3xl
+
+			flex flex-col items-center justify-center gap-4
+
+			text-white text-6xl
+
+			bg-dark bg-opacity-80
+
+		">
 
 			<h1>OUAI L'HISTORIQUE</h1>
 			
-			<ul id="gameHistoryList" class="
-				flex flex-col items-center justify-center p-2
+			<div class="
+				h-4/5 w-3/4
+				outline outline-accent
+				min-h-0
 				overflow-y-auto
 			">
-				No game History
-			</ul>
+
+				<ul id="gameHistoryList" class="
+					w-full
+					h-full
+				">
+					No game History
+				</ul>
+
+			</div>
 
 		</div>
 

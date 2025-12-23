@@ -380,7 +380,84 @@ class Router {
 
 }
 
+async function notificationHandler(): Promise<void> {
 
+	const	notifBubbleDiv:		HTMLDivElement = document.getElementById("notifBubble") as HTMLDivElement;
+	const	notifBubbleButton:	HTMLButtonElement = document.getElementById("notifBubbleButton") as HTMLButtonElement;
+	const	notifNumberBadge:	HTMLDivElement = document.getElementById("notifNumberBadge") as HTMLDivElement;
+
+	const	notifPannel:		HTMLDivElement = document.getElementById("notifPannel") as HTMLDivElement;
+	const	notifList:			HTMLUListElement = document.getElementById("notifList") as HTMLUListElement;
+	const	removeAllButton:	HTMLButtonElement = document.getElementById("removeAllButton") as HTMLButtonElement;
+	let		notifNumber:		number = 0;
+
+	if (!notifBubbleDiv || !notifBubbleButton || !notifNumberBadge
+		|| !notifPannel || !notifList || !removeAllButton) {
+		console.error("Could not get html elements");
+		return ;
+	}
+
+	notifBubbleButton.onclick = () => {
+		notifPannel.classList.toggle('invisible');
+		notifPannel.classList.toggle('opacity-100');
+		notifPannel.classList.toggle('opacity-0');
+		notifBubbleDiv.classList.toggle('rotate-90');
+	};
+
+
+
+
+	// const res = await fetch(``);
+	// if (!res.ok) {
+	// 	console.error("Could not fetch game invitations");
+	// 	return ;
+	// }
+
+	// notifList.innerHTML = "";
+	// const frag = document.createDocumentFragment();
+	// for (invite of inviteList)
+	// {
+	// 	const li: HTMLLIElement = document.createElement("li");
+	// 	li.className = "flex flex-row items-center justify-evenly w-full text-white";
+
+	// 	const userNameSpan: HTMLSpanElement = document.createElement("span");
+	// 	userNameSpan.innerHTML = invite.username;
+
+	// 	const acceptButton: HTMLButtonElement = document.createElement("button");
+	// 	acceptButton.innerHTML = "✓";
+	// 	acceptButton.onclick = async () => {
+
+	// 		li.remove();
+	// 		notifNumber--;
+	// 	};
+
+	// 	const denyButton: HTMLButtonElement = document.createElement("button");
+	// 	denyButton.innerHTML = "✗";
+	// 	denyButton.onclick = () => {
+
+	// 		li.remove();
+	// 		notifNumber--;
+	// 	};
+
+	// 	frag.appendChild(li);
+	// 	notifNumber++;
+	// }
+	// notifList.appendChild(frag);
+	if (notifNumber == 0)
+		notifNumberBadge.classList.add('hidden');
+	else {
+		notifNumberBadge.classList.remove('hidden');
+		notifNumberBadge.innerHTML = String(notifNumber);
+	}
+
+	removeAllButton.onclick = () => {
+		// FETCH POUR LA DB ??
+
+		notifList.innerHTML = "";
+		notifNumber = 0;
+		notifNumberBadge.classList.add('hidden');
+	};
+}
 
 // A SUPPRIMER (TESTS) /////////////////////////////////////////////////////////////////////////////////
 (async () => {
@@ -404,4 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	handleOauth42Redirect();
 
 	new Router();
+
+	notificationHandler();
 });
+

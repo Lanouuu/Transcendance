@@ -423,7 +423,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	img.src = avatarUrl;
 	img.width = 36;
 	img.height = 36;
-	img.className = "rounded-full";
+	img.className = "rounded-full select-none";
 
 	//ajout du username
 	const nameSpan = document.createElement("span");
@@ -433,6 +433,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	// Ajout du status de connexion
 	const statusDot = document.createElement("span");
 	statusDot.textContent = isOnline ? "🟢" : "⚪️";
+	statusDot.className = "select-none";
 
 	// Ajout du bouton de defi
 	const playButton = document.createElement("button");
@@ -440,9 +441,8 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 
 	// playButton.id = "fInListPlayButton"; // Si plusieurs amis id identiques
 	playIcon.src = "./assets/other/challenge-user.svg";
-	playIcon.width = 24;
-	playIcon.height = 24;
-	playIcon.className = "invert"
+	playIcon.className = "h-6 w-6 invert";
+	playButton.className = "w-fit h-fit place-self-center";
 	playButton.appendChild(playIcon);
 
 	// Ajout du bouton de suppression d'un ami
@@ -451,9 +451,8 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 
 	// delFriendButton.id = "fInListDelFriendButton"; // Same
 	delFriendIcon.src = "./assets/other/delete-user.svg";
-	delFriendIcon.width = 24;
-	delFriendIcon.height = 24;
-	delFriendIcon.className = "invert"
+	delFriendIcon.className = "h-6 w-6 invert"
+	delFriendButton.className = "w-fit h-fit place-self-center";
 	delFriendButton.appendChild(delFriendIcon);
 	delFriendButton.onclick = async () => {
 		try {
@@ -486,9 +485,8 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	
 	// blockFriendButton.id = "fInListBlockFriendButton"; // Same
 	blockFriendIcon.src = "./assets/other/block-user.svg";
-	blockFriendIcon.width = 24;
-	blockFriendIcon.height = 24;
-	blockFriendIcon.className = "invert"
+	blockFriendIcon.className = "w-6 h-6 invert"
+	blockFriendButton.className = "w-fit h-fit place-self-center";
 	blockFriendButton.appendChild(blockFriendIcon);
 	blockFriendButton.onclick = async () => {
 		try {
@@ -525,10 +523,11 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 function createLiPendingItem(userId: string, token: string, senderId: string, senderName: string, ulFriendsList: HTMLUListElement, ulBlockedList: HTMLUListElement): HTMLLIElement {
 
 	const li = document.createElement("li");
+	li.className = 'flex items-center justify-between gap-2 w-5/6';
 
 	const nameSpan = document.createElement("span");
 	nameSpan.textContent = senderName;
-	nameSpan.className = "text-center";
+	nameSpan.className = "text-center w-1/2 truncate";
 
 	// Ajout du bouton accept invitation
 	const acceptFriendButton = document.createElement("button");
@@ -640,10 +639,11 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 
 function createLiBlockedItem(blockedId: string, blockedName: string, userId: string, token: string): HTMLLIElement {
 	const li = document.createElement("li");
+	li.className = 'flex flex-rows items-center justify-between w-5/6';
 
-	const nameSpan = document.createElement("span");
-	nameSpan.textContent = blockedName;
-	nameSpan.className = "text-center";
+	const nameDiv = document.createElement("div");
+	nameDiv.textContent = blockedName;
+	nameDiv.className = "text-center";
 
 	const unblockFriendButton = document.createElement("button");
 	const unblockFriendIcon = document.createElement("img");
@@ -678,7 +678,7 @@ function createLiBlockedItem(blockedId: string, blockedName: string, userId: str
 			return ;
 		}
 	};
-	li.append(nameSpan, unblockFriendButton);
+	li.append(nameDiv, unblockFriendButton);
 	return (li);
 }
 // #endregion FriendsTab //
@@ -711,18 +711,16 @@ async function showHistoryTab(userId: string, token: string): Promise<void> {
 		ulHistoryList.innerHTML = "";
 		const frag = document.createDocumentFragment();
 		for (const match of matchList) {
-			const p1Id: string = match.player1_id;
 			const p1Name: string = match.player1_name;
-			const p2Id: string = match.player2_id;
 			const p2Name: string = match.player2_name;
-			const winnerId: string = match.winner_id;
+			const matchWon: boolean = String(match.winner_id) === String(userId);
 			const p1Score: string = match.score_p1;
 			const p2Score: string = match.score_p2;
 			const gameType: string = match.game_type;
 			const matchType: string = match.match_type;
 			const playedAt: string = match.played_at;
 			
-			frag.appendChild(createLiHistoryItem(p1Id, p1Name, p2Id, p2Name, p1Score, p2Score, gameType, matchType, playedAt));
+			frag.appendChild(createLiHistoryItem(p1Name, p2Name, p1Score, p2Score, gameType, matchType, playedAt, matchWon));
 		}
 		ulHistoryList.appendChild(frag);
 	} catch (error) {
@@ -730,38 +728,71 @@ async function showHistoryTab(userId: string, token: string): Promise<void> {
 	}
 }
 
-function createLiHistoryItem(p1Id: string, p1Name: string, p2Id: string, p2Name: string, p1Score: string, p2Score: string, gameType: string, matchType: string, playedAt: string): HTMLLIElement {
+function createLiHistoryItem(p1Name: string, p2Name: string, p1Score: string, p2Score: string, gameType: string, matchType: string, playedAt: string, matchWon: boolean): HTMLLIElement {
 
 	const li: HTMLLIElement = document.createElement('li');
+	li.className = 'w-full grid grid-cols-[1fr_6fr] grid-rows-2 bg-opacity-50 border-b-2 border-white last:border-b-0';
 
+	matchWon ? li.classList.add('bg-green-600') : li.classList.add('bg-red-600');
 
-	const p1NameSpan: HTMLSpanElement = document.createElement('span');
-	p1NameSpan.textContent = p1Name;
+	// #region icons //
 
-	const p2NameSpan: HTMLSpanElement = document.createElement('span');
-	p2NameSpan.textContent = p2Name;
-
-	const p1ScoreSpan: HTMLSpanElement = document.createElement('span');
-	p1ScoreSpan.textContent = p1Score;
-
-	const p2ScoreSpan: HTMLSpanElement = document.createElement('span');
-	p2ScoreSpan.textContent = p2Score;
+	const iconsDiv: HTMLDivElement = document.createElement('div');
+	iconsDiv.className = 'row-span-2 col-span-1 flex items-center justify-center gap-3 h-full w-full';
 
 	const gameTypeIcon: HTMLImageElement = document.createElement('img');
 	if (gameType === 'pong')
 		gameTypeIcon.src = './assets/other/pong.png';
 	else if (gameType === 'snake')
 		gameTypeIcon.src = './assets/other/snake.png';
-	gameTypeIcon.width = 24;
-	gameTypeIcon.height = 24;
-
-	const matchTypeSpan: HTMLSpanElement = document.createElement('span');
-	matchTypeSpan.textContent = matchType;
-
-	const playedAtSpan: HTMLSpanElement = document.createElement('span');
-	playedAtSpan.textContent = playedAt;
+	gameTypeIcon.className = 'object-contain h-2/3 w-2/3';
 	
-	li.append(gameTypeIcon, p1Name, p1Score, p2Score, p2Name, matchType, playedAtSpan);
+	const matchTypeIcon: HTMLImageElement = document.createElement('img');
+	if (matchType === 'remote')
+		matchTypeIcon.src = './assets/other/versus-icon.svg';
+	else if (matchType === 'tournament')
+		matchTypeIcon.src = './assets/other/cup-icon.svg';
+	matchTypeIcon.className = 'w-1/3 h-1/3 invert';
+
+	iconsDiv.append(gameTypeIcon, matchTypeIcon);
+
+	// #endregion icon //
+
+
+	// #region resume //
+
+	const resumeDiv: HTMLDivElement = document.createElement('div');
+	resumeDiv.className = 'row-span-1 col-span-1 flex flex-row items-center justify-center gap-4 text-4xl';
+
+	const p1NameDiv: HTMLDivElement = document.createElement('div');
+	p1NameDiv.textContent = p1Name;
+
+	const p2NameDiv: HTMLDivElement = document.createElement('div');
+	p2NameDiv.textContent = p2Name;
+
+	const ScoreDiv: HTMLDivElement = document.createElement('div');
+	ScoreDiv.textContent = p1Score + ' - ' + p2Score;
+
+	resumeDiv.append(p1NameDiv, ScoreDiv, p2NameDiv);
+
+	// #endregion resume //
+
+	// #region date //
+
+	const playedAtDiv: HTMLDivElement = document.createElement('div');
+	playedAtDiv.className = 'row-span-1 col-span-1 flex flex-row items-center justify-evenly text-xl';
+
+	const fullDate: Date = new Date(playedAt);
+	const day = String(fullDate.getDate()).padStart(2, '0');
+	const month = String(fullDate.getMonth() + 1).padStart(2, '0');
+	const year = String(fullDate.getFullYear()).slice(-2);
+	const hours = String(fullDate.getHours()).padStart(2, '0');
+	const minutes = String(fullDate.getMinutes()).padStart(2, '0');
+	playedAtDiv.textContent = `${day}/${month}/${year} - ${hours}:${minutes}`;
+	
+	// #endregion date //
+
+	li.append(iconsDiv, resumeDiv, playedAtDiv);
 
 	return (li);
 }

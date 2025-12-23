@@ -2,35 +2,37 @@
 
 <html>
 
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<!-- output.css correspond au css compile par tailwind -->
-		<link rel="stylesheet" href="/css/output.css">
-		<link href="favicon/favicon.ico" rel="icon">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- output.css correspond au css compile par tailwind -->
+	<link rel="stylesheet" href="/css/output.css">
+	<link href="favicon/favicon.ico" rel="icon">
 
-		<!--Polices importees-->
-		<!-- Base -->
-		<link rel="preconnect" href="https://fonts.googleapis.com">
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Geo:ital@0;1&display=swap" rel="stylesheet">
+	<!--Polices importees-->
+	<!-- Base -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Geo:ital@0;1&display=swap" rel="stylesheet">
 
-		<!-- Glyphes -->
-		<!-------------------------------------------------------------------------------------------------------->
+	<!-- Glyphes -->
+	<!-------------------------------------------------------------------------------------------------------->
 
-		<script src="../dist/router.js" defer></script>
+	<script src="../dist/router.js" defer></script>
 
-		<title>Transcendance</title>
-	</head>
+	<title>Transcendance</title>
+</head>
 
-	<body class="
+<body class="
 		min-h-screen
 		flex
 		flex-col
 		overflow-x-hidden
 	">
-		
-		<div id="backgroundContainer" class="
+
+	<!-- #region Background -->
+
+	<div id="backgroundContainer" class="
 			fixed
 			inset-0
 			-z-10
@@ -41,139 +43,258 @@
 			transition-transform
 			duration-1000
 			ease-in-out
-		"
-		style="background-image: url('/img/Background1.png');">
+		" style="background-image: url('/img/Background1.png');">
+	</div>
+
+	<!-- <div id="backgroundNext" class="
+			fixed
+			inset-0
+			-z-10
+			bg-cover
+			bg-center
+			bg-no-repeat
+			bg-fixed
+			transition-transform
+			duration-1000
+			ease-in-out
+		"></div> -->
+
+	<!-- #endregion Background -->
+
+	<header class="headerLayout">
+		Pong infinity
+	</header>
+
+	<nav class="navLayout">
+		<a href="#home" class="navLinkLayout">
+			Home
+		</a>
+
+		<a href="#game" class="navLinkLayout">
+			Game
+		</a>
+
+		<a href="#tournament" class="navLinkLayout">
+			Tournament
+		</a>
+
+		<a id="accountNavLink" href="#account" class="navLinkLayout">
+			My account
+		</a>
+
+		<a id="signupNavLink" href="#signup" class="navLinkLayout">
+			Sign up
+		</a>
+
+		<a id="loginNavLink" href="#login" class="navLinkLayout">
+			Login
+		</a>
+
+		<a id="logoutNavLink" href="#logout" class="navLinkLayout">
+			Logout
+		</a>
+	</nav>
+
+	<!-- #region Notif -->
+
+	<div id="notifDiv" class="
+		fixed right-8 bottom-8
+
+		flex flex-col-reverse items-end
+	">
+		
+
+		<div id="notifBubble" class="
+			h-28 w-28
+			flex items-center justify-center
+			rounded-full
+			bg-dark bg-opacity-10 hover:bg-opacity-60
+			transition-all duration-300 ease-in-out
+			peer
+			relative
+		">
+
+			<img src="./assets/other/cristal-notif.png" class="
+				h-3/4 w-3/4 object-contain
+				pointer-events-none
+				select-none
+			">
+
+			<button id="notifBubbleButton" class="
+				absolute w-full h-full object-cover rounded-full
+			"></button>
+
+			<div id="notifNumberBadge" class="
+				absolute -right-2 -top-1
+
+				rounded-full
+
+				w-[1.75rem] h-[1.75rem]
+
+				flex items-center justify-center
+
+				text-white
+				font-bold
+				bg-red-500
+
+			">
+				?
+			</div>
+
 		</div>
 
-		<div id="backgroundNext" class="
-			fixed
-			inset-0
-			-z-10
-			bg-cover
-			bg-center
-			bg-no-repeat
-			bg-fixed
-			transition-transform
-			duration-1000
-			ease-in-out
-		"></div>
+		<div id="notifPannel" class="
+			invisible opacity-0
 
-		<header class="headerLayout">
-			Pong infinity
-		</header>
+			flex flex-col items-center justify-center gap-4
 
-		<nav class="navLayout">
-			<a href="#home" class="navLinkLayout">
-				Home
-			</a>
+			w-fit h-fit
 
-			<a href="#game" class="navLinkLayout">
-				Game
-			</a>
+			p-4
+
+			rounded-2xl
+
+			text-white
+			bg-accent bg-opacity-60
+
+			transition-all duration-300 ease-in-out
+		">
+
+			<h1 class="text-center w-full text-2xl">
+
+				Game invitations
+
+			</h1>
+
 			
-			<a href="#tournament" class="navLinkLayout">
-				Tournament
-			</a>
-			
-			<a id="accountNavLink" href="#account" class="navLinkLayout">
-				My account
-			</a>
-			
-			<a id="signupNavLink" href="#signup" class="navLinkLayout">
-				Sign up
-			</a>
-			
-			<a id="loginNavLink" href="#login" class="navLinkLayout">
-				Login
-			</a>
-			
-			<a id="logoutNavLink" href="#logout" class="navLinkLayout">
-				Logout
-			</a>
-		</nav>
 
-		<main class="mainLayout">
-			<div>Loading ...</div>
-		</main>
-
-
-		<footer class="footerLayout group">
-			<p>This website was created for 42 school's Transcendance project</p>
-			Participants:
-			<ul class="
-				flex flex-row flex-wrap justify-evenly
-				w-2/3
-				mx-auto
+			<ul id="notifList" class="
+				w-5/6
 			">
-				<li class="footerParticipant">
-					Alan De Franceschi
-					<div class="footerParticipantLinks">
-						<a href="https://fr.linkedin.com" rel="noopener noreferrer">
-							<img src="./img/logos/LinkdIn.png" class="footerLogos">
-						</a>
-						<a href="https://github.com" rel="noopener noreferrer">
-							<img src="./img/logos/github.svg" class="footerLogos footerLogoGithub">
-						</a>
-					</div>
-				</li>
 
-				<li class="footerParticipant">
-					Anthony Ciezadlik
-					<div class="footerParticipantLinks">
-						<a href="https://fr.linkedin.com" rel="noopener noreferrer">
-							<img src="./img/logos/LinkdIn.png" class="footerLogos">
-						</a>
-						<a href="https://github.com" rel="noopener noreferrer">
-							<img src="./img/logos/github.svg" class="footerLogos footerLogoGithub">
-						</a>
-					</div>
-				</li>
+				<li class="
+				flex flex-row items-center justify-evenly
+				w-full
+				">
 
-				<li class="footerParticipant">
-					Jacky Ung
-					<div class="footerParticipantLinks">
-						<a href="https://fr.linkedin.com" rel="noopener noreferrer">
-							<img src="./img/logos/LinkdIn.png" class="footerLogos">
-						</a>
-						<a href="https://github.com" rel="noopener noreferrer">
-							<img src="./img/logos/github.svg" class="footerLogos footerLogoGithub">
-						</a>
-					</div>
-				</li>
+					Username
 
-				<li class="footerParticipant">
-					Mervan Kilic
-					<div class="footerParticipantLinks">
-						<a href="https://fr.linkedin.com" rel="noopener noreferrer">
-							<img src="./img/logos/LinkdIn.png" class="footerLogos">
-						</a>
-						<a href="https://github.com" rel="noopener noreferrer">
-							<img src="./img/logos/github.svg" class="footerLogos footerLogoGithub">
-						</a>
-					</div>
-				</li>
+					<button id="notifAcceptButton">
+						✓
+					</button>
 
-				<li class="footerParticipant">
-					Tom Lebon
-					<div class="footerParticipantLinks">
-						<a href="https://fr.linkedin.com" rel="noopener noreferrer">
-							<img src="./img/logos/LinkdIn.png" class="footerLogos">
-						</a>
-						<a href="https://github.com" rel="noopener noreferrer">
-							<img src="./img/logos/github.svg" class="footerLogos footerLogoGithub">
-						</a>
-					</div>
+					<button id="notifDenyButton">
+						✗
+					</button>
+
 				</li>
 
 			</ul>
 
-			<p class="p-2">Website hugely inspired by Cosmogenese</p>
+			<button id="removeAllButton" class="
 
-			<a href="https://www.instagram.com/cosmogenese/" target="_blank" rel="noopener noreferrer">
-				<img src="./img/logos/InstagramLogo.png" class="footerLogos">
-			</a>
-		</footer>
+				w-3/4
+				rounded-2xl
 
-	</body>
+				font-medium text-lg text-red-600
+				bg-white
+			">
+				Remove All
+			</button>
+
+		</div>
+
+		
+
+
+	</div>
+
+	
+
+	<!-- #endregion Notif -->
+
+	<!-- MAIN -->
+	<main class="mainLayout">
+		<div>Loading ...</div>
+	</main>
+
+	<footer class="footerLayout group">
+		<p>This website was created for 42 school's Transcendance project</p>
+		Participants:
+		<ul class="
+				flex flex-row flex-wrap justify-evenly
+				w-2/3
+				mx-auto
+			">
+			<li class="footerParticipant">
+				Alan De Franceschi
+				<div class="footerParticipantLinks">
+					<a href="https://fr.linkedin.com" rel="noopener noreferrer">
+						<img src="./img/logos/LinkdIn.png" class="footerLogos">
+					</a>
+					<a href="https://github.com" rel="noopener noreferrer">
+						<img src="./img/logos/github.svg" class="footerLogos footerLogoGithub">
+					</a>
+				</div>
+			</li>
+
+			<li class="footerParticipant">
+				Anthony Ciezadlik
+				<div class="footerParticipantLinks">
+					<a href="https://fr.linkedin.com" rel="noopener noreferrer">
+						<img src="./img/logos/LinkdIn.png" class="footerLogos">
+					</a>
+					<a href="https://github.com" rel="noopener noreferrer">
+						<img src="./img/logos/github.svg" class="footerLogos footerLogoGithub">
+					</a>
+				</div>
+			</li>
+
+			<li class="footerParticipant">
+				Jacky Ung
+				<div class="footerParticipantLinks">
+					<a href="https://fr.linkedin.com" rel="noopener noreferrer">
+						<img src="./img/logos/LinkdIn.png" class="footerLogos">
+					</a>
+					<a href="https://github.com" rel="noopener noreferrer">
+						<img src="./img/logos/github.svg" class="footerLogos footerLogoGithub">
+					</a>
+				</div>
+			</li>
+
+			<li class="footerParticipant">
+				Mervan Kilic
+				<div class="footerParticipantLinks">
+					<a href="https://fr.linkedin.com" rel="noopener noreferrer">
+						<img src="./img/logos/LinkdIn.png" class="footerLogos">
+					</a>
+					<a href="https://github.com" rel="noopener noreferrer">
+						<img src="./img/logos/github.svg" class="footerLogos footerLogoGithub">
+					</a>
+				</div>
+			</li>
+
+			<li class="footerParticipant">
+				Tom Lebon
+				<div class="footerParticipantLinks">
+					<a href="https://fr.linkedin.com" rel="noopener noreferrer">
+						<img src="./img/logos/LinkdIn.png" class="footerLogos">
+					</a>
+					<a href="https://github.com" rel="noopener noreferrer">
+						<img src="./img/logos/github.svg" class="footerLogos footerLogoGithub">
+					</a>
+				</div>
+			</li>
+
+		</ul>
+
+		<p class="p-2">Website hugely inspired by Cosmogenese</p>
+
+		<a href="https://www.instagram.com/cosmogenese/" target="_blank" rel="noopener noreferrer">
+			<img src="./img/logos/InstagramLogo.png" class="footerLogos">
+		</a>
+	</footer>
+
+</body>
 
 </html>
