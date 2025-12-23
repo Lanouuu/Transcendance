@@ -344,15 +344,30 @@ class Router {
 
 async function notificationHandler(): Promise<void> {
 
+	const	notifBubbleDiv:		HTMLDivElement = document.getElementById("notifBubble") as HTMLDivElement;
+	const	notifBubbleButton:	HTMLButtonElement = document.getElementById("notifBubbleButton") as HTMLButtonElement;
 	const	notifNumberBadge:	HTMLDivElement = document.getElementById("notifNumberBadge") as HTMLDivElement;
+
+	const	notifPannel:		HTMLDivElement = document.getElementById("notifPannel") as HTMLDivElement;
 	const	notifList:			HTMLUListElement = document.getElementById("notifList") as HTMLUListElement;
 	const	removeAllButton:	HTMLButtonElement = document.getElementById("removeAllButton") as HTMLButtonElement;
 	let		notifNumber:		number = 0;
 
-	if (!notifNumberBadge || !notifList || !removeAllButton) {
+	if (!notifBubbleDiv || !notifBubbleButton || !notifNumberBadge
+		|| !notifPannel || !notifList || !removeAllButton) {
 		console.error("Could not get html elements");
 		return ;
 	}
+
+	notifBubbleButton.onclick = () => {
+		notifPannel.classList.toggle('invisible');
+		notifPannel.classList.toggle('opacity-100');
+		notifPannel.classList.toggle('opacity-0');
+		notifBubbleDiv.classList.toggle('rotate-90');
+	};
+
+
+
 
 	// const res = await fetch(``);
 	// if (!res.ok) {
@@ -390,14 +405,19 @@ async function notificationHandler(): Promise<void> {
 	// 	notifNumber++;
 	// }
 	// notifList.appendChild(frag);
-	// notifNumberBadge.innerHTML = String(notifNumber);
+	if (notifNumber == 0)
+		notifNumberBadge.classList.add('hidden');
+	else {
+		notifNumberBadge.classList.remove('hidden');
+		notifNumberBadge.innerHTML = String(notifNumber);
+	}
 
 	removeAllButton.onclick = () => {
 		// FETCH POUR LA DB ??
 
 		notifList.innerHTML = "";
 		notifNumber = 0;
-		notifNumberBadge.innerHTML = String(notifNumber);
+		notifNumberBadge.classList.add('hidden');
 	};
 }
 
@@ -424,8 +444,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	new Router();
 
-	if (sessionStorage.getItem("jwt")){
-		notificationHandler();
-	}
+	notificationHandler();
 });
 

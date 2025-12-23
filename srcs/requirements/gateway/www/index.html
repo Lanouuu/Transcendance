@@ -101,12 +101,11 @@
 		fixed right-8 bottom-8
 
 		flex flex-col-reverse items-end
-
 	">
 		
 
 		<div id="notifBubble" class="
-			h-16 w-16
+			h-28 w-28
 			flex items-center justify-center
 			rounded-full
 			bg-dark bg-opacity-10 hover:bg-opacity-60
@@ -115,12 +114,15 @@
 			relative
 		">
 
-			<img src="./assets/other/notif-icon.svg" class="
-				h-3/5 w-3/5 object-contain
-				invert
+			<img src="./assets/other/cristal-notif.png" class="
+				h-3/4 w-3/4 object-contain
 				pointer-events-none
 				select-none
 			">
+
+			<button id="notifBubbleButton" class="
+				absolute w-full h-full object-cover rounded-full
+			"></button>
 
 			<div id="notifNumberBadge" class="
 				absolute -right-2 -top-1
@@ -141,14 +143,14 @@
 
 		</div>
 
-		<div class="
-			invisible opacity-0 peer-hover:visible peer-hover:opacity-100 hover:visible hover:opacity-100
+		<div id="notifPannel" class="
+			invisible opacity-0
 
-			flex-col items-center justify-center gap-4
+			flex flex-col items-center justify-center gap-4
 
 			w-fit h-fit
 
-			p-8
+			p-4
 
 			rounded-2xl
 
