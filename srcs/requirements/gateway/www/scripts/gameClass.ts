@@ -79,15 +79,35 @@ export class Game {
 			name: undefined,
 			key: { up: false , down: false },
 			score: 0,
-			sprite: undefined as unknown as Sprite
+			sprite: new Sprite ({
+				position: {x: 0, y: 0},
+				velocity: {x: 0, y: 0},
+				imageSrc: '',
+				imgSize: {height: 0, width: 0}
+			}),
 		});
 		this.player2 = new Player({
 			name: undefined,
 			key: { up: false , down: false },
 			score: 0,
-			sprite: undefined as unknown as Sprite
+			sprite: new Sprite ({
+				position: {x: 0, y: 0},
+				velocity: {x: 0, y: 0},
+				imageSrc: '',
+				imgSize: {height: 0, width: 0}
+			}),
 		});
-		this.ball = undefined as unknown as Sprite;
-		this.board = undefined as unknown as Sprite;
+		this.ball = new Sprite ({
+			position: {x: 0, y: 0},
+			velocity: {x: 0, y: 0},
+			imageSrc: '',
+			imgSize: {height: 0, width: 0}
+		}),
+		this.board = new Sprite ({
+			position: {x: 0, y: 0},
+			velocity: {x: 0, y: 0},
+			imageSrc: '',
+			imgSize: {height: 0, width: 0}
+		})
     }
 }

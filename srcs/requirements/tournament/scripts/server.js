@@ -1,7 +1,6 @@
 import Fastify from "fastify";
 import { initDB } from "./database.js";
 import fs from 'fs'
-import { error } from "console";
 
 // Désactiver la vérification SSL pour appels inter-services
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -155,7 +154,7 @@ export async function runServer() {
     try {
 
       const res = await dbtour.get(
-        "SELECT players_ids, mode, nb_current_players, nb_max_players, status FROM tournament WHERE creator_id = ? ORDER BY created_at DESC LIMIT 1",
+        "SELECT players_ids, mode, nb_current_players, nb_max_players, status, id FROM tournament WHERE creator_id = ? ORDER BY created_at DESC LIMIT 1",
         [creator]
       );
       if (!res){
@@ -169,7 +168,7 @@ export async function runServer() {
         return reply.code(400).send({error: "Tournament is playing or finished"});
       }
       const nbPlayers = parseInt(res.nb_current_players, 10);
-      if (nbPlayers < 3) {
+      if (nbPlayers < 3 && res.mode === "remote") {
         return reply.code(400).send({error: "Minimum 3 players required"});
       }
       const tour_ids = res.players_ids || '';
@@ -200,6 +199,18 @@ export async function runServer() {
           },
           body: JSON.stringify({ schedule, mode: res.mode })
         })
+        const response = await data.json()
+        if (response.message !== "Success")
+          throw new Error("Fail to create match")
+        else {
+          const upd = await dbtour.run(
+          "UPDATE tournament SET status='finished' WHERE id=? AND status='playing'",
+          [res.id]
+          );
+          if (upd.changes !== 1) {
+            return reply.code(409).send({ error: "Tournament is not in playing state" });
+          }
+        }
       } else if (res.mode === "local") {
           const data = await fetch(`https://game:3002/localTournament`, {
           method: "POST",
@@ -208,11 +219,19 @@ export async function runServer() {
           },
           body: JSON.stringify({ schedule, mode: res.mode, rmId: creator })
         })
+        const response = await data.json()
+        if (response.message !== "Success")
+          throw new Error("Fail to create match")
+        else {
+          const upd = await dbtour.run(
+          "UPDATE tournament SET status='finished' WHERE id=? AND status='playing'",
+          [res.id]
+          );
+          if (upd.changes !== 1) {
+            return reply.code(409).send({ error: "Tournament is not in playing state" });
+          }
+        }
       }
-
-      // const response = await data.json()
-      // if (response.message !== "Success")
-      //   throw new Error("Fail to create match")
       reply.send({message: "Success"})
       
     } catch (err) {
@@ -222,47 +241,13 @@ export async function runServer() {
     }
     
   });
-  
-  // route a appeler qund un tournoi finit pour set le tournoi a finished
-  fastify.post('/tournamentFinished', async (request, reply) => {
-  const { id,  } = request.body || {};
-  if (!id) {
-    return reply.code(400).send({ error: "Tournament id required" });
-  }
-  const upd = await dbtour.run(
-    "UPDATE tournament SET status='finished' WHERE id=? AND status='playing'",
-    [id]
-  );
-  if (upd.changes !== 1) {
-    return reply.code(409).send({ error: "Tournament is not in playing state" });
-  }
-  reply.send({ message: "Success" });
-});
 
-// fastify.get("/tournament", async (request, reply) => {
-//     try {
-//         console.log("GAME AT CREATION = ", game)
-//         console.log("Local game created with id:", game.id)
-//         reply.send(game)
-//     } catch (e) {
-//         console.log(e.message)
-//         console.log("Error creating local game")
-//     }
-// })
-
-    // creation tournoi
-    // liste d'attente
-    // lancement du tournoi
-    // gestion des matchs, avec ajout des stats
-    // declaration du gagnant, avec ajout de stats
-    // fin tournoi
-
-    fastify.listen({host: HOST, port: PORT}, (err) => {
-      if (err) {
-          fastify.log.error(err);
-          process.exit(1);
-      }
-    });
+  fastify.listen({host: HOST, port: PORT}, (err) => {
+    if (err) {
+        fastify.log.error(err);
+        process.exit(1);
+    }
+  });
 }
 
 runServer();

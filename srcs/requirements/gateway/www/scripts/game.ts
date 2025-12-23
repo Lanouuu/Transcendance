@@ -222,47 +222,46 @@ export async function gameLoop(game: Game, ws: WebSocket) { // BIZARRE LE TYPE
 	try {
 		await loadSprites(game);
 
-
 		window.addEventListener('keydown', (e) => {
-			console.log("keydown detected")
+			let key;
 			switch (e.key) {
 				case 'a':
-					game.player1.key.up = true
+					key = 'a'
 					break
 				case 'd':
-					game.player1.key.down = true
+					key = 'd'
 					break
 				case 'ArrowLeft':
-					game.player2.key.up = true
+					key = 'ArrowLeft'
 					break
 				case 'ArrowRight':
-					game.player2.key.down = true
+					key = 'ArrowRight'
 					break
 			}
 			if (ws.readyState === WebSocket.OPEN)
-				ws.send(JSON.stringify({game, message: "input"}))
+				ws.send(JSON.stringify({id: game.id, message: "input", key, event: "keydown"}))
 			else
 				console.error("WebSocket is not open")
 		})
 
 		window.addEventListener('keyup', (e) => {
-			console.log("keyup detected")
+			let key;
 			switch (e.key) {
 				case 'a':
-					game.player1.key.up = false
+					key = 'a'
 					break
 				case 'd':
-					game.player1.key.down = false
+					key = 'd'
 					break
 				case 'ArrowLeft':
-					game.player2.key.up = false
+					key = 'ArrowLeft'
 					break
 				case 'ArrowRight':
-					game.player2.key.down = false
+					key = 'ArrowRight'
 					break
 			}
 			if (ws.readyState === WebSocket.OPEN)
-				ws.send(JSON.stringify({game, message: "input"}))
+				ws.send(JSON.stringify({id: game.id, message: "input", key, event: "keyup"}))
 			else
 				console.error("WebSocket is not open")
 		})
@@ -376,8 +375,8 @@ async function loadSprites(game: Game) {
         )
         initSprite(board, player1, player2, ball)
         game.board = board;
-        game.player1.sprite = player1;
-        game.player2.sprite = player2;
+        game.player1.sprite.image = player1.image;
+        game.player2.sprite.image = player2.image;
         game.ball = ball;
     }catch(e) {
         console.error("ERREUR CHARGEMENT IMAGES", e);
