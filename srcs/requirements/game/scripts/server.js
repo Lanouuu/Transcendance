@@ -98,6 +98,7 @@ function gameLoop(game) {
         startTimer(game)
     }
     if (game.started === true) {
+        game.message = "Playing"
         // Player 1
         if (game.player1.key.up) {
 
@@ -153,7 +154,7 @@ function gameLoop(game) {
                 game.ball.position.x = game.player2.sprite.position.x - game.ball.imgSize.width
             }
         }
-        game.message = "Playing"
+
         if (game.player1.score === 5) {
             game.message = "END"
             game.winner = "Player1"
@@ -166,7 +167,7 @@ function gameLoop(game) {
         }
         game.socket.forEach(socket => {
             if (socket.readyState === 1) {
-                socket.send(JSON.stringify(game));
+                socket.send(JSON.stringify(serialize(game)));
             }
         })
     }
@@ -175,6 +176,55 @@ function gameLoop(game) {
             sendResult(game)
         clearInterval(game.loopId)
     }
+}
+
+function serialize(data) {
+    const game = {
+        id: data.id,
+        message: data.message,
+        displayWinner: data.displayWinner,
+        player1: {
+            name: data.player1.name,
+            score: data.player1.score,
+            sprite: {
+                position: {
+                    x: data.player1.sprite.position.x,
+                    y: data.player1.sprite.position.y
+                },
+                loaded: data.player1.sprite.loaded
+            },
+        },
+        player2: {
+            name: data.player2.name,
+            score: data.player2.score,
+            sprite: {
+                position: {
+                    x: data.player2.sprite.position.x,
+                    y: data.player2.sprite.position.y
+                },
+                loaded: data.player2.sprite.loaded
+            },
+        },
+        ball: {
+            position: {
+                x: data.ball.position.x,
+                y: data.ball.position.y
+            },
+            loaded: undefined            
+        },
+        board: {
+            position: {
+                x: data.board.position.x,
+                y: data.board.position.y
+            },
+            imgSize: {
+                height: data.board.imgSize.height,
+                width: data.board.imgSize.width
+            },          
+            loaded: undefined            
+        }     
+    }
+    return game
 }
 
 function localGamehandler(id, ws) {
@@ -198,18 +248,13 @@ function RemoteGamehandler(id, ws) {
     const game = games.get(parseInt(id, 10))
     
     if (ws.userId === undefined && game.socket.length === 0) {
-        console.log("PARING WEBSOCKET WITH PLAYER1")
         ws.userId = game.player1.id
-        console.log("websocket is = ", ws.userId)
     } else if (ws.userId === undefined && game.socket.length === 1) {
-        console.log("PARING WEBSOCKET WITH PLAYER2")
         ws.userId = game.player2.id
-        console.log("websocket is = ", ws.userId)
         game.message = "start"
     }
     game.socket.push(ws)
-
-    ws.send(JSON.stringify({game, message: "Init"}))
+    ws.send(JSON.stringify({game: serialize(game), message: "Init"}))
     if (game.message === "start")
         game.loopId = setInterval(() => gameLoop(game), 16)
 }
@@ -221,20 +266,53 @@ function TournamentHandler(id, gameId, tournament_id, ws) {
     tournamentSocket.set(parseInt(id, 10), ws)
 }
 
-function localInputHandler(game, res) {
-    game.player1.key.up = res.game.player1.key.up
-    game.player1.key.down = res.game.player1.key.down
-    game.player2.key.up = res.game.player2.key.up
-    game.player2.key.down = res.game.player2.key.down
+function localInputHandler(game, key, event) {
+    if (event === "keydown") {
+        if (key === 'a')
+            game.player1.key.up = true
+        else if (key === 'd')
+            game.player1.key.down = true
+        else if (key === "ArrowLeft")
+            game.player2.key.up = true
+        else if (key === "ArrowRight")
+            game.player2.key.down = true
+    } else if (event === "keyup") {
+         if (key === 'a')
+            game.player1.key.up = false
+        else if (key === 'd')
+            game.player1.key.down = false
+        else if (key === "ArrowLeft")
+            game.player2.key.up = false
+        else if (key === "ArrowRight")
+            game.player2.key.down = false       
+    }
 }
 
-function remoteInputHandler(game, res, ws) {
+function remoteInputHandler(game, ws, key, event) {
     if (parseInt(ws.userId, 10) === parseInt(game.player1.id, 10)) {
-        game.player1.key.up = res.game.player1.key.up
-        game.player1.key.down = res.game.player1.key.down
+        if (event === "keydown") {
+            if (key === 'a' || key === "ArrowLeft")
+                game.player1.key.up = true;
+            else if (key === 'd' || key === "ArrowRight")
+                game.player1.key.down = true;
+        } else if (event === "keyup") {
+            if (key === 'a' || key === "ArrowLeft")
+                game.player1.key.up = false;
+            else if (key === 'd' || key === "ArrowRight")
+                game.player1.key.down = false;            
+        }
     } else if (parseInt(ws.userId, 10) === parseInt(game.player2.id, 10)) {
-        game.player2.key.up = res.game.player2.key.up
-        game.player2.key.down = res.game.player2.key.down
+        if (event === "keydown") {
+            if (key === 'a' || key === "ArrowLeft")
+                game.player2.key.up = true;
+            else if (key === 'd' || key === "ArrowRight")
+                game.player2.key.down = true;
+        } else if (event === "keyup") {
+            if (key === 'a' || key === "ArrowLeft")
+                game.player2.key.up = false;
+            else if (key === 'd' || key === "ArrowRight")
+                game.player2.key.down = false;            
+        }
     }
 }
 
@@ -251,7 +329,6 @@ wss.on('listening', () => {
 wss.on('connection', function connection(ws) {
   ws.on('error', console.error)
 
-  ws.initialized = false
   ws.on('message', function message(data) {
     const res = JSON.parse(data.toString())
     if (res.message === "InitLocal") 
@@ -261,77 +338,17 @@ wss.on('connection', function connection(ws) {
     else if (res.message === "InitTournament")
         TournamentHandler(res.id, res.gameId, res.tournament_id, ws)
     else if (res.message === "input") {
-        if (!games.has(parseInt(res.game.id, 10))) {
+        if (!games.has(parseInt(res.id, 10))) {
             ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
             return
         }
-        const game = games.get(parseInt(res.game.id, 10))
+        const game = games.get(parseInt(res.id, 10))
         if (game.mode === "local")
-            localInputHandler(game, res)
+            localInputHandler(game, res.key, res.event)
         else if (game.mode === "remote" || game.mode === "tournament")
-            remoteInputHandler(game, res, ws)
+            remoteInputHandler(game, ws, res.key, res.event)
         games.set(game.id, game)
     }
-    // if (res.game.mode === "tournament" && !ws.initialized) {
-    //     if (res.message !== "InitSocket") {
-    //         ws.send(JSON.stringify({
-    //             message: "Error",
-    //             error: "Your first message has to be InitSocket and send your userId"
-    //         }))
-    //         ws.close()
-    //         return
-    //     } else {
-    //         ws.initialized = true
-    //         ws.userId = res.game.creator_id
-    //         ws.gameId = res.game.id
-    //         tournamentSocket.set(parseInt(ws.userId, 10), ws)
-    //         // console.log("When user send initSocket: ", tournamentSocket)
-    //         // console.log("When user send initSocket: ", tournamentSocket.get(ws.userId))
-    //         ws.send(JSON.stringify({message: "Initialized"}))
-    //         return
-    //     }
-    // }
-    // if (!games.has(parseInt(res.game.id, 10))) {
-    //     ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
-    //     return
-    // }
-    // const game = games.get(parseInt(res.game.id, 10))
-
-    // if (res.message == "Init")
-    // {
-    //     if (game.mode === "remote") {
-    //         if (ws.userId === undefined && game.socket.length === 0) {
-    //             console.log("PARING WEBSOCKET WITH PLAYER1")
-    //             ws.userId = game.player1.id
-    //             console.log("websocket is = ", ws.userId)
-    //         } else if (ws.userId === undefined && game.socket.length === 1) {
-    //             console.log("PARING WEBSOCKET WITH PLAYER2")
-    //             ws.userId = game.player2.id
-    //             console.log("websocket is = ", ws.userId)
-    //         }
-    //     }
-    //     game.socket.push(ws)
-    //     if (game.message === "start")
-    //         game.loopId = setInterval(() => gameLoop(game), 16)
-    // }
-    // else {
-    //     if (game.mode === "remote") {
-    //         if (ws.userId === game.player1.id) {
-    //             game.player1.key.up = res.game.player1.key.up
-    //             game.player1.key.down = res.game.player1.key.down
-    //         } else if (ws.userId === game.player2.id) {
-    //             game.player2.key.up = res.game.player2.key.up
-    //             game.player2.key.down = res.game.player2.key.down
-    //         }
-    //     } else {
-    //         game.player1.key.up = res.game.player1.key.up
-    //         game.player1.key.down = res.game.player1.key.down
-    //         game.player2.key.up = res.game.player2.key.up
-    //         game.player2.key.down = res.game.player2.key.down
-    //     }
-    // }
-    // games.set(game.id, game)
-    // console.log("GAME AFTER SET IN WS CONNECTION = ", game)
   })
 })
 
@@ -412,6 +429,8 @@ function findRemotePendingGame() {
     return true
 }
 
+
+
 fastify.get("/remote", async (request, reply) => {
     try {
 	    const userId = request.headers["x-user-id"]
@@ -436,16 +455,8 @@ fastify.get("/remote", async (request, reply) => {
             const game = games.get(gameTemp.id)
             game.player2.id = queue[0][0]
             game.player2.name = queue[0][1]
-            // game.message = "start"
             games.set(game.id, game)
             reply.send({message: "Success", id: game.id})
-            // if (game.socket[0].readyState === WebSocket.OPEN) {
-            //     game.socket.forEach(socket => {
-            //        if (socket.readyState === 1) {
-            //            socket.send(JSON.stringify(game));
-            //        }
-            //    })
-            // }
         }
         queue.shift()
     } catch (e) {
@@ -551,6 +562,7 @@ fastify.post("/localTournament", async (request, reply) => {
                     await createLocalTournament(match, rmId)
             }
         }
+        reply.send({message: "Success"})
     }catch(err) {
         console.log("ERROR IN local TOURNAMENT: ", err.message)
         reply.code(400).send({error: "Fail to create game"});
@@ -568,6 +580,7 @@ fastify.post("/remoteTournament", async (request, reply) => {
         for (const round of schedule) {
             await Promise.all(round.map(match => createRemoteTournament(match)))
         }
+        reply.send({message: "Success"})
     }catch(err) {
         console.log("ERROR IN REMOTE TOURNAMENT: ", err.message)
         reply.code(400).send({error: "Fail to create game"});

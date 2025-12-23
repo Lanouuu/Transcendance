@@ -1,7 +1,6 @@
 import Fastify from "fastify";
 import { initDB } from "./database.js";
 import fs from 'fs'
-import { error } from "console";
 
 // Désactiver la vérification SSL pour appels inter-services
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -164,7 +163,7 @@ export async function runServer() {
       }
 
       const nbPlayers = parseInt(res.nb_current_players, 10);
-      if (nbPlayers < 3) {
+      if (nbPlayers < 3 && res.mode === "remote") {
         return reply.code(400).send({error: "Minimum 3 players required"});
       }
       const tour_ids = res.players_ids || '';
@@ -184,6 +183,9 @@ export async function runServer() {
           },
           body: JSON.stringify({ schedule, mode: res.mode })
         })
+        const response = await data.json()
+        if (response.message !== "Success")
+          throw new Error("Fail to create match")
       } else if (res.mode === "local") {
           const data = await fetch(`https://game:3002/localTournament`, {
           method: "POST",
@@ -192,10 +194,10 @@ export async function runServer() {
           },
           body: JSON.stringify({ schedule, mode: res.mode, rmId: creator })
         })
+        const response = await data.json()
+        if (response.message !== "Success")
+          throw new Error("Fail to create match")
       }
-      // const response = await data.json()
-      // if (response.message !== "Success")
-      //   throw new Error("Fail to create match")
       reply.send({message: "Success"})
       
     } catch (err) {
@@ -206,31 +208,12 @@ export async function runServer() {
 
   });
 
-
-// fastify.get("/tournament", async (request, reply) => {
-//     try {
-//         console.log("GAME AT CREATION = ", game)
-//         console.log("Local game created with id:", game.id)
-//         reply.send(game)
-//     } catch (e) {
-//         console.log(e.message)
-//         console.log("Error creating local game")
-//     }
-// })
-
-    // creation tournoi
-    // liste d'attente
-    // lancement du tournoi
-    // gestion des matchs, avec ajout des stats
-    // declaration du gagnant, avec ajout de stats
-    // fin tournoi
-
-    fastify.listen({host: HOST, port: PORT}, (err) => {
-      if (err) {
-          fastify.log.error(err);
-          process.exit(1);
-      }
-    });
+  fastify.listen({host: HOST, port: PORT}, (err) => {
+    if (err) {
+        fastify.log.error(err);
+        process.exit(1);
+    }
+  });
 }
 
 runServer();
