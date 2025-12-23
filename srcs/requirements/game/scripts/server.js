@@ -350,6 +350,10 @@ wss.on('connection', function connection(ws) {
         games.set(game.id, game)
     }
   })
+
+  ws.on('close', function close(ws) {
+    console.log("CLIENT DECONNECTER")
+  }) 
 })
 
 function loadSprite(game) {
