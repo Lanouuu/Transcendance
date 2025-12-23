@@ -225,13 +225,13 @@ export async function runServer() {
   
   // route a appeler qund un tournoi finit pour set le tournoi a finished
   fastify.post('/tournamentFinished', async (request, reply) => {
-  const { id, winner_id } = request.body || {};
+  const { id,  } = request.body || {};
   if (!id) {
     return reply.code(400).send({ error: "Tournament id required" });
   }
   const upd = await dbtour.run(
-    "UPDATE tournament SET status='finished', winner_id=? WHERE id=? AND status='playing'",
-    [winner_id ?? null, id]
+    "UPDATE tournament SET status='finished' WHERE id=? AND status='playing'",
+    [id]
   );
   if (upd.changes !== 1) {
     return reply.code(409).send({ error: "Tournament is not in playing state" });
