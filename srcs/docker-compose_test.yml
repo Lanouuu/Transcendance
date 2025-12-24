@@ -34,6 +34,8 @@ services:
     expose: ["3000"]
     env_file:
       - .env
+    volumes:
+      - users_data:/app/data
     networks:
       - pong_app
     restart: always
@@ -84,6 +86,7 @@ services:
       - .env
     volumes:
       - ssl_certifs:/etc/ssl:ro
+      - tournament_data:/app/data
     networks:
       - pong_app
     restart: always
@@ -102,3 +105,5 @@ networks:
 
 volumes:
   ssl_certifs:
+  users_data:
+  tournament_data:
