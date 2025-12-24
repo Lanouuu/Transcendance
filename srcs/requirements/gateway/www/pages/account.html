@@ -104,24 +104,31 @@
 					flex flex-col items-center justify-center gap-16 
 
 					text-7xl
+
+					relative
 				">
 
 					<p id="accountBoxUsername" class="text-center w-full">
 						Username<br>
 						<span class="text-5xl break-words block">
-							rien
+							?
 						</span>
 					</p>
 					<p id="accountBoxMail" class="text-center w-full">
 						Mail<br>
 						<span class="text-5xl break-words block">
-							nada@degun.fr
+							?
 						</span>
 					</p>
 					<p id="accountBox2fa" class="text-center w-full flex flex-col items-center justify-normal">
 						2FA<br>
 						<input type="checkbox" disabled>
 					</p>
+
+					<div id="userInfosMsg" class="opacity-0 absolute -top-2
+						text-center h-4 text-xl
+						transition-all duration-200 ease-in-out
+					"></div>
 
 				</div>
 
@@ -134,6 +141,7 @@
 
 				flex flex-col gap-6 justify-center items-center
 
+				relative
 			">
 
 				<input id="profilePicInput" type="file" accept="image/*" class="hidden">
@@ -205,11 +213,17 @@
 					
 				</div>
 
+				<div id="userPicMsg" class="opacity-0 absolute -top-2
+					text-center h-4 text-xl
+					transition-all duration-200 ease-in-out
+				"></div>
 			</div>
 
 			<!-- Stats -->
 			<div id="accountBoxStats" class="
 				col-start-2 col-end-3 row-start-2 row-end-3
+
+				w-full h-full min-h-0
 
 				grid grid-cols-2 grid-rows-[1fr_4fr]
 			">
@@ -218,26 +232,28 @@
 					col-span-2 row-span-1
 					flex items-center justify-center
 					text-4xl
-					
 				">
-					Basic stats
+					Winrates
 				</h2>
 
-				<span id="accountInfosPongWinrate" class="
-					row-span-1 col-span-1 flex items-center justify-center text-6xl
+				<div class=" row-span-1 col-span-1
+					w-full h-full min-h-0
+					flex flex-col items-center justify-center gap-6
+					text-5xl
+					relative
 				">
-					No Data
-				</span>
+					<img src="./assets/other/pong.png" class="h-1/5 absolute top-6">
+					<div id="accountInfosPongWinrate">?</div>
+				</div>
 
-				<div id="accountStatsGraph" class="
-					col-span-1 row-span-1
-					flex flex-col place-content-center place-items-center
+				<div class=" row-span-1 col-span-1
+					w-full h-full min-h-0
+					flex flex-col items-center justify-center gap-6
+					text-5xl
+					relative
 				">
-
-					<h3 class="text-3xl">Graph</h3>
-
-					No data
-
+					<img src="./assets/other/snake.png" class="h-1/5 absolute top-6">
+					<div id="accountInfosSnakeWinrate">?</div>
 				</div>
 
 			</div>
@@ -264,6 +280,7 @@
 			<div class="
 				col-start-1 col-end-2 row-span-4
 				flex flex-col items-center
+				relative
 			">
 				<h1 class="h-1/6 text-center content-center">
 					OUAI LA LISTE D'AMIS
@@ -277,6 +294,11 @@
 				">
 					You have no friends ! (haha)
 				</ul>
+				
+				<div id="friendListMsg" class="opacity-0 absolute
+					top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+					text-center text-xl
+				"></div>				
 
 			</div>
 
