@@ -38,14 +38,18 @@ export function signup() {
 
 				// Afficher le QR code si 2FA activé
 				if (data.qrcodedata) {
-					let img = document.querySelector("#signup-form img.qr") as HTMLImageElement;
-					if (!img) {
-						img = document.createElement("img");
-						img.classList.add("qr");
-						form.appendChild(img);
-					}
-					img.src = data.qrcodedata;
-					img.alt = "QR Code 2FA";
+					if (typeof data.qrcodedata === 'string' && data.qrcodedata.startsWith('data:image/png;base64,')) {
+        				let img = document.querySelector("#signup-form img.qr") as HTMLImageElement;
+        				if (!img) {
+        				    img = document.createElement("img");
+        				    img.classList.add("qr");
+        				    form.appendChild(img);
+        				}
+        				img.src = data.qrcodedata;
+        				img.alt = "QR Code 2FA";
+    				} else {
+    				    console.error('Invalid QR code data format');
+    				}
 				}
 			} catch (err) {
 					console.error(err);

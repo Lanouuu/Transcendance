@@ -456,7 +456,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	delFriendButton.appendChild(delFriendIcon);
 	delFriendButton.onclick = async () => {
 		try {
-			if (!confirm(`Delete ${friendName} from your friend's list ?`)) return ;
+			if (!confirm(`Delete this from your friend's list ?`)) return ;
 			const res = await fetch(`${USERS_URL}/delete-friend`, {
 				method: "POST",
 				headers: {
@@ -608,7 +608,7 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 	blockFriendButton.appendChild(blockFriendIcon);
 	blockFriendButton.onclick = async () => {
 		try {
-			if (!confirm(`Block ${senderName} ?`)) return ;
+			if (!confirm(`Block this friend ?`)) return ;
 			const res = await fetch(`${USERS_URL}/block-friend`, {
 				method: "POST",
 				headers: {
@@ -656,7 +656,7 @@ function createLiBlockedItem(blockedId: string, blockedName: string, userId: str
 	unblockFriendButton.appendChild(unblockFriendIcon);
 	unblockFriendButton.onclick = async () => {
 		try {
-			if (!confirm(`Unblock ${blockedName} ?`)) return ;
+			if (!confirm(`Unblock this user ?`)) return ;
 			const res = await fetch(`${USERS_URL}/unblock-user`, {
 				method: "POST",
 				headers: {

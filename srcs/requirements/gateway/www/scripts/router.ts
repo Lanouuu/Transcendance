@@ -49,6 +49,24 @@ class Router {
 		this.initRouter();
 	}
 
+
+	private sanitizeHTML(html: string): string {
+        // Supprimer tous les <script>
+        html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+        
+        // Supprimer tous les event handlers (onclick, onerror, onload, etc.)
+        html = html.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '');
+        html = html.replace(/\son\w+\s*=\s*[^\s>]*/gi, '');
+        
+        // Supprimer javascript: dans les URLs
+        html = html.replace(/javascript:/gi, '');
+        
+        // Supprimer data: urls (peuvent contenir du JS)
+        html = html.replace(/data:text\/html/gi, '');
+        
+        return html;
+    }
+
 	private async checkAuth(): Promise<boolean> {
     	const token = sessionStorage.getItem("jwt");
 
@@ -274,7 +292,7 @@ class Router {
 				const content = await response.text();
 
 				// Updates the <main> of index.html
-				this.mainContent.innerHTML = content;
+				this.mainContent.innerHTML = this.sanitizeHTML(content);
 
 				this.currentPage = page;
 
@@ -320,11 +338,15 @@ class Router {
 				}
 		} catch (error) {
 			console.error('Error loading page: ', error);
-			this.mainContent.innerHTML = '<h1>Page not found</h1>'; // A changer ?
+			this.mainContent.innerHTML = this.sanitizeHTML('<h1>Page not found</h1>'); // A changer ?
 		}
 	}
 
 	private displayError(code: string): void {
+
+		const validCodes = ['400', '401', '403', '404', '500'];
+    	const safeCode = validCodes.includes(code) ? code : '500';
+
 		const errorMessages: Record<string, { title: string, message: string}> = {
 			'400': {
 				title: 'Bad Request',
@@ -348,7 +370,7 @@ class Router {
 			}
 		};
 
-		const error = errorMessages[code] || errorMessages['500'];
+		const error = errorMessages[safeCode] || errorMessages['500'];
 
 		this.mainContent.innerHTML = `
 			<div class="flex flex-col 
@@ -357,13 +379,13 @@ class Router {
 				text-center 
 				font-geo text-base">
 
-				<h1 class="text-6xl font-bold text-red-500 mb-4">${code}</h1>
+				<h1 class="text-6xl font-bold text-red-500 mb-4">${safeCode}</h1>
 
 				<h2 class="text-3xl font-semibold mb-4">${error.title}</h2>
 
 				<p class="text-xl mb-8">${error.message}</p>
 
-				<a href="#${code === '401' ? 'login' : 'home'}" 
+				<a href="#${safeCode === '401' ? 'login' : 'home'}" 
 					class="mx-auto py-3 w-40
                 		rounded-xl
                 		bg-prim bg-opacity-90 hover:bg-opacity-100
@@ -371,7 +393,7 @@ class Router {
                 		shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
                 		hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
                 		transition">
-					${code === '401' ? 'Return to Login' : 'Return to Home'}
+					${safeCode === '401' ? 'Return to Login' : 'Return to Home'}
 				</a>
 
 			</div>
@@ -447,7 +469,7 @@ async function notificationHandler(): Promise<void> {
 		notifNumberBadge.classList.add('hidden');
 	else {
 		notifNumberBadge.classList.remove('hidden');
-		notifNumberBadge.innerHTML = String(notifNumber);
+		notifNumberBadge.textContent = String(notifNumber);
 	}
 
 	removeAllButton.onclick = () => {
