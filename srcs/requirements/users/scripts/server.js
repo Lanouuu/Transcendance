@@ -56,7 +56,7 @@ export async function runServer() {
         return reply.status(201).send({ success: true });
       } catch (err) {
         fastify.log.error(err);
-        return reply.code(500).send({ error: "Database error" });
+        return reply.code(400).send({ error: "Database error" });
       }
     });
 
@@ -71,7 +71,7 @@ export async function runServer() {
         return reply.send(user);
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error: " + err.message });
+        return reply.status(400).send({ error: "Internal Server Error: " + err.message });
       }
     });
 
@@ -86,7 +86,7 @@ export async function runServer() {
         return reply.send(user);
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error: " + err.message });
+        return reply.status(400).send({ error: "Internal Server Error: " + err.message });
       }
     });
 
@@ -135,7 +135,7 @@ export async function runServer() {
         reply.send({ success: true, avatar:fileName });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -160,7 +160,7 @@ export async function runServer() {
         return reply.type(`image/${path.extname(user.avatar_path).slice(1)}`).send(fs.createReadStream(filePath));
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -179,7 +179,7 @@ export async function runServer() {
         return reply.send({ online: isOnline === 1});
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -226,7 +226,7 @@ export async function runServer() {
         reply.send(sanitizedUser);
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -259,7 +259,7 @@ export async function runServer() {
         return reply.status(200).send({ success: true, message: "Name updated" });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -312,7 +312,7 @@ export async function runServer() {
         return reply.status(200).send({ success: true, message: "Mail updated" });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
     
@@ -372,7 +372,7 @@ export async function runServer() {
         return reply.status(200).send({ success: true, message: "Password updated" });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -468,7 +468,7 @@ export async function runServer() {
         return reply.status(201).send({ success: true, message: "Invitation send to friend" });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -500,7 +500,7 @@ export async function runServer() {
         return reply.status(200).send({ pendingList });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -527,7 +527,7 @@ export async function runServer() {
         reply.send({ success: true, message: "Invitation accepted" });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -558,7 +558,7 @@ export async function runServer() {
         return reply.send({ success: true, message: "Invitation declined" });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -590,7 +590,7 @@ export async function runServer() {
         return reply.send({ success: true, message: "Friend deleted"});
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -623,7 +623,7 @@ export async function runServer() {
         return reply.send({ success: true, message: "Friend blocked"});
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -654,7 +654,7 @@ export async function runServer() {
         return reply.send({ success: true, message: "Friend unblocked"});
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -689,7 +689,7 @@ export async function runServer() {
         return reply.status(200).send({ friendsList });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -725,7 +725,7 @@ export async function runServer() {
         reply.status(200).send({ blockedUsers });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -781,7 +781,7 @@ export async function runServer() {
         return reply.status(201).send({ success: true, message: "Match saved" });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 
@@ -807,7 +807,7 @@ export async function runServer() {
         return reply.status(200).send({ matchList });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error" });
+        return reply.status(400).send({ error: "Internal Server Error" });
       }
     });
 

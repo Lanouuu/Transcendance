@@ -87,7 +87,7 @@ export default async function routes(fastify, options) {
 
       } catch (err) {
         console.error("OAuth 42 error:", err);
-        reply.code(500).send({ error: "OAuth 42 callback failed" });
+        reply.code(400).send({ error: "OAuth 42 callback failed" });
       }
     });
 
@@ -270,7 +270,7 @@ export default async function routes(fastify, options) {
         reply.send({ message: "Logged out" });
       } catch (err) {
         fastify.log.error(err, "logout error");
-        return reply.code(500).send({ error: "Logout failed" });
+        return reply.code(400).send({ error: "Logout failed" });
       }
     });
 }

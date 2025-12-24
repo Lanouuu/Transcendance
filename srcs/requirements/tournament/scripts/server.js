@@ -115,7 +115,7 @@ export async function runServer() {
       reply.send({ message: "Success", tournament_id: result.lastID, name , id: creator_id});
     } catch (err) {
       fastify.log.error({ err }, "Tournament creation failed");
-      reply.code(500).send({ error: "Database insertion failed" });
+      reply.code(400).send({ error: "Database insertion failed" });
     }
   });
 
@@ -191,7 +191,7 @@ export async function runServer() {
       reply.send({ message: "Success", text: "Player added to tournament", tournament_id: idTour, id: res.creator_id });
     } catch (err) {
       fastify.log.error({ err }, "Add player to tournament failed");
-      reply.code(500).send({ error: "Database update failed" });
+      reply.code(400).send({ error: "Database update failed" });
     }
   });
 
