@@ -33,20 +33,28 @@ export async function runServer() {
       limits: { fileSize: 2 * 1024 * 1024 },
     });
 
-    async function isGuest(userID) {
-      if (!userID) return false;
-      const stmt = usersDB.prepare("SELECT is_guest FROM users WHERE id = ?");
-      const result = stmt.get(userID);
-      return result?.is_guest === 1;
-    }
+    async function checkIsGuest(userID) {
+      if (!userID) {
+        return false;
+      } else {
+        const checkStmt = usersDB.prepare("SELECT is_gest FROM users WHERE id = ?");
+        const checkRes = checkStmt.get(userID);
+        if (checkRes && checkRes.is_guest) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    };
 
     function blockGuests(handler) {
       return async (req, reply) => {
-        const userID = req.headers["x-user-id"] || req.params.id;
-        if (await isGuest(userID)) {
-          return reply.status(403).send({ error: "Guests cannot perform this action" });
+        const userID = req.headers["x-user-id"];
+        if (await checkIsGuest(userID)) {
+          return reply.status(403).send({ error: "Unauthorized for guests" });
+        } else {
+          return handler(req, reply);
         }
-        return handler(req, reply);
       };
     }
 
