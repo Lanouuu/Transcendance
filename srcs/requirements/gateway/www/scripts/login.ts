@@ -2,8 +2,9 @@ export function login() {
 
 	const BASE_URL: string = `${window.location.origin}/auth_service`;
 
-	const form = document.getElementById("login-form");
-	const button42 = document.getElementById("42ConnectionButton");
+	const form:			HTMLFormElement = document.getElementById("login-form") as HTMLFormElement;
+	const buttonGest:	HTMLButtonElement = document.getElementById("guestConnectionButton") as HTMLButtonElement;
+	const button42:		HTMLButtonElement = document.getElementById("42ConnectionButton") as HTMLButtonElement;
 
 	if (form) {
 		form.addEventListener("submit", async (e) => {
@@ -34,7 +35,7 @@ export function login() {
             		}
 				}
 
-				if (res.ok && data.token) {
+				if (res.ok && data.token && data.id) {
 					sessionStorage.setItem("jwt", data.token);
 					sessionStorage.setItem("userId", data.id);
 
@@ -65,5 +66,44 @@ export function login() {
 				console.error(err);
 			}
 		})
+	}
+	if (buttonGest) {
+		buttonGest.addEventListener('click', async () => {
+
+			try {
+				const res = await fetch(`${window.location.origin}/users/create-guest`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({}), 
+				});
+
+				// Debug: afficher ce que le serveur renvoie vraiment
+    	        if (res.redirected) {
+     	           console.error("Request was redirected! Check your gateway config.");
+      	          return;
+       	     	}
+
+				if (res.ok) 
+					console.log(res);
+				const data = await res.json();
+				const msg = document.getElementById("login-msg");
+
+				if (msg && !res.ok) {
+               		msg.textContent = data.error || data.message;
+               		msg.style.color = "red";
+					return ;
+				}
+				if (data.token && data.id) {
+					sessionStorage.setItem("jwt", data.token);
+					sessionStorage.setItem("userId", data.id);
+
+					setTimeout(async () => {
+						window.location.hash = '#game';
+					}, 800);
+				}
+			} catch (error) {
+				console.error("Failed guest connection:", error);
+			}
+		});
 	}
 }

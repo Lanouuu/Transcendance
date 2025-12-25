@@ -33,6 +33,23 @@ export async function runServer() {
       limits: { fileSize: 2 * 1024 * 1024 },
     });
 
+    async function isGuest(userID) {
+      if (!userID) return false;
+      const stmt = usersDB.prepare("SELECT is_guest FROM users WHERE id = ?");
+      const result = stmt.get(userID);
+      return result?.is_guest === 1;
+    }
+
+    function blockGuests(handler) {
+      return async (req, reply) => {
+        const userID = req.headers["x-user-id"] || req.params.id;
+        if (await isGuest(userID)) {
+          return reply.status(403).send({ error: "Guests cannot perform this action" });
+        }
+        return handler(req, reply);
+      };
+    }
+
     //#endregion init_users_server
     
     /****************************************************************************/
@@ -90,6 +107,61 @@ export async function runServer() {
       }
     });
 
+    fastify.post("/create-guest", async (req, reply) => {
+      try {
+        const lastRow = usersDB.prepare("SELECT MAX(id) AS id FROM users").get();
+        const guestID = (lastRow?.id || 0) + 1;
+        const guestName = `guest${guestID}`;
+        const mail = `${guestName}@guest.fr`;
+        const password = `${guestName}-Guest2025`;
+        const code2FA = null;
+
+        if (!guestName || !mail || !password)
+          return reply.code(400).send({ error: "Missing name or mail or pass" });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const stmt = usersDB.prepare(`
+          INSERT INTO users (name, mail, password, is_guest)
+          VALUES (?, ?, ?, ?)
+        `);
+        stmt.run(guestName, mail, hashedPassword, 1);
+
+        const guestLog = await fetch('http://auth_service:3001/login', {
+          method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ mail, password, code2FA }),
+        });
+
+        if (!guestLog.ok)
+          return reply.status(400).send({ error: "Counldn't login guest" });
+        
+        const data = await guestLog.json();
+
+        return reply.status(201).send({ token: data.token, id: data.id });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error: " + err.message });
+      }
+    });
+
+    fastify.get("/is-guest", async (req, reply) => {
+      try {
+        const guestID = req.headers["x-user-id"];
+        if (!guestID) {
+          return reply.status(400).send({ error: "ID required" });
+        }
+
+        const checkStmt = usersDB.prepare("SELECT is_guest FROM users WHERE id = ?");
+        const checkRes = checkStmt.get(guestID);
+
+        return reply.status(200).send({ isGuest: checkRes.is_guest });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(500).send({ error: "Internal Server Error: " + err.message });
+      }
+    });
+
     //#endregion create_user
 
     /****************************************************************************/
@@ -98,7 +170,7 @@ export async function runServer() {
 
     //#region avatar_management
 
-    fastify.post("/upload-avatar/:id", async (req, reply) => {
+    fastify.post("/upload-avatar/:id",  blockGuests(async (req, reply) => {
       try {
         const data = await req.file();
         if (!data) {
@@ -137,9 +209,9 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
-    fastify.get("/get-avatar/:id", async (req, reply) => {
+    fastify.get("/get-avatar/:id",  blockGuests(async(req, reply) => {
       try {
         const { id } = req.params;
         if (!id) {
@@ -162,7 +234,7 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
     //#endregion avatar_management
  
@@ -193,7 +265,7 @@ export async function runServer() {
       return reply.status(200).send({ success: true });
     });
 
-    fastify.get("/get-user/:id", async (req, reply) => {
+    fastify.get("/get-user/:id",  blockGuests(async (req, reply) => {
       try {
         const { id } = req.params;
         if (!id) {
@@ -228,9 +300,9 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
-    fastify.post("/update-name/:id", async (req, reply) => {
+    fastify.post("/update-name/:id",  blockGuests(async (req, reply) => {
       try {
         const { id } = req.params;
         if (!id) {
@@ -261,9 +333,9 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
-    fastify.post("/update-mail/:id", async (req, reply) => {
+    fastify.post("/update-mail/:id",  blockGuests(async (req, reply) => {
       try {
         const { id } = req.params;
         if (!id) {
@@ -314,9 +386,9 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
     
-    fastify.post("/update-password/:id", async (req, reply) => {
+    fastify.post("/update-password/:id",  blockGuests(async (req, reply) => {
       try {
         const { id } = req.params;
         if (!id) {
@@ -374,7 +446,7 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
     //#endregion users_data_management
 
@@ -384,7 +456,7 @@ export async function runServer() {
 
     //#region friends_management
 
-    fastify.post("/send-invit", async (req, reply) => {
+    fastify.post("/send-invit",  blockGuests(async (req, reply) => {
       try {
         const userID = req.headers["x-user-id"];
         const { friendName } = req.body;
@@ -470,9 +542,9 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
-    fastify.get("/get-invits/:id", async (req, reply) => {
+    fastify.get("/get-invits/:id",  blockGuests(async (req, reply) => {
       try {
         const userID = req.params.id;
         if (!userID) {
@@ -502,18 +574,15 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
-    fastify.post("/accept-invit", async (req, reply) => {
+    fastify.post("/accept-invit",  blockGuests(async (req, reply) => {
       try {
         const userID = req.headers["x-user-id"];
         const { friendID } = req.body;
         if (!userID || !friendID) {
           return reply.status(400).send({ error: "Missing parameters" });
         }
-        
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         const pendingStmt = usersDB.prepare("SELECT * FROM friends WHERE user_id = ? AND friend_id = ? AND status = 'pending'");
         const isPending = pendingStmt.get(friendID, userID);
@@ -529,18 +598,15 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
-    fastify.post("/decline-invit", async (req, reply) => {
+    fastify.post("/decline-invit",  blockGuests(async (req, reply) => {
       try {
         const userID = req.headers["x-user-id"];
         const { friendID } = req.body;
         if (!userID || !friendID) {
           return reply.status(400).send({ error: "Missing parameters" });
         }
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         const pendingStmt = usersDB.prepare(`
           SELECT * FROM friends 
@@ -560,18 +626,15 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
-    fastify.post("/delete-friend", async (req, reply) => {
+    fastify.post("/delete-friend",  blockGuests(async (req, reply) => {
       try {
         const userID = req.headers["x-user-id"];
         const { friendID } = req.body;
         if (!userID || !friendID) {
           return reply.status(400).send({ error: "Missing parameters" });
         }
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         const deleteStmt = usersDB.prepare(`
           DELETE FROM friends
@@ -592,18 +655,15 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
-    fastify.post("/block-friend", async (req, reply) => {
+    fastify.post("/block-friend",  blockGuests(async (req, reply) => {
       try {
         const userID = req.headers["x-user-id"];
         const { friendID } = req.body;
         if (!userID || !friendID) {
           return reply.status(400).send({ error: "Missing parameters" });
         }
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         const blockStmt = usersDB.prepare(`
           UPDATE friends
@@ -625,18 +685,15 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
-    fastify.post("/unblock-user", async (req, reply) => {
+    fastify.post("/unblock-user",  blockGuests(async (req, reply) => {
       try {
         const userID = req.headers["x-user-id"];
         const { friendID } = req.body;
         if (!userID || !friendID) {
           return reply.status(400).send({ error: "Missing parameters" });
         }
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         const unblockStmt = usersDB.prepare(`
           DELETE FROM friends
@@ -656,20 +713,19 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
-    fastify.get("/friends-list/:id", async (req, reply) => {
+    fastify.get("/friends-list/:id",  blockGuests(async (req, reply) => {
       try {
         const userID = req.params.id;
         if (!userID) {
           return reply.status(400).send({ error: "ID required" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         const reqID = req.headers["x-user-id"];
         if (userID !== reqID) {
           return reply.status(403).send({ error: "Can only view your own friends list" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
         const listStmt = usersDB.prepare(`
           SELECT
@@ -691,20 +747,19 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
-    fastify.get("/blocked-users/:id", async (req, reply) => {
+    fastify.get("/blocked-users/:id",  blockGuests(async (req, reply) => {
       try {
         const userID = req.params.id;
         if (!userID) {
           return reply.status(400).send({ error: "ID required" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         const reqID = req.headers["x-user-id"];
         if (userID !== reqID) {
           return reply.status(403).send({ error: "Can only view your own blocked list" });
         }
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         const blockedStmt = usersDB.prepare(`
           SELECT 
@@ -727,7 +782,7 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
     //#endregion friends_management
 
@@ -785,7 +840,7 @@ export async function runServer() {
       }
     });
 
-    fastify.get("/get-matches/:id", async (req, reply) => {
+    fastify.get("/get-matches/:id",  blockGuests(async (req, reply) => {
       try {
         const userID = req.params.id;
         if (!userID) {
@@ -809,7 +864,7 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
-    });
+    }));
 
     //#endregion matches_management
 

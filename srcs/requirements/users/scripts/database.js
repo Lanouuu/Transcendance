@@ -11,13 +11,14 @@ export async function initDB() {
             mail        	TEXT NOT NULL UNIQUE,
             password    	TEXT NOT NULL,
             enable2FA   	BOOLEAN DEFAULT 0,
-            secret2FA   	TEXT,
+            secret2FA   	TEXT DEFAULT NULL,
             auth_type   	TEXT DEFAULT 'local',
             avatar_path 	TEXT NOT NULL DEFAULT 'default.png',
             pong_wins       INTEGER DEFAULT 2,
             pong_losses     INTEGER DEFAULT 2,
             snake_wins      INTEGER DEFAULT 1,
             snake_losses    INTEGER DEFAULT 1,
+            is_guest        BOOLEAN DEFAULT 0,
             created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
         );
         CREATE TABLE IF NOT EXISTS friends (

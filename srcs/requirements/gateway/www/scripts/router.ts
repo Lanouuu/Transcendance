@@ -93,6 +93,38 @@ class Router {
     	}
 	}
 
+	async checkGuest(): Promise<boolean> {
+    	const token = sessionStorage.getItem("jwt");
+
+    	if (!token) {
+    	    return false;
+    	}
+
+    	try {
+    	    const response = await fetch(`${this.BASE_URL}users/is-guest`, {
+				method: "GET",
+    	        headers: { "Authorization": `Bearer ${token}` }
+    	    });
+
+    	    if (!response.ok) {
+				this.cleanupSession();
+    	        return false;
+    	    }
+
+			const data = await response.json();
+
+			if (data.isGuest)
+    	    	return true;
+			else
+				return false;
+
+    	} catch (error) {
+    	    console.error("Auth check failed:", error);
+    	    this.cleanupSession();
+    	    return false;
+    	}
+	}	
+
 	private cleanupSession(): void {
 	    sessionStorage.removeItem("jwt");
 	    sessionStorage.removeItem("userId");
@@ -263,9 +295,16 @@ class Router {
         		const needsAuth = ['account', 'editProfile', 'logout'];
         		const isAuthPage = ['login', 'signup'];
 
+				
         		const isAuthenticated = await this.checkAuth();
+				const isGuest = await this.checkGuest();
 
-        		if (isAuthenticated && isAuthPage.includes(page)) {
+				if (isAuthenticated && isGuest && needsAuth.includes(page)) {
+					this.displayError('401');
+        		    return;
+				}
+
+        		if (isAuthenticated && !isGuest && isAuthPage.includes(page)) {
         		    window.location.hash = '#account';
         		    return;
         		}
@@ -492,18 +531,18 @@ async function notificationHandler(): Promise<void> {
 })();	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
-	if (!sessionStorage.getItem("jwt"))
-		document.body.classList.remove("loggedIn");
-	else
-		document.body.classList.add("loggedIn");
-	console.log(document.body.classList);
 
 	handleOauth42Redirect();
 
-	new Router();
+	const router: Router = new Router();
+	const isGuest: boolean = await router.checkGuest();
 
+	if (!sessionStorage.getItem("jwt") || isGuest)
+		document.body.classList.remove("loggedIn");
+	else
+		document.body.classList.add("loggedIn");
 	notificationHandler();
 });
 
