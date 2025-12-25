@@ -823,7 +823,13 @@ export async function runServer() {
         `);
         saveStmt.run(player1ID, player1Name.name, player2ID, player2Name.name, winnerID, scoreP1, scoreP2, matchType, gameType);
 
-        const loserID = winnerID === player1ID ? player2ID : player1ID;
+        let loserID;
+
+        if (winnerID === player1ID) {
+          loserID = player2ID;
+        } else {
+          loserID = player1ID;
+        }
 
         const updateWinnerStmt = usersDB.prepare(`
           UPDATE users 
