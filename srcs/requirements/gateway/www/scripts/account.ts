@@ -1,3 +1,5 @@
+import { launchInvitGame } from "./game.js";
+
 const USERS_URL: string = `${window.location.origin}/users`;
 
 export async function displayAccountPage() {
@@ -509,16 +511,21 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	playPongIcon.className = "h-6 w-6 invert";
 	playPongButton.className = "w-fit h-fit place-self-center";
 	playPongButton.onclick = async () => {
-		const res = await fetch(`${window.location.origin}/game/remote`, {
+		const inviteRes = await fetch(`${window.location.origin}/users/invit-game/:${friendId}`, {
 			method: "POST",
 			headers: {
 				"x-user-id": userId,
 				"authorization": `Bearer ${token}`,
 				"Content-Type": "application/json"
 			},
-			body: JSON.stringify({friendId: friendId, message: "invit"})
-		});
-		// Ajouter la notif chez user invite
+			body: JSON.stringify({gameType: "pong", message: "invit"})
+		}); 
+		if (!inviteRes.ok) {
+			console.error("Could not send game invit");
+			return ;
+		}
+		window.location.hash = "#game";
+		launchInvitGame(friendId, "invit");
 	}
 	playPongButton.appendChild(playPongIcon);
 

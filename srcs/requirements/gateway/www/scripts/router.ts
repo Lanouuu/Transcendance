@@ -1,4 +1,6 @@
-const	PAGE_BACKGROUNDS: Record<string, string> = {
+import { launchInvitGame } from "./game.js";
+
+const PAGE_BACKGROUNDS: Record<string, string> = {
 	'account': '/img/Background1.png',
 	'editProfile': '/img/Background1.png',
 	'error': '/img/Background1.png',
@@ -14,23 +16,23 @@ const	PAGE_BACKGROUNDS: Record<string, string> = {
 // et redirige vers account
 // utiliser juste avant new Router() a la fin
 function handleOauth42Redirect() {
-    const params = new URLSearchParams(window.location.hash.split("?")[1]);
-    const token = params.get("token");
-    const id = params.get("id");
+	const params = new URLSearchParams(window.location.hash.split("?")[1]);
+	const token = params.get("token");
+	const id = params.get("id");
 
-    if (token && id) {
-        sessionStorage.setItem("jwt", token);
-        sessionStorage.setItem("userId", id);
+	if (token && id) {
+		sessionStorage.setItem("jwt", token);
+		sessionStorage.setItem("userId", id);
 
-        document.body.classList.add("loggedIn");
+		document.body.classList.add("loggedIn");
 
 		window.dispatchEvent(new Event('user:login'));
 
-        window.location.hash = "#account";
-    }
+		window.location.hash = "#account";
+	}
 }
 
-const	PAGE_ORDER: string [] = ['home', 'game', 'tournament', 'account', 'logout', 'signup', 'login'];
+const PAGE_ORDER: string[] = ['home', 'game', 'tournament', 'account', 'logout', 'signup', 'login'];
 
 class Router {
 
@@ -51,86 +53,86 @@ class Router {
 
 
 	private sanitizeHTML(html: string): string {
-        // Supprimer tous les <script>
-        html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-        
-        // Supprimer tous les event handlers (onclick, onerror, onload, etc.)
-        html = html.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '');
-        html = html.replace(/\son\w+\s*=\s*[^\s>]*/gi, '');
-        
-        // Supprimer javascript: dans les URLs
-        html = html.replace(/javascript:/gi, '');
-        
-        // Supprimer data: urls (peuvent contenir du JS)
-        html = html.replace(/data:text\/html/gi, '');
-        
-        return html;
-    }
+		// Supprimer tous les <script>
+		html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+
+		// Supprimer tous les event handlers (onclick, onerror, onload, etc.)
+		html = html.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '');
+		html = html.replace(/\son\w+\s*=\s*[^\s>]*/gi, '');
+
+		// Supprimer javascript: dans les URLs
+		html = html.replace(/javascript:/gi, '');
+
+		// Supprimer data: urls (peuvent contenir du JS)
+		html = html.replace(/data:text\/html/gi, '');
+
+		return html;
+	}
 
 	private async checkAuth(): Promise<boolean> {
-    	const token = sessionStorage.getItem("jwt");
+		const token = sessionStorage.getItem("jwt");
 
-    	if (!token) {
-    	    return false;
-    	}
+		if (!token) {
+			return false;
+		}
 
-    	try {
-    	    const response = await fetch(`${this.BASE_URL}auth_service/verify`, {
-    	        headers: { "Authorization": `Bearer ${token}` }
-    	    });
+		try {
+			const response = await fetch(`${this.BASE_URL}auth_service/verify`, {
+				headers: { "Authorization": `Bearer ${token}` }
+			});
 
-    	    if (!response.ok) {
-    	        this.cleanupSession();
-    	        return false;
-    	    }
+			if (!response.ok) {
+				this.cleanupSession();
+				return false;
+			}
 
-    	    return true;
+			return true;
 
-    	} catch (error) {
-    	    console.error("Auth check failed:", error);
-    	    this.cleanupSession();
-    	    return false;
-    	}
+		} catch (error) {
+			console.error("Auth check failed:", error);
+			this.cleanupSession();
+			return false;
+		}
 	}
 
 	async checkGuest(): Promise<boolean> {
-    	const token = sessionStorage.getItem("jwt");
+		const token = sessionStorage.getItem("jwt");
 
-    	if (!token) {
-    	    return false;
-    	}
+		if (!token) {
+			return false;
+		}
 
-    	try {
-    	    const response = await fetch(`${this.BASE_URL}users/is-guest`, {
+		try {
+			const response = await fetch(`${this.BASE_URL}users/is-guest`, {
 				method: "GET",
-    	        headers: { "Authorization": `Bearer ${token}` }
-    	    });
+				headers: { "Authorization": `Bearer ${token}` }
+			});
 
-    	    if (!response.ok) {
+			if (!response.ok) {
 				this.cleanupSession();
-    	        return false;
-    	    }
+				return false;
+			}
 
 			const data = await response.json();
 
 			if (data.isGuest)
-    	    	return true;
+				return true;
 			else
 				return false;
 
-    	} catch (error) {
-    	    console.error("Auth check failed:", error);
-    	    this.cleanupSession();
-    	    return false;
-    	}
-	}	
+		} catch (error) {
+			console.error("Auth check failed:", error);
+			this.cleanupSession();
+			return false;
+		}
+	}
 
 	private cleanupSession(): void {
-	    sessionStorage.removeItem("jwt");
-	    sessionStorage.removeItem("userId");
-	    sessionStorage.removeItem("accountActiveTab");
-	    document.body.classList.remove("loggedIn");
-	    window.dispatchEvent(new Event("user:logout"));
+		sessionStorage.removeItem("jwt");
+		sessionStorage.removeItem("userId");
+		sessionStorage.removeItem("accountActiveTab");
+		document.body.classList.remove("loggedIn");
+		window.dispatchEvent(new Event("user:logout"));
 	}
 
 	private async initRouter(): Promise<void> {
@@ -139,30 +141,30 @@ class Router {
 		this.handleRoute();
 
 		window.addEventListener('hashchange', () => this.handleRoute());
-		
+
 		window.addEventListener('user:login', () => this.startHeartbeat());
 		window.addEventListener('user:logout', () => this.stopHeartbeat());
 
-// 		window.addEventListener('storage', (ev: StorageEvent) => {
-//			if (ev.key === 'jwt') {
-//				if (sessionStorage.getItem('jwt')) this.startHeartbeat();
-//				else this.stopHeartbeat();
-//			}
-//		});
-// 		Potentiellement juste dispatch un event user:login ou logout en fonction et laisser ceux du haut gerer le bordel
+		// 		window.addEventListener('storage', (ev: StorageEvent) => {
+		//			if (ev.key === 'jwt') {
+		//				if (sessionStorage.getItem('jwt')) this.startHeartbeat();
+		//				else this.stopHeartbeat();
+		//			}
+		//		});
+		// 		Potentiellement juste dispatch un event user:login ou logout en fonction et laisser ceux du haut gerer le bordel
 
-		if (sessionStorage.getItem("jwt") && sessionStorage.getItem("userId")) 
+		if (sessionStorage.getItem("jwt") && sessionStorage.getItem("userId"))
 			this.startHeartbeat();
 	}
 
-	private startHeartbeat (): void {
+	private startHeartbeat(): void {
 
-		if (this.heartBeatInterval !== null) return ;
+		if (this.heartBeatInterval !== null) return;
 
 		const sendHeartbeat = async () => {
 			const token = sessionStorage.getItem("jwt");
 			const userId = sessionStorage.getItem("userId");
-			if (!token || !userId) return ;
+			if (!token || !userId) return;
 			try {
 				await fetch(`${this.BASE_URL}/users/heartbeat`, {
 					method: "POST",
@@ -191,7 +193,7 @@ class Router {
 	// Gets called each time the hash (#) changes (?)
 	// Get the name of the page clean and call loadPage
 	private handleRoute(): void {
-		
+
 		const fullHash = window.location.hash.slice(1) || 'home';
 		const page = fullHash.split('?')[0];
 		this.loadPage(page);
@@ -209,14 +211,14 @@ class Router {
 
 	private async animateBgTransition(nextBgUrl: string, transitionDirection: string): Promise<void> {
 
-		if (nextBgUrl === this.currentBgUrl) return ;
+		if (nextBgUrl === this.currentBgUrl) return;
 
-		const	currentBgContainer: HTMLElement = document.getElementById('backgroundContainer') as HTMLElement;
-		const	nextBgContainer: HTMLElement = document.getElementById('backgroundNext') as HTMLElement;
+		const currentBgContainer: HTMLElement = document.getElementById('backgroundContainer') as HTMLElement;
+		const nextBgContainer: HTMLElement = document.getElementById('backgroundNext') as HTMLElement;
 
 		if (!currentBgContainer || !nextBgContainer) {
 			console.error('Could not find background containers');
-			return ;
+			return;
 		}
 
 		nextBgContainer.style.backgroundImage = `url('${nextBgUrl}')`;
@@ -255,7 +257,7 @@ class Router {
 
 		// On wait que l'animation se termine
 		await new Promise(resolve => setTimeout(resolve, 1000));
-		
+
 		// On retire les animations
 		currentBgContainer.style.transition = 'none';
 		nextBgContainer.style.transition = 'none';
@@ -284,97 +286,97 @@ class Router {
 
 		try {
 
-				if (page === 'error') {
-					const params = new URLSearchParams(window.location.hash.split('?')[1]);
-					const errorCode = params.get('code');
-					this.displayError(errorCode || '500');
-					this.currentPage = 'error';
-					return;
-				}
+			if (page === 'error') {
+				const params = new URLSearchParams(window.location.hash.split('?')[1]);
+				const errorCode = params.get('code');
+				this.displayError(errorCode || '500');
+				this.currentPage = 'error';
+				return;
+			}
 
-        		const needsAuth = ['account', 'editProfile', 'logout'];
-        		const isAuthPage = ['login', 'signup'];
+			const needsAuth = ['account', 'editProfile', 'logout'];
+			const isAuthPage = ['login', 'signup'];
 
-				
-        		const isAuthenticated = await this.checkAuth();
-				const isGuest = await this.checkGuest();
 
-				if (isAuthenticated && isGuest && needsAuth.includes(page)) {
-					this.displayError('401');
-        		    return;
-				}
+			const isAuthenticated = await this.checkAuth();
+			const isGuest = await this.checkGuest();
 
-        		if (isAuthenticated && !isGuest && isAuthPage.includes(page)) {
-        		    window.location.hash = '#account';
-        		    return;
-        		}
-			
-        		if (!isAuthenticated && needsAuth.includes(page)) {
-        		    this.displayError('401');
-        		    return;
-        		}
+			if (isAuthenticated && isGuest && needsAuth.includes(page)) {
+				this.displayError('401');
+				return;
+			}
 
-				if (!PAGE_BACKGROUNDS[page] && page !== 'error') {
-					this.displayError('404');
-					this.currentPage = 'error';
-					return;
-				}
+			if (isAuthenticated && !isGuest && isAuthPage.includes(page)) {
+				window.location.hash = '#account';
+				return;
+			}
 
-				const	nextBackgroundUrl: string = PAGE_BACKGROUNDS[page] || PAGE_BACKGROUNDS['home'];
-				const	transitionDirection: string = this.getTransitionDirection(page);
-				// await this.animateBgTransition(nextBackgroundUrl, transitionDirection);
-			
-				// Fetch the file corresponding to the attribute page
-				// Then gets its content as a text in the variabe content
-				const response = await fetch(`/pages/${page}.html`);
-				if (!response.ok) throw new Error(`Page ${page} not found`);
-				const content = await response.text();
+			if (!isAuthenticated && needsAuth.includes(page)) {
+				this.displayError('401');
+				return;
+			}
 
-				// Updates the <main> of index.html
-				this.mainContent.innerHTML = this.sanitizeHTML(content);
+			if (!PAGE_BACKGROUNDS[page] && page !== 'error') {
+				this.displayError('404');
+				this.currentPage = 'error';
+				return;
+			}
 
-				this.currentPage = page;
+			const nextBackgroundUrl: string = PAGE_BACKGROUNDS[page] || PAGE_BACKGROUNDS['home'];
+			const transitionDirection: string = this.getTransitionDirection(page);
+			// await this.animateBgTransition(nextBackgroundUrl, transitionDirection);
 
-				// Attendre plus longtemps pour laisser le DOM se mettre à jour
-				await new Promise(resolve => setTimeout(resolve, 50));
+			// Fetch the file corresponding to the attribute page
+			// Then gets its content as a text in the variabe content
+			const response = await fetch(`/pages/${page}.html`);
+			if (!response.ok) throw new Error(`Page ${page} not found`);
+			const content = await response.text();
 
-				// Loads the scripts corresponding the the page loaded
-				switch(page) {
-					case 'home':
-						const homeScript = await import('./home.js'); // on peut mettre ca en haut
-						if (homeScript.home) homeScript.home();
-						break;
-					case 'game':
-						const gameScript = await import('./game.js')
-						if (gameScript.setupGamePage) gameScript.setupGamePage();
-						break;
-					case 'tournament':
-						const tournamentScript = await import('./tournament.js');
-						if (tournamentScript.displayTournamentPage) tournamentScript.displayTournamentPage();
-						break;
-					case 'account':
-						const accountScript = await import('./account.js');
-						if (accountScript.displayAccountPage) accountScript.displayAccountPage();
-						break;
-					case 'editProfile':
-						const editProfileScript = await import('./editProfile.js');
-						if (editProfileScript.editProfile) editProfileScript.editProfile();
-						break;
-					case 'signup':
-						const signupScript = await import('./signup.js');
-						if (signupScript.signup) signupScript.signup();
-						break;
-					case 'login':
-						const loginScript = await import('./login.js');
-						if (loginScript.login) loginScript.login();
-						break;
-					case 'logout':
-						const logoutScript = await import('./logout.js');
-						if (logoutScript.logout) logoutScript.logout();
-						break;
-					default:
-						break;
-				}
+			// Updates the <main> of index.html
+			this.mainContent.innerHTML = this.sanitizeHTML(content);
+
+			this.currentPage = page;
+
+			// Attendre plus longtemps pour laisser le DOM se mettre à jour
+			await new Promise(resolve => setTimeout(resolve, 50));
+
+			// Loads the scripts corresponding the the page loaded
+			switch (page) {
+				case 'home':
+					const homeScript = await import('./home.js'); // on peut mettre ca en haut
+					if (homeScript.home) homeScript.home();
+					break;
+				case 'game':
+					const gameScript = await import('./game.js')
+					if (gameScript.setupGamePage) gameScript.setupGamePage();
+					break;
+				case 'tournament':
+					const tournamentScript = await import('./tournament.js');
+					if (tournamentScript.displayTournamentPage) tournamentScript.displayTournamentPage();
+					break;
+				case 'account':
+					const accountScript = await import('./account.js');
+					if (accountScript.displayAccountPage) accountScript.displayAccountPage();
+					break;
+				case 'editProfile':
+					const editProfileScript = await import('./editProfile.js');
+					if (editProfileScript.editProfile) editProfileScript.editProfile();
+					break;
+				case 'signup':
+					const signupScript = await import('./signup.js');
+					if (signupScript.signup) signupScript.signup();
+					break;
+				case 'login':
+					const loginScript = await import('./login.js');
+					if (loginScript.login) loginScript.login();
+					break;
+				case 'logout':
+					const logoutScript = await import('./logout.js');
+					if (logoutScript.logout) logoutScript.logout();
+					break;
+				default:
+					break;
+			}
 		} catch (error) {
 			console.error('Error loading page: ', error);
 			this.mainContent.innerHTML = this.sanitizeHTML('<h1>Page not found</h1>'); // A changer ?
@@ -384,9 +386,9 @@ class Router {
 	private displayError(code: string): void {
 
 		const validCodes = ['400', '401', '403', '404', '500'];
-    	const safeCode = validCodes.includes(code) ? code : '500';
+		const safeCode = validCodes.includes(code) ? code : '500';
 
-		const errorMessages: Record<string, { title: string, message: string}> = {
+		const errorMessages: Record<string, { title: string, message: string }> = {
 			'400': {
 				title: 'Bad Request',
 				message: 'The server could not process the request due to a client error.'
@@ -441,69 +443,116 @@ class Router {
 
 }
 
+
 async function notificationHandler(): Promise<void> {
 
-	const	notifBubbleDiv:		HTMLDivElement = document.getElementById("notifBubble") as HTMLDivElement;
-	const	notifBubbleButton:	HTMLButtonElement = document.getElementById("notifBubbleButton") as HTMLButtonElement;
-	const	notifNumberBadge:	HTMLDivElement = document.getElementById("notifNumberBadge") as HTMLDivElement;
+	const userId: string | null = sessionStorage.getItem("userId");
+	const token: string | null = sessionStorage.getItem("jwt");
 
-	const	notifPannel:		HTMLDivElement = document.getElementById("notifPannel") as HTMLDivElement;
-	const	notifList:			HTMLUListElement = document.getElementById("notifList") as HTMLUListElement;
-	const	removeAllButton:	HTMLButtonElement = document.getElementById("removeAllButton") as HTMLButtonElement;
-	let		notifNumber:		number = 0;
+	const notifBubbleDiv: HTMLDivElement = document.getElementById("notifBubble") as HTMLDivElement;
+	const notifBubbleButton: HTMLButtonElement = document.getElementById("notifBubbleButton") as HTMLButtonElement;
+	const notifNumberBadge: HTMLDivElement = document.getElementById("notifNumberBadge") as HTMLDivElement;
+
+	const notifPannel: HTMLDivElement = document.getElementById("notifPannel") as HTMLDivElement;
+	const notifList: HTMLUListElement = document.getElementById("notifList") as HTMLUListElement;
+	const removeAllButton: HTMLButtonElement = document.getElementById("removeAllButton") as HTMLButtonElement;
+	let notifNumber: number = 0;
+
+	if (!userId || !token) {
+		console.error("Not logged in");
+		return;
+	}
 
 	if (!notifBubbleDiv || !notifBubbleButton || !notifNumberBadge
 		|| !notifPannel || !notifList || !removeAllButton) {
 		console.error("Could not get html elements");
-		return ;
+		return;
 	}
 
-	notifBubbleButton.onclick = () => {
+	notifBubbleButton.onclick = async () => {
 		notifPannel.classList.toggle('invisible');
 		notifPannel.classList.toggle('opacity-100');
 		notifPannel.classList.toggle('opacity-0');
 		notifBubbleDiv.classList.toggle('rotate-90');
+
+		try {
+			const res = await fetch(`${window.location.origin}/users/get-game-invits/${userId}`, {
+				method: "GET",
+				headers: {
+					"x-user-id": userId,
+					"authorization": `Bearer ${token}`,
+				},
+			});
+			if (!res.ok) {
+				console.error("Could not fetch game invitations");
+				return;
+			}
+
+			const { invitList } = await res.json();
+			notifList.innerHTML = "";
+			const frag = document.createDocumentFragment();
+			for (let invit of invitList) {
+
+				const li: HTMLLIElement = document.createElement("li");
+				li.className = "flex flex-row items-center justify-evenly w-full text-white";
+
+				const userNameSpan: HTMLSpanElement = document.createElement("span");
+				userNameSpan.innerHTML = invit.userId;
+
+				const acceptButton: HTMLButtonElement = document.createElement("button");
+				acceptButton.innerHTML = "✓";
+				acceptButton.onclick = async () => {
+					const res = await fetch(`${window.location.origin}/users/clear-invit/:${invit.friendId}`, {
+						method: "POST",
+						headers: {
+							"x-user-id": userId,
+							"authorization": `Bearer ${token}`,
+							"Content-Type": "application/json"
+						},
+						body: JSON.stringify({ gameType: `${invit.gameType}` })
+					});
+					if (!res.ok) {
+						console.error("Could not accept invit");
+						return;
+					}
+					window.location.hash = "#game";
+					launchInvitGame(invit.friendID, "accept-invit");
+					li.remove();
+					notifNumber--;
+				};
+
+				const denyButton: HTMLButtonElement = document.createElement("button");
+				denyButton.innerHTML = "✗";
+				denyButton.onclick = async () => {
+					const res = await fetch(`${window.location.origin}/users/clear-invit/:${invit.friendId}`, {
+						method: "POST",
+						headers: {
+							"x-user-id": userId,
+							"authorization": `Bearer ${token}`,
+							"Content-Type": "application/json"
+						},
+						body: JSON.stringify({ gameType: `${invit.gameType}` })
+					});
+					if (!res.ok) {
+						console.error("Could not accept invit");
+						return;
+					}
+					li.remove();
+					notifNumber--;
+				};
+
+				frag.appendChild(li);
+				notifNumber++;
+			}
+			notifList.appendChild(frag)
+		} catch (error) {
+			console.error("Could not fetch invitList:", error);
+			return;
+		}
 	};
 
 
 
-
-	// const res = await fetch(``);
-	// if (!res.ok) {
-	// 	console.error("Could not fetch game invitations");
-	// 	return ;
-	// }
-
-	// notifList.innerHTML = "";
-	// const frag = document.createDocumentFragment();
-	// for (invite of inviteList)
-	// {
-	// 	const li: HTMLLIElement = document.createElement("li");
-	// 	li.className = "flex flex-row items-center justify-evenly w-full text-white";
-
-	// 	const userNameSpan: HTMLSpanElement = document.createElement("span");
-	// 	userNameSpan.innerHTML = invite.username;
-
-	// 	const acceptButton: HTMLButtonElement = document.createElement("button");
-	// 	acceptButton.innerHTML = "✓";
-	// 	acceptButton.onclick = async () => {
-
-	// 		li.remove();
-	// 		notifNumber--;
-	// 	};
-
-	// 	const denyButton: HTMLButtonElement = document.createElement("button");
-	// 	denyButton.innerHTML = "✗";
-	// 	denyButton.onclick = () => {
-
-	// 		li.remove();
-	// 		notifNumber--;
-	// 	};
-
-	// 	frag.appendChild(li);
-	// 	notifNumber++;
-	// }
-	// notifList.appendChild(frag);
 	if (notifNumber == 0)
 		notifNumberBadge.classList.add('hidden');
 	else {
@@ -528,7 +577,7 @@ async function notificationHandler(): Promise<void> {
 		else console.log("CA MARCHE PO");
 		localStorage.setItem("userTest", "true");
 	}
-})();	
+})();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 document.addEventListener('DOMContentLoaded', async () => {

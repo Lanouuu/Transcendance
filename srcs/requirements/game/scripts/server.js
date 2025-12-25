@@ -431,34 +431,54 @@ function findRemotePendingGame() {
 
 
 
-fastify.get("/remote", async (request, reply) => {
+fastify.post("/remote", async (request, reply) => {
     try {
+        const {friendId, message} = request.body
 	    const userId = request.headers["x-user-id"]
-        queue.push([userId, await getUserName(userId), reply])
-        console.log(queue)
-        if (findRemotePendingGame() === false) {
-            const game = new Game({
-                id: gameId++,
-                socket: [],
-                mode: 'remote',
-                message: "Waiting"
-            })
-            loadSprite(game)
-            game.player1.id = queue[0][0]
-            game.player1.name = queue[0][1]
-            pendingRemoteGame.push(game)
+
+        const game = new Game({
+            id: gameId++,
+            socket: [],
+            mode: 'remote',
+            message: "Waiting"
+        })
+        if (message === "invit") {
+            game.player1.id = userId
+            game.player1.name = await getUserName(userId)
             games.set(game.id, game)
             reply.send({message: "Success", id: game.id})
+        }
+        else if (message === "accept-invit") {
+            for (const game in games ) {
+                if (game.player1.id === friendId) {
+                    game.player2.id = userId
+                    game.player2.name = await getUserName(userId)
+                    games.set(game.id, game)
+                    reply.send({message: "Success", id: game.id})
+                }            
+            }
         }
         else {
-            const gameTemp = pendingRemoteGame.shift()
-            const game = games.get(gameTemp.id)
-            game.player2.id = queue[0][0]
-            game.player2.name = queue[0][1]
-            games.set(game.id, game)
-            reply.send({message: "Success", id: game.id})
+            queue.push([userId, await getUserName(userId), reply])
+            console.log(queue)
+            if (findRemotePendingGame() === false) {
+                loadSprite(game)
+                game.player1.id = queue[0][0]
+                game.player1.name = queue[0][1]
+                pendingRemoteGame.push(game)
+                games.set(game.id, game)
+                reply.send({message: "Success", id: game.id})
+            }
+            else {
+                const gameTemp = pendingRemoteGame.shift()
+                const game = games.get(gameTemp.id)
+                game.player2.id = queue[0][0]
+                game.player2.name = queue[0][1]
+                games.set(game.id, game)
+                reply.send({message: "Success", id: game.id})
+            }
+            queue.shift()
         }
-        queue.shift()
     } catch (e) {
         console.log(e.message)
         // a supprimer

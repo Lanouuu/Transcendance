@@ -155,11 +155,86 @@ async function launchRemoteGame() {
 
 	try {
 		const res = await fetch(`${route}/remote`, {
-			method: "GET",
+			method: "POST",
 			headers: {
 				"authorization": `Bearer ${token}`,
 				"x-user-id": userId
 			},
+		});
+		if (!res.ok) {
+			const text = await res.text();
+			console.error(`Server error ${res.status}:`, text);
+			throw new Error(`Failed to load the game`);
+		}
+		// console.log(res.text());
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")) {
+			const text = await res.text();
+			console.error(`Server did not return JSON`, text);
+			throw new Error(`Server response is not JSON`);
+		}
+		
+		const response = await res.json();
+		if (response.message === "Success") {
+			let game : Game;
+			const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
+			ws.addEventListener('open', (event) => {
+				if (ws.readyState === WebSocket.OPEN)
+					ws.send(JSON.stringify({id: response.id, message: "InitRemote"}))
+			})
+
+			ws.addEventListener('message', (event) => {
+				const serverGame = JSON.parse(event.data)
+				if (serverGame.message === "Init") {
+					game = serverGame.game;
+					gameLoop(game, ws);
+				}
+				else if (game && serverGame.message === "Countdown") {
+					game.message = serverGame.message
+					game.timer = serverGame.timer
+				}
+				else if (game && serverGame.message === "Playing") {
+					game.message = serverGame.message
+					game.started = serverGame.started
+					game.player1.sprite.position.y = serverGame.player1.sprite.position.y
+					game.player2.sprite.position.y = serverGame.player2.sprite.position.y
+					game.ball.position.x = serverGame.ball.position.x
+					game.ball.position.y = serverGame.ball.position.y
+					game.player1.score = serverGame.player1.score
+					game.player2.score = serverGame.player2.score
+				}
+				else if (game && serverGame.message === "END") {
+					game.message = serverGame.message
+					game.winner = serverGame.winner
+					game.displayWinner = serverGame.displayWinner
+					game.player1.score = serverGame.player1.score
+					game.player2.score = serverGame.player2.score
+				}
+			})
+		}
+	} catch (err) {
+		console.error(err);
+	}
+}
+
+export async function launchInvitGame(friendId: string, message: string) {
+	const token: string | null = sessionStorage.getItem("jwt");
+	const userId: string | null = sessionStorage.getItem("userId");
+	const localButton: HTMLButtonElement = document.getElementById('gameLocalGameButton') as HTMLButtonElement;
+	
+	if (userId === null || token === null) {
+		console.error('Could not fetch user id/token');
+		return;
+	}
+
+	try {
+		const res = await fetch(`${route}/remote`, {
+			method: "POST",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId
+			},
+			body: JSON.stringify({friendId: friendId, message: message})
 		});
 		if (!res.ok) {
 			const text = await res.text();
