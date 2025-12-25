@@ -811,6 +811,10 @@ export async function runServer() {
       }
     });
 
+    fastify.post("/invit-game", async (req, reply) => {
+
+    });
+
     //#endregion matches_management
 
     fastify.listen({host: HOST, port: PORT}, (err) => {

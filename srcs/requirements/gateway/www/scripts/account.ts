@@ -323,10 +323,6 @@ async function displayFriendList(userId: string, token: string, ulFriendsList: H
 				friendListMsg.textContent = "Loading Failure";
 				friendListMsg.style.color = "red";
 			}
-			else { 
-				friendListMsg.textContent = "Loading succes";
-				friendListMsg.style.color = "green";
-			}
 			setTimeout(async () => {
 				friendListMsg.classList.toggle('opacity-0');
 				friendListMsg.classList.toggle('opacity-100');
@@ -504,14 +500,26 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	statusDot.className = "select-none";
 
 	// Ajout du bouton de defi
-	const playButton = document.createElement("button");
-	const playIcon = document.createElement("img");
+	const playPongButton = document.createElement("button");
+	const playPongIcon = document.createElement("img");
 
 	// playButton.id = "fInListPlayButton"; // Si plusieurs amis id identiques
-	playIcon.src = "./assets/other/challenge-user.svg";
-	playIcon.className = "h-6 w-6 invert";
-	playButton.className = "w-fit h-fit place-self-center";
-	playButton.appendChild(playIcon);
+	playPongIcon.src = "./assets/other/challenge-user.svg";
+	playPongIcon.className = "h-6 w-6 invert";
+	playPongButton.className = "w-fit h-fit place-self-center";
+	playPongButton.onclick = async () => {
+		const res = await fetch(`${window.location.origin}/game/remote`, {
+			method: "POST",
+			headers: {
+				"x-user-id": userId,
+				"authorization": `Bearer ${token}`,
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({friendId: friendId, message: "invit"})
+		});
+		// Ajouter la notif chez user invite
+	}
+	playPongButton.appendChild(playPongIcon);
 
 	// Ajout du bouton de suppression d'un ami
 	const delFriendButton = document.createElement("button");
@@ -583,7 +591,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	};
 
 	// Ajout de tous les elements crees a la balise li
-	li.append(img, statusDot, nameSpan, playButton, delFriendButton, blockFriendButton);
+	li.append(img, statusDot, nameSpan, playPongButton, delFriendButton, blockFriendButton);
 
 	return (li);
 }
