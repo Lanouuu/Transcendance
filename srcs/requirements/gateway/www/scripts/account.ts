@@ -91,17 +91,23 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 	const usernameSpan: HTMLElement | null | undefined = document.getElementById("accountBoxUsername")?.querySelector("span");
 	const mailSpan: HTMLElement | null | undefined = document.getElementById("accountBoxMail")?.querySelector("span");
 	const dblFaBox: HTMLInputElement | null | undefined = document.getElementById("accountBox2fa")?.querySelector("input") as HTMLInputElement;
+	const userInfoMsg: HTMLDivElement = document.getElementById("userInfosMsg") as HTMLDivElement;
 
 	const profilePic: HTMLImageElement | null | undefined = document.getElementById("accountBoxProfilePic")?.querySelector("img") as HTMLImageElement;
 	const profilePicInput: HTMLInputElement = document.getElementById('profilePicInput') as HTMLInputElement;
 	const profilePicButton: HTMLButtonElement = document.getElementById('profilePicButton') as HTMLButtonElement;
 	const profilePicButtonConfirm: HTMLButtonElement = document.getElementById('profilePicButtonConfirm') as HTMLButtonElement;
 	const profilePicButtonCancel: HTMLButtonElement = document.getElementById('profilePicButtonCancel') as HTMLButtonElement;
+	const userPicMsg: HTMLDivElement = document.getElementById("userPicMsg") as HTMLDivElement;
 
-	const pongWinrateSpan: HTMLSpanElement = document.getElementById("accountInfosPongWinrate") as HTMLSpanElement;
+	const pongWinrateDiv: HTMLDivElement = document.getElementById("accountInfosPongWinrate") as HTMLDivElement;
+	const snakeWinrateDiv: HTMLDivElement = document.getElementById("accountInfosSnakeWinrate") as HTMLDivElement;
 
 
-	if (!usernameSpan || !mailSpan || !dblFaBox || !profilePic || !profilePicInput || !profilePicButton || !profilePicButtonConfirm || !profilePicButtonCancel || !pongWinrateSpan) {
+	if (!usernameSpan || !mailSpan || !dblFaBox
+		|| !profilePic || !profilePicInput || !profilePicButton
+		|| !profilePicButtonConfirm || !profilePicButtonCancel
+		|| !pongWinrateDiv || !snakeWinrateDiv) {
 		console.error("HTML element not found");
 		return;
 	}
@@ -119,7 +125,18 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 		});
 
 		const data = await res.json();
-		if (!res.ok) throw new Error(`Fetch user infos failed`);
+		if (userInfoMsg) {
+			userInfoMsg.classList.toggle('opacity-0');
+			userInfoMsg.classList.toggle('opacity-100');
+			if (!res.ok){
+				userInfoMsg.textContent = data.error;
+				userInfoMsg.style.color = 'red';
+			} 
+			setTimeout(async () => {
+				userInfoMsg.classList.toggle('opacity-100');
+				userInfoMsg.classList.toggle('opacity-0');
+			}, 2000);
+		}
 		usernameSpan.innerText = data.name;
 		mailSpan.innerText = data.mail;
 		dblFaBox.checked = data.enable2FA || false; // checkbox plutot que du text
@@ -138,6 +155,16 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 
 			profilePic.src = imgUrl;
 		} else {
+			if (userPicMsg) {
+				userPicMsg.classList.toggle('opacity-0');
+				userPicMsg.classList.toggle('opacity-100');
+				userPicMsg.textContent = "Failed loading profile picture";
+				userPicMsg.style.color = 'red';
+				setTimeout(async () => {
+					userPicMsg.classList.toggle('opacity-100');
+					userPicMsg.classList.toggle('opacity-0');
+				}, 2000);
+			}
 			profilePic.src = "./img/cristal_profile_base.jpg";
 			console.error("Fetch user profile picture failed");
 		}
@@ -200,15 +227,29 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 					body: formData,
 				});
 
-				if (!res.ok) {
-					throw new Error('Upload failed');
+				if (userPicMsg) {
+					userPicMsg.classList.toggle('opacity-0');
+					userPicMsg.classList.toggle('opacity-100');
+					if (res.ok) {
+						userPicMsg.textContent = "Upload success";
+						userPicMsg.style.color = "green";
+					}
+					else {
+						userPicMsg.textContent = "Upload failure";
+						userPicMsg.style.color = "red";
+					}
+					setTimeout(async () => {
+						userPicMsg.classList.toggle('opacity-100');
+						userPicMsg.classList.toggle('opacity-0');
+					}, 2000);
 				}
-
+				if (!res.ok) {
+					profilePic.src = originalSrc;
+					return ;
+				}
 				console.log('Avatar upload success');
 			} catch (error) {
 				console.error('Error uploading the avatar', error);
-				// Peut etre modifier l'image de base
-				profilePic.src = originalSrc;
 			}
 		});
 
@@ -229,8 +270,13 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 		const pongLosses = Number(data.pong_losses) || 0;
 		const totalPongMatches = pongWins + pongLosses;
 		const pongWinrate = totalPongMatches === 0 ? 0 : Math.round((pongWins / totalPongMatches) * 100);
-		pongWinrateSpan.textContent = `${pongWinrate}%`;
+		pongWinrateDiv.textContent = `${pongWinrate}%`;
 
+		const snakeWins = Number(data.snake_wins) || 0;
+		const snakeLosses = Number(data.snake_losses) || 0;
+		const totalSnakeMatches = snakeWins + snakeLosses;
+		const snakeWinrate = totalSnakeMatches === 0 ? 0 : Math.round((snakeWins / totalSnakeMatches) * 100);
+		snakeWinrateDiv.textContent = `${snakeWinrate}%`;
 		// #endregion stats //
 	} catch (error) {
 		console.error(error);
@@ -261,6 +307,8 @@ async function showFriendsTab(userId: string, token: string): Promise<void> {
 
 async function displayFriendList(userId: string, token: string, ulFriendsList: HTMLUListElement, ulBlockedList: HTMLUListElement): Promise<void> {
 	
+	const friendListMsg: HTMLDivElement = document.getElementById("friendListMsg") as HTMLDivElement;
+
 	try {
 		const res = await fetch(`${USERS_URL}/friends-list/${userId}`, {
 			method: "GET",
@@ -269,7 +317,23 @@ async function displayFriendList(userId: string, token: string, ulFriendsList: H
 				"x-user-id": userId
 			},
 		});
-		if (!res.ok) throw new Error(`Friend list not found`);
+		if (friendListMsg) {
+			friendListMsg.classList.toggle('opacity-0');
+			friendListMsg.classList.toggle('opacity-100');
+			if (!res.ok) {
+				friendListMsg.textContent = "Loading Failure";
+				friendListMsg.style.color = "red";
+			}
+			setTimeout(async () => {
+				friendListMsg.classList.toggle('opacity-0');
+				friendListMsg.classList.toggle('opacity-100');
+			}, 2000);
+		}
+		if (!res.ok) {
+			console.error("Could not fetch friendList");
+			return ;
+		}
+
 		const { friendsList } = (await res.json());
 
 		ulFriendsList.innerHTML = "";
@@ -437,14 +501,26 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	statusDot.className = "select-none";
 
 	// Ajout du bouton de defi
-	const playButton = document.createElement("button");
-	const playIcon = document.createElement("img");
+	const playPongButton = document.createElement("button");
+	const playPongIcon = document.createElement("img");
 
 	// playButton.id = "fInListPlayButton"; // Si plusieurs amis id identiques
-	playIcon.src = "./assets/other/challenge-user.svg";
-	playIcon.className = "h-6 w-6 invert";
-	playButton.className = "w-fit h-fit place-self-center";
-	playButton.appendChild(playIcon);
+	playPongIcon.src = "./assets/other/challenge-user.svg";
+	playPongIcon.className = "h-6 w-6 invert";
+	playPongButton.className = "w-fit h-fit place-self-center";
+	playPongButton.onclick = async () => {
+		const res = await fetch(`${window.location.origin}/game/remote`, {
+			method: "POST",
+			headers: {
+				"x-user-id": userId,
+				"authorization": `Bearer ${token}`,
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({friendId: friendId, message: "invit"})
+		});
+		// Ajouter la notif chez user invite
+	}
+	playPongButton.appendChild(playPongIcon);
 
 	// Ajout du bouton de suppression d'un ami
 	const delFriendButton = document.createElement("button");
@@ -516,7 +592,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	};
 
 	// Ajout de tous les elements crees a la balise li
-	li.append(img, statusDot, nameSpan, playButton, delFriendButton, blockFriendButton);
+	li.append(img, statusDot, nameSpan, playPongButton, delFriendButton, blockFriendButton);
 
 	return (li);
 }
@@ -687,7 +763,6 @@ function createLiBlockedItem(blockedId: string, blockedName: string, userId: str
 async function showStatsTab(): Promise<void> {
 	console.log('showStatsTab function called');
 }
-
 
 async function showHistoryTab(userId: string, token: string): Promise<void> {
 
