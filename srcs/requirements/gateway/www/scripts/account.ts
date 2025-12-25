@@ -8,6 +8,7 @@ export async function displayAccountPage() {
 
 	if (!userId || !token) {
 		console.error("Userid or token NULL");
+		window.location.hash = '#home';
 		return;
 	}
 
