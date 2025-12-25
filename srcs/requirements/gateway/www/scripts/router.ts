@@ -383,8 +383,13 @@ class Router {
 
 	private displayError(code: string): void {
 
-		const validCodes = ['400', '401', '403', '404', '500'];
-    	const safeCode = validCodes.includes(code) ? code : '500';
+		const validCodes = ['400', '401', '403', '404'];
+		let safeCode;
+		if (validCodes.includes(code)) {
+			safeCode = code;
+		} else {
+			safeCode = '400'
+		}
 
 		const errorMessages: Record<string, { title: string, message: string}> = {
 			'400': {
@@ -402,14 +407,10 @@ class Router {
 			'404': {
 				title: 'Page Not Found',
 				message: 'This is not the web page you are looking for'
-			},
-			'500': {
-				title: 'Internal Server Error',
-				message: 'Something went wrong. Please try again later.'
 			}
 		};
 
-		const error = errorMessages[safeCode] || errorMessages['500'];
+		const error = errorMessages[safeCode];
 
 		this.mainContent.innerHTML = `
 			<div class="flex flex-col 
