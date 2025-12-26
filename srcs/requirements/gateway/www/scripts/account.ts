@@ -511,7 +511,33 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	playPongIcon.className = "h-6 w-6 invert";
 	playPongButton.className = "w-fit h-fit place-self-center";
 	playPongButton.onclick = async () => {
-		const inviteRes = await fetch(`${window.location.origin}/users/invit-game/:${friendId}`, {
+		const onlineRes = await fetch (`${window.location.origin}/users/is-online/${friendId}`, {
+			method: "GET",
+			headers: {
+				"x-user-id": userId,
+				"authorization": `Bearer ${token}`,
+			}
+		});
+		const onlineData = await onlineRes.json();
+		if (!onlineRes.ok) {
+			console.error(onlineData.error);
+			return ;
+		}
+		else if (!onlineData.online) {
+			const errorMsg: HTMLDivElement = document.getElementById("friendListMsg") as HTMLDivElement;
+			if (errorMsg) {
+				errorMsg.classList.toggle('opacity-0');
+				errorMsg.classList.toggle('opacity-100');
+				errorMsg.textContent = "Cannot invite an offline user";
+				errorMsg.style.color = 'red';
+				setTimeout(() => {
+					errorMsg.classList.toggle('opacity-100');
+					errorMsg.classList.toggle('opacity-0');
+				}, 2000);
+			}
+			return ;
+		}
+		const inviteRes = await fetch(`${window.location.origin}/users/invit-game/${friendId}`, {
 			method: "POST",
 			headers: {
 				"x-user-id": userId,
@@ -521,7 +547,8 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 			body: JSON.stringify({gameType: "pong", message: "invit"})
 		}); 
 		if (!inviteRes.ok) {
-			console.error("Could not send game invit");
+			const data = await inviteRes.json();
+			console.error("Could not send game invit:", data.error);
 			return ;
 		}
 		window.location.hash = "#game";

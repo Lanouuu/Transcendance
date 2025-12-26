@@ -497,50 +497,36 @@ async function notificationHandler(): Promise<void> {
 				li.className = "flex flex-row items-center justify-evenly w-full text-white";
 
 				const userNameSpan: HTMLSpanElement = document.createElement("span");
-				userNameSpan.innerHTML = invit.userId;
+				const res = await fetch(`${window.location.origin}/users/get-user/${invit.user_id}`, {
+					method: "GET",
+					headers: {
+						"x-user-id": userId,
+						"authorization": `Bearer ${token}`,
+					},
+				});
+				if (!res.ok) {
+					userNameSpan.textContent = `<undefined user>`;
+				}
+				const data = await res.json();
+				userNameSpan.textContent = data.name;
 
 				const acceptButton: HTMLButtonElement = document.createElement("button");
-				acceptButton.innerHTML = "✓";
+				acceptButton.textContent = "✓";
 				acceptButton.onclick = async () => {
-					const res = await fetch(`${window.location.origin}/users/clear-invit/:${invit.friendId}`, {
-						method: "POST",
-						headers: {
-							"x-user-id": userId,
-							"authorization": `Bearer ${token}`,
-							"Content-Type": "application/json"
-						},
-						body: JSON.stringify({ gameType: `${invit.gameType}` })
-					});
-					if (!res.ok) {
-						console.error("Could not accept invit");
-						return;
-					}
 					window.location.hash = "#game";
-					launchInvitGame(invit.friendID, "accept-invit");
+					launchInvitGame(invit.user_id, "accept-invit");
 					li.remove();
 					notifNumber--;
 				};
 
 				const denyButton: HTMLButtonElement = document.createElement("button");
-				denyButton.innerHTML = "✗";
+				denyButton.textContent = "✗";
 				denyButton.onclick = async () => {
-					const res = await fetch(`${window.location.origin}/users/clear-invit/:${invit.friendId}`, {
-						method: "POST",
-						headers: {
-							"x-user-id": userId,
-							"authorization": `Bearer ${token}`,
-							"Content-Type": "application/json"
-						},
-						body: JSON.stringify({ gameType: `${invit.gameType}` })
-					});
-					if (!res.ok) {
-						console.error("Could not accept invit");
-						return;
-					}
+					launchInvitGame(invit.user_id, "deny-invit");
 					li.remove();
 					notifNumber--;
 				};
-
+				li.append(userNameSpan, acceptButton, denyButton);
 				frag.appendChild(li);
 				notifNumber++;
 			}
