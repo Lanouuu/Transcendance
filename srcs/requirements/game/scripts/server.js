@@ -431,34 +431,103 @@ function findRemotePendingGame() {
 
 
 
-fastify.get("/remote", async (request, reply) => {
+fastify.post("/remote", async (request, reply) => {
     try {
+        const {message} = request.body
 	    const userId = request.headers["x-user-id"]
-        queue.push([userId, await getUserName(userId), reply])
-        console.log(queue)
-        if (findRemotePendingGame() === false) {
-            const game = new Game({
-                id: gameId++,
-                socket: [],
-                mode: 'remote',
-                message: "Waiting"
-            })
+        console.log("message: ", message)
+        const game = new Game({
+            id: gameId++,
+            socket: [],
+            mode: 'remote',
+            message: "Waiting"
+        })
+        if (message === "invit") {
             loadSprite(game)
-            game.player1.id = queue[0][0]
-            game.player1.name = queue[0][1]
-            pendingRemoteGame.push(game)
+            game.player1.id = userId
+            console.log("USER ID: ", game.player1.id)
+            game.player1.name = await getUserName(userId)
             games.set(game.id, game)
             reply.send({message: "Success", id: game.id})
         }
-        else {
-            const gameTemp = pendingRemoteGame.shift()
-            const game = games.get(gameTemp.id)
-            game.player2.id = queue[0][0]
-            game.player2.name = queue[0][1]
-            games.set(game.id, game)
-            reply.send({message: "Success", id: game.id})
+        else if (message === "accept-invit") {
+            const {friendId} = request.body
+            let gameFound = false
+            console.log("IN ACCEPT-INVIT: ", friendId)
+            console.log(games)
+            for (const [gameId, game] of games.entries() ) {
+                if (parseInt(game.player1.id, 10) === parseInt(friendId, 10)) {
+                    gameFound = true
+                    game.player2.id = userId
+                    game.player2.name = await getUserName(userId)
+                    games.set(game.id, game);
+                    console.log("ALEEED");
+                    reply.send({message: "Success", id: game.id})
+                }            
+            }
+            const res = await fetch(`http://users:3000/clear-invit/${friendId}`, {
+                method: "POST",
+                headers: {
+                    "x-user-id": userId,
+                    "authorization": request.headers["authorization"],
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ gameType: `pong` })
+            });
+            if (!res.ok) {
+                console.error("Could not clear invit");
+                // return;
+            }
+            if (gameFound === false)
+                return reply.send({message: "deny-invit"})
         }
-        queue.shift()
+        else if (message === "deny-invit") {
+            const {friendId, message} = request.body
+            console.log("deny-invit-back")
+            console.log("FRIEND ID: ", friendId)
+            console.log(games);
+            for (const [gameId, game] of games.entries() ) {
+                console.log("DANS LA BOUCLE")
+                if (parseInt(game.player1.id, 10) === parseInt(friendId, 10)) {
+                    console.log("player found")
+                    game.socket[0].send(JSON.stringify({message: "deny-invit"}))
+                }           
+            }
+            const res = await fetch(`http://users:3000/clear-invit/${friendId}`, {
+                method: "POST",
+                headers: {
+                    "x-user-id": userId,
+                    "authorization": request.headers["authorization"],
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ gameType: `pong` })
+            });
+            if (!res.ok) {
+                console.error("Could not clear invit");
+                return;
+            }           
+        }
+        else if (message === "matchmaking") {
+            queue.push([userId, await getUserName(userId), reply])
+            console.log(queue)
+            if (findRemotePendingGame() === false) {
+                loadSprite(game)
+                game.player1.id = queue[0][0]
+                game.player1.name = queue[0][1]
+                pendingRemoteGame.push(game)
+                games.set(game.id, game)
+                reply.send({message: "Success", id: game.id})
+            }
+            else {
+                const gameTemp = pendingRemoteGame.shift()
+                const game = games.get(gameTemp.id)
+                game.player2.id = queue[0][0]
+                game.player2.name = queue[0][1]
+                games.set(game.id, game)
+                reply.send({message: "Success", id: game.id})
+            }
+            queue.shift()
+        }
     } catch (e) {
         console.log(e.message)
         // a supprimer

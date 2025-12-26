@@ -880,9 +880,110 @@ export async function runServer() {
       }
     }));
 
-    fastify.post("/invit-game", async (req, reply) => {
+    fastify.post("/invit-game/:id", blockGuests(async (req, reply) => {
+      try {
+        const userID = req.headers["x-user-id"];
+        const friendID = req.params.id;
+        const { gameType } = req.body; 
 
-    });
+        if (!userID || !friendID || !gameType) {
+          return reply.status(400).send({ error: "userID/friendID/gameType required" });
+        }
+
+        if (userID === friendID) {
+          return reply.status(403).send({ error: "Can't invite yourself" });
+        }
+
+        const blockedStmt = usersDB.prepare(`
+          SELECT blocked_by FROM friends
+          WHERE status = 'blocked'
+          AND (
+            (user_id = ? AND friend_id = ?)
+            OR
+            (user_id = ? AND friend_id = ?)
+          );`
+        );
+        const checkBlocked = blockedStmt.get(userID, friendID, friendID, userID);
+        if (checkBlocked) {
+          if (checkBlocked.blocked_by === Number(userID)) {
+            return reply.status(403).send({ error: "You have blocked this user" });
+          } else {
+              return reply.status(403).send({ error: "You are blocked by this user" });
+          }
+        }
+
+        const existingStmt = usersDB.prepare(`
+          SELECT * FROM invitations 
+          WHERE game_type = ? 
+          AND (
+            (user_id = ? AND friend_id = ?)
+            OR 
+            (user_id = ? AND friend_id = ? )
+          );`
+        );
+        const existingInvit = existingStmt.get(gameType, userID, friendID, friendID, userID);
+        if (existingInvit) {
+          return reply.status(403).send({ error: "Invitation already sent" });
+        }
+
+        const insertStmt = usersDB.prepare("INSERT INTO invitations (user_id, friend_id, game_type) VALUES (?, ?, ?)");
+        insertStmt.run(userID, friendID, gameType);
+
+        return reply.status(200).send({ success: true });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(400).send({ error: "Internal Server Error" });
+      }
+    }));
+
+    fastify.post("/clear-invit/:id", blockGuests(async (req, reply) => {
+      try {
+        const userID = req.headers["x-user-id"];
+        const friendID = req.params.id;
+        const { gameType } = req.body; 
+
+        if (!userID || !friendID || !gameType) {
+          return reply.status(400).send({ error: "userID/friendID/gameType required" });
+        }
+
+        const deleteStmt = usersDB.prepare(`
+          DELETE FROM invitations 
+          WHERE game_type = ? 
+          AND (
+            (user_id = ? AND friend_id = ?)
+            OR 
+            (user_id = ? AND friend_id = ? )
+          );`);
+        deleteStmt.run(gameType, userID, friendID, friendID, userID);
+
+
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(400).send({ error: "Internal Server Error" });
+      } 
+    }));
+
+    fastify.get("/get-game-invits/:id", blockGuests(async (req, reply) => {
+      try {
+        const reqID = req.headers["x-user-id"];
+        const userID = req.params.id;
+        if (!userID || !reqID) {
+          return reply.status(400).send({ error: "userID/reqID required" });
+        }
+
+        if (reqID !== userID) {
+          return reply.status(403).send({ error: "Can only view your own invitations list" });
+        }
+
+        const listStmt = usersDB.prepare("SELECT * FROM invitations WHERE friend_id = ?");
+        const invitList = listStmt.all(userID);
+        
+        return reply.status(200).send({ invitList });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(400).send({ error: "Internal Server Error" });
+      }
+    }));
 
     //#endregion matches_management
 
