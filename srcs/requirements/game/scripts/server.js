@@ -727,22 +727,6 @@ fastify.get("/state/:id", async (request, reply) => {
     }
 })
 
-// fastify.post("/state/:id", async (request, reply) => {
-//     try {
-//         const id = parseInt(request.params.id, 10)
-//         if (!games.has(id)) {
-//             return reply.status(404).send({ error: "Game not found" });
-//         }
-//         const game = request.body.game
-//         console.log("GAME AFTER FRONT POST = ", game)
-//         games.set(id, game)
-//         reply.send({ status: 'Ok' })
-//     } catch (e) {
-//         console.log(e.message)
-//         reply.send({ status: 'Not ok' })
-//     }
-// })
-
 const start = async () => {
   try {
     const server = await fastify.listen({ port: PORT, host: HOST })
