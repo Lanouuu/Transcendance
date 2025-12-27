@@ -144,6 +144,8 @@ class Router {
 
 		window.addEventListener('user:login', () => this.startHeartbeat());
 		window.addEventListener('user:logout', () => this.stopHeartbeat());
+		window.addEventListener('user:login', () => notificationHandler());
+		// window.addEventListener('user:logout', () => this.notificationHandler());
 
 		// 		window.addEventListener('storage', (ev: StorageEvent) => {
 		//			if (ev.key === 'jwt') {
@@ -189,6 +191,8 @@ class Router {
 			this.heartBeatInterval = null;
 		}
 	}
+
+
 
 	// Gets called each time the hash (#) changes (?)
 	// Get the name of the page clean and call loadPage
@@ -444,7 +448,6 @@ class Router {
 
 }
 
-
 async function notificationHandler(): Promise<void> {
 
 	const userId: string | null = sessionStorage.getItem("userId");
@@ -531,14 +534,22 @@ async function notificationHandler(): Promise<void> {
 				frag.appendChild(li);
 				notifNumber++;
 			}
-			notifList.appendChild(frag)
+			notifList.appendChild(frag);
+
+
+			removeAllButton.onclick = () => {
+				for(let invit of invitList) {
+					launchInvitGame(invit.user_id, "deny-invit");
+				}
+				notifList.innerHTML = "";
+				notifNumber = 0;
+				notifNumberBadge.classList.add('hidden');
+		};
 		} catch (error) {
 			console.error("Could not fetch invitList:", error);
 			return;
 		}
 	};
-
-
 
 	if (notifNumber == 0)
 		notifNumberBadge.classList.add('hidden');
@@ -547,24 +558,17 @@ async function notificationHandler(): Promise<void> {
 		notifNumberBadge.textContent = String(notifNumber);
 	}
 
-	removeAllButton.onclick = () => {
-		// FETCH POUR LA DB ??
-
-		notifList.innerHTML = "";
-		notifNumber = 0;
-		notifNumberBadge.classList.add('hidden');
-	};
 }
 
 // A SUPPRIMER (TESTS) /////////////////////////////////////////////////////////////////////////////////
-(async () => {
-	if (!localStorage.getItem("userTest")) {
-		const addFriendsModule = await import('./addFriends.js');
-		if (addFriendsModule.initTest) addFriendsModule.initTest();
-		else console.log("CA MARCHE PO");
-		localStorage.setItem("userTest", "true");
-	}
-})();
+	(async () => {
+		if (!localStorage.getItem("userTest")) {
+			const addFriendsModule = await import('./addFriends.js');
+			if (addFriendsModule.initTest) addFriendsModule.initTest();
+			else console.log("CA MARCHE PO");
+			localStorage.setItem("userTest", "true");
+		}
+	})();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -577,8 +581,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	if (!sessionStorage.getItem("jwt") || isGuest)
 		document.body.classList.remove("loggedIn");
-	else
+	else {
 		document.body.classList.add("loggedIn");
-	notificationHandler();
+		notificationHandler();
+	}
 });
 
