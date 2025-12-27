@@ -37,7 +37,7 @@ export async function runServer() {
       if (!userID) {
         return false;
       } else {
-        const checkStmt = usersDB.prepare("SELECT is_gest FROM users WHERE id = ?");
+        const checkStmt = usersDB.prepare("SELECT is_guest FROM users WHERE id = ?");
         const checkRes = checkStmt.get(userID);
         if (checkRes && checkRes.is_guest) {
           return true;
