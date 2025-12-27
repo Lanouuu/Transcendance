@@ -164,13 +164,13 @@ function gameLoop(game) {
         updateBallPosition(game)
         if (game.player1.score === 5) {
             game.message = "END"
-            game.winner = "Player1"
-            game.displayWinner = "Player 1 wins"
+            game.winner = game.player1.name
+            game.displayWinner = game.player1.name + " wins"
         }
         else if (game.player2.score === 5) {
             game.message = "END"
-            game.winner = "Player2"
-            game.displayWinner = "Player 2 wins"
+            game.winner = game.player2.name
+            game.displayWinner = game.player2.name + " wins"
         }
         game.socket.forEach(socket => {
             if (socket.readyState === 1) {
