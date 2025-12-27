@@ -53,6 +53,7 @@ function startTimer(game) {
         if (game.timer < 0) {
             clearInterval(intervalId)
             game.started = true
+            game.message = "Playing"
         }
     }, 1000)
 }
@@ -74,7 +75,7 @@ async function sendResult(game) {
                winnerID: winner_id,
                scoreP1: game.player1.score,
                scoreP2: game.player2.score,
-               matchType: "remote",
+               matchType: game.mode,
                gameType: "pong",
              }),
            });
@@ -88,6 +89,37 @@ async function sendResult(game) {
     }
 }
 
+function updatePlayersPosition(game) {
+    // Player 1
+    if (game.player1.key.up) {
+
+        if (game.player1.sprite.position.y - 15 <= 0)
+            game.player1.sprite.position.y = 0
+        else
+            game.player1.sprite.position.y -=1 * 15
+    }
+    if (game.player1.key.down) {
+        if (game.player1.sprite.position.y + 15 + game.player1.sprite.imgSize.height >= game.board.imgSize.height)
+            game.player1.sprite.position.y = game.board.imgSize.height - game.player1.sprite.imgSize.height
+        else
+            game.player1.sprite.position.y +=1 * 15
+    }
+    // Player 2
+    if (game.player2.key.up) {
+
+        if (game.player2.sprite.position.y - 15 <= 0)
+            game.player2.sprite.position.y = 0
+        else
+            game.player2.sprite.position.y -=1 * 15
+    }
+    if (game.player2.key.down) {
+        if (game.player2.sprite.position.y + 15 + game.player2.sprite.imgSize.height >= game.board.imgSize.height)
+            game.player2.sprite.position.y = game.board.imgSize.height - game.player2.sprite.imgSize.height
+        else
+            game.player2.sprite.position.y +=1 * 15
+    }
+}
+
 function gameLoop(game) {
     if (game.board === undefined || game.socket === undefined) {
         console.log("Game not ready yet")
@@ -98,35 +130,7 @@ function gameLoop(game) {
         startTimer(game)
     }
     if (game.started === true) {
-        game.message = "Playing"
-        // Player 1
-        if (game.player1.key.up) {
-
-            if (game.player1.sprite.position.y - 15 <= 0)
-                game.player1.sprite.position.y = 0
-            else
-                game.player1.sprite.position.y -=1 * 15
-        }
-        if (game.player1.key.down) {
-            if (game.player1.sprite.position.y + 15 + game.player1.sprite.imgSize.height >= game.board.imgSize.height)
-                game.player1.sprite.position.y = game.board.imgSize.height - game.player1.sprite.imgSize.height
-            else
-                game.player1.sprite.position.y +=1 * 15
-        }
-        // Player 2
-        if (game.player2.key.up) {
-
-            if (game.player2.sprite.position.y - 15 <= 0)
-                game.player2.sprite.position.y = 0
-            else
-                game.player2.sprite.position.y -=1 * 15
-        }
-        if (game.player2.key.down) {
-            if (game.player2.sprite.position.y + 15 + game.player2.sprite.imgSize.height >= game.board.imgSize.height)
-                game.player2.sprite.position.y = game.board.imgSize.height - game.player2.sprite.imgSize.height
-            else
-                game.player2.sprite.position.y +=1 * 15
-        }
+        updatePlayersPosition(game)
         // Move Ball
         if (game.ball.position !== undefined) {
             game.ball.position.x += game.ball.velocity.x
@@ -288,8 +292,12 @@ function localInputHandler(game, key, event) {
     }
 }
 
-function remoteInputHandler(game, ws, key, event) {
-    if (parseInt(ws.userId, 10) === parseInt(game.player1.id, 10)) {
+function remoteInputHandler(game, userId, key, event) {
+    console.log("USER ID: ", userId)
+    console.log("int USER ID: ", parseInt(userId, 10))
+    console.log("PLAYER 1 ID: ", parseInt(game.player1.id, 10))
+    console.log("PLAYER 2 ID: ", parseInt(game.player2.id, 10))
+    if (parseInt(userId, 10) === parseInt(game.player1.id, 10)) {
         if (event === "keydown") {
             if (key === 'a' || key === "ArrowLeft")
                 game.player1.key.up = true;
@@ -301,7 +309,7 @@ function remoteInputHandler(game, ws, key, event) {
             else if (key === 'd' || key === "ArrowRight")
                 game.player1.key.down = false;            
         }
-    } else if (parseInt(ws.userId, 10) === parseInt(game.player2.id, 10)) {
+    } else if (parseInt(userId, 10) === parseInt(game.player2.id, 10)) {
         if (event === "keydown") {
             if (key === 'a' || key === "ArrowLeft")
                 game.player2.key.up = true;
@@ -346,7 +354,7 @@ wss.on('connection', function connection(ws) {
         if (game.mode === "local")
             localInputHandler(game, res.key, res.event)
         else if (game.mode === "remote" || game.mode === "tournament")
-            remoteInputHandler(game, ws, res.key, res.event)
+            remoteInputHandler(game, ws.userId, res.key, res.event)
         games.set(game.id, game)
     }
   })
@@ -499,7 +507,7 @@ async function public_matchmaking(userId, reply) {
     console.log(queue)
     if (findRemotePendingGame() === false) {
         const game = new Game({
-            id: gameId++,
+            id: parseInt(userId, 10),
             socket: [],
             mode: 'remote',
             message: "Waiting"
@@ -669,17 +677,40 @@ fastify.post("/remoteTournament", async (request, reply) => {
 })
 
 
-// fastify.post("/input", async (request, reply) => {
-//     try {
-//         const id = parseInt()
-//         reply.send(game)
-//     } catch (e) {
-//         console.log(e.message)
-//         // a supprimer
-//         console.log("Error creating local game")
-//         reply.send([])
-//     }
-// })
+fastify.post("/input", async (request, reply) => {
+    const {gameId, key} = request.body || {}
+    const userId = request.headers["x-user-id"]
+    try {
+        if (!gameId)
+            throw new Error("Game id required")
+        if (!userId)
+            throw new Error("User id required")
+        if (key) {
+            if (!games.has(parseInt(gameId, 10))) {
+                reply.send(JSON.stringify({ error: "Game not found" }))
+                return
+            }
+            const game = games.get(parseInt(gameId, 10))
+            if (game.message === "Playing") {
+                if (game.mode === "local") {
+                    localInputHandler(game, key, "keydown")
+                    updatePlayersPosition(game)
+                    localInputHandler(game, key, "keyup")
+                }
+                else if (game.mode === "remote" || game.mode === "tournament") {
+                    remoteInputHandler(game, userId, key, "keydown")
+                    updatePlayersPosition(game)
+                    remoteInputHandler(game, userId, key, "keyup")
+                }
+            }
+            else
+                throw new Error("Game haven't started yet")
+        }
+    } catch (e) {
+        console.log("Error, in API ROUTE INPUT: ", e.message)
+        reply.send({ error: e.message })
+    }
+})
 
 
 fastify.get("/state/:id", async (request, reply) => {
