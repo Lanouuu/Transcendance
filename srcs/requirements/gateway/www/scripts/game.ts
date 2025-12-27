@@ -1,4 +1,5 @@
 import { Game, Sprite, Vector2D, KeyBind, ImgSize } from "./gameClass.js"
+import { login } from "./login.js";
 import { SnakeGame, GridPosition } from "./snakeGame.js"
 
 
@@ -12,55 +13,81 @@ let currentSnakeGameMode: 'local' | 'remote' | null = null;
 let currentWebSocket: WebSocket | null = null;
 let currentAnimationId: number | null = null;
 
+async function checkToken(): Promise<boolean> {
+	const token = sessionStorage.getItem("jwt");
+	if (!token) {
+		return false;
+	}
+	try {
+		const response = await fetch(`${window.location.origin}/auth_service/verify`, {
+			headers: { "Authorization": `Bearer ${token}` }
+		});
+		if (!response.ok) {
+			return false;
+		}
+		return true;
+	} catch (error) {
+		console.error("Auth check failed:", error);
+		return false;
+	}
+}
+
 export async function setupGamePage(): Promise<void> {
-	
-	const initButtons = () => {
-		const remoteButton: HTMLButtonElement = document.getElementById('gameRemoteGameButton') as HTMLButtonElement;
-		const localButton: HTMLButtonElement = document.getElementById('gameLocalGameButton') as HTMLButtonElement;
-		const snakeLocalButton: HTMLButtonElement = document.getElementById('snakeLocalGameButton') as HTMLButtonElement;
-		const snakeRemoteButton: HTMLButtonElement = document.getElementById('snakeRemoteGameButton') as HTMLButtonElement;
-		const snakeReplayButton: HTMLButtonElement = document.getElementById('snakeReplayButton') as HTMLButtonElement;
-		const gameMenu: HTMLElement = document.getElementById('gameSelectionMenu') as HTMLElement;
 
+	const loginRedirectButton: HTMLButtonElement = document.getElementById('loginRedirectButton') as HTMLButtonElement;
 
-		if (!remoteButton || !localButton || !snakeLocalButton || !snakeRemoteButton) {
-			console.error("Could not fetch game buttons");
-			return ;
-		}
+	const boxGamePong: HTMLDivElement = document.getElementById("boxGamePong") as HTMLDivElement;
+	const boxGameSnake: HTMLDivElement = document.getElementById("boxGameSnake") as HTMLDivElement;
+	const pongLocalButton: HTMLButtonElement = document.getElementById('pongLocalGameButton') as HTMLButtonElement;
+	const pongRemoteButton: HTMLButtonElement = document.getElementById('pongRemoteGameButton') as HTMLButtonElement;
+	const snakeLocalButton: HTMLButtonElement = document.getElementById('snakeLocalGameButton') as HTMLButtonElement;
+	const snakeRemoteButton: HTMLButtonElement = document.getElementById('snakeRemoteGameButton') as HTMLButtonElement;
 
-		localButton.addEventListener('click', async () => {
-			console.log("localGameBUtton");
-			localButton.classList.add('hidden');
-			remoteButton.classList.add('hidden');
-			launchLocalGame();
-		});
-		remoteButton.addEventListener('click', async () => {
-			launchRemoteGame();
-			localButton.classList.add('hidden');
-			remoteButton.classList.add('hidden');
-			console.log("remoteGameBUtton");
-		});
-		snakeLocalButton.addEventListener('click', async () => {
-			console.log("snakeLocalGameButton");
-			if (gameMenu) gameMenu.classList.add('hidden');
-			launchSnakeLocalGame();
-		});
-		snakeRemoteButton.addEventListener('click', async () => {
-			console.log("snakeRemoteGameButton");
-			if (gameMenu) gameMenu.classList.add('hidden');
-			launchSnakeRemoteGame();
-		});
+	const isOnline = await checkToken();
+	if (!isOnline) {
+		loginRedirectButton.classList.remove('hidden');
+	} else {
+		boxGamePong.classList.remove('hidden');
+		boxGamePong.classList.add('flex');
+		boxGameSnake.classList.remove('hidden');
+		boxGameSnake.classList.add('flex');
+	}
 
-		// Gestionnaire pour le bouton replay
-		if (snakeReplayButton) {
-			snakeReplayButton.addEventListener('click', async () => {
-				console.log("snakeReplayButton");
-				replaySnakeGame();
-			});
-		}
-	};
+	loginRedirectButton.addEventListener('click', async () => {
+		window.location.hash = "#login";
+	});
 
-	initButtons();
+	pongLocalButton.addEventListener('click', async () => {
+		boxGamePong.classList.remove('flex');
+		boxGamePong.classList.add('hidden');
+		boxGameSnake.classList.remove('flex');
+		boxGameSnake.classList.add('hidden');
+		launchLocalGame();
+	});
+
+	pongRemoteButton.addEventListener('click', async () => {
+		boxGamePong.classList.remove('flex');
+		boxGamePong.classList.add('hidden');
+		boxGameSnake.classList.remove('flex');
+		boxGameSnake.classList.add('hidden');
+		launchRemoteGame();
+	});
+
+	snakeLocalButton.addEventListener('click', async () => {
+		boxGamePong.classList.remove('flex');
+		boxGamePong.classList.add('hidden');
+		boxGameSnake.classList.remove('flex');
+		boxGameSnake.classList.add('hidden');
+		launchSnakeLocalGame();
+	});
+
+	snakeRemoteButton.addEventListener('click', async () => {
+		boxGamePong.classList.remove('flex');
+		boxGamePong.classList.add('hidden');
+		boxGameSnake.classList.remove('flex');
+		boxGameSnake.classList.add('hidden');
+		launchSnakeRemoteGame();
+	});
 }
 
 
@@ -68,7 +95,6 @@ async function launchLocalGame() {
 
 	const token: string | null = sessionStorage.getItem("jwt");
 	const userId: string | null = sessionStorage.getItem("userId");
-	const remoteButton: HTMLButtonElement = document.getElementById('gameRemoteGameButton') as HTMLButtonElement;
 
 	if (userId === null || token === null) {
 		console.error('Could not fetch user id/token');
@@ -146,7 +172,6 @@ async function launchRemoteGame() {
 
 	const token: string | null = sessionStorage.getItem("jwt");
 	const userId: string | null = sessionStorage.getItem("userId");
-	const localButton: HTMLButtonElement = document.getElementById('gameLocalGameButton') as HTMLButtonElement;
 	
 	if (userId === null || token === null) {
 		console.error('Could not fetch user id/token');
@@ -168,7 +193,6 @@ async function launchRemoteGame() {
 			console.error(`Server error ${res.status}:`, text);
 			throw new Error(`Failed to load the game`);
 		}
-		// console.log(res.text());
 		const contentType = res.headers.get("content-type");
 		if (!contentType || !contentType.includes("application/json")) {
 			const text = await res.text();
@@ -285,7 +309,6 @@ export async function launchInvitGame(friendId: string, message: string) {
 							window.location.hash = "#account";
 						}
 					}
-					else console.log("BALALALALALLA");
 					game = serverGame.game;
 					gameLoop(game, ws);
 				}
@@ -293,7 +316,6 @@ export async function launchInvitGame(friendId: string, message: string) {
 					const gameQueueMsg: HTMLDivElement = document.getElementById("gameQueueMsg") as HTMLDivElement;
 
 					if (gameQueueMsg) {
-						console.log("ADSASD");
 						gameQueueMsg.classList.toggle('opacity-0');
 						gameQueueMsg.classList.toggle('opacity-100');
 						gameQueueMsg.textContent = "Your invitation has been denied ! haha";
@@ -331,7 +353,7 @@ export async function launchInvitGame(friendId: string, message: string) {
 	}
 }
 
-export async function gameLoop(game: Game, ws: WebSocket) { // BIZARRE LE TYPE
+export async function gameLoop(game: Game, ws: WebSocket) {
 
 	try {
 		await loadSprites(game);
@@ -388,12 +410,10 @@ export async function gameLoop(game: Game, ws: WebSocket) { // BIZARRE LE TYPE
 		canvas.height= 455;
 		canvas.className = "bg-color-black";
 
-		// const canvas: HTMLCanvasElement = document.getElementById("canvas") as HTMLCanvasElement;
 		if (!canvas || !canvasDiv) {
 			console.error('Could not fetch canvas div');
 			return;
 		}
-		// canvasDiv.innerHTML = "";
 		canvasDiv.appendChild(canvas);
 		gameAnimation(game, canvas);
 	} catch (error) {

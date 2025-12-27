@@ -1,131 +1,136 @@
-<div id="game" style="display:flex; flex-direction:column; justify-content:center; align-items:center; gap:20px;">
+<div id="game" 
+	class="
+		page 
+        flex flex-col 
+        lg:flex-row items-center justify-center
+        gap-20
+        px-4 py-8">
 
-	<div class="game-selection-menu" id="gameSelectionMenu">
-		<h2 class="text-2xl font-bold text-white mb-4">Choisissez votre jeu</h2>
+	<button id="loginRedirectButton" 
+		class="
+			mx-auto py-3 px-12
+            rounded-xl
+            bg-prim bg-opacity-90 hover:bg-opacity-100
+            text-white font-semibold font-geo
+			text-3xl
+            shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+            hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+            transition
+			hidden">
+		Login to play
+	</button>
 
-		<div class="pong-section mb-6">
-			<h3 class="text-xl text-white mb-3">Pong</h3>
-			<div style="display:flex; gap:10px;">
-				<button id="gameLocalGameButton" class="
-					bg-prim
-					hover:bg-sec
-					text-white
-					font-bold
-					py-3
-					px-6
-					rounded-lg
+	<div id="boxGamePong" 
+		class="
+			bg-dark bg-opacity-40 
+    		rounded-3xl 
+    		p-6 
+    		w-full lg:w-[22vw] h-[55vh] 
+    		flex-col
+			items-center justify-evenly
+    		text-white font-geo text-xl
+			hidden">
+			<h2 class="
+					text-3xl sm:text-4xl lg:text-5xl xl:text-6xl
+        			font-geo font-semibold text-light mb-6 text-center">
+        		Pong
+	        </h2>
+			<img src="assets/other/pong.png" 
+				class="
+					w-64 h-64
+					rounded-full
+					object-cover
 					cursor-pointer
-					shadow-lg
-					hover:shadow-xl
-					transition-all
-					duration-200
-					active:scale-95">
-					Pong - Local
-				</button>
-
-				<button id="gameRemoteGameButton" class="
-					bg-prim
-					hover:bg-sec
-					text-white
-					font-bold
-					py-3
-					px-6
-					rounded-lg
-					cursor-pointer
-					shadow-lg
-					hover:shadow-xl
-					transition-all
-					duration-200
-					active:scale-95">
-					Pong - En ligne
-				</button>
-			</div>
-		</div>
-
-		<div class="snake-section">
-			<h3 class="text-xl text-white mb-3">Snake</h3>
-			<div style="display:flex; gap:10px;">
-				<button id="snakeLocalGameButton" class="
-					bg-prim
-					hover:bg-sec
-					text-white
-					font-bold
-					py-3
-					px-6
-					rounded-lg
-					cursor-pointer
-					shadow-lg
-					hover:shadow-xl
-					transition-all
-					duration-200
-					active:scale-95">
-					Snake - Local
-				</button>
-
-				<button id="snakeRemoteGameButton" class="
-					bg-prim
-					hover:bg-sec
-					text-white
-					font-bold
-					py-3
-					px-6
-					rounded-lg
-					cursor-pointer
-					shadow-lg
-					hover:shadow-xl
-					transition-all
-					duration-200
-					active:scale-95">
-					Snake - En ligne
-				</button>
-			</div>
-		</div>
+					select-none">
+			<button id="pongLocalGameButton" 
+				class="
+					mx-auto py-3 w-full sm:w-4/6
+            		rounded-xl
+            		bg-prim bg-opacity-90 hover:bg-opacity-100
+            		text-white font-semibold font-geo
+            		shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+            		hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+            		transition">
+				Local game
+			</button>
+			<button id="pongRemoteGameButton" 
+				class="
+					mx-auto py-3 w-full sm:w-4/6
+            		rounded-xl
+            		bg-prim bg-opacity-90 hover:bg-opacity-100
+            		text-white font-semibold font-geo
+            		shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+            		hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+            		transition">
+				Remote game
+			</button>
 	</div>
+
+	<div id="boxGameSnake" 
+		class="
+			bg-dark bg-opacity-40 
+    		rounded-3xl 
+    		p-6 
+    		w-full lg:w-[22vw] h-[55vh] 
+    		flex-col
+			items-center justify-evenly
+    		text-white font-geo text-xl
+			hidden">
+			<h2 class="
+					text-3xl sm:text-4xl lg:text-5xl xl:text-6xl
+        			font-geo font-semibold text-light mb-6 text-center">
+        		Snake
+	        </h2>
+			<img src="assets/other/snake.png" 
+				class="
+					w-64 h-64
+					object-cover
+					cursor-pointer
+					select-none">
+			<button id="snakeLocalGameButton" 
+				class="
+					mx-auto py-3 w-full sm:w-4/6
+            		rounded-xl
+            		bg-prim bg-opacity-90 hover:bg-opacity-100
+            		text-white font-semibold font-geo
+            		shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+            		hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+            		transition">
+				Local game
+			</button>
+			<button id="snakeRemoteGameButton" 
+				class="
+					mx-auto py-3 w-full sm:w-4/6
+            		rounded-xl
+            		bg-prim bg-opacity-90 hover:bg-opacity-100
+            		text-white font-semibold font-geo
+            		shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+            		hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+            		transition">
+				Remote game
+			</button>
+	</div>
+
 
 	<div id="canvasDiv">
 
 	</div>
 
-    <canvas id="canvas" width="802" height="455" style="background-color: black;" class="hidden"></canvas>
+    <canvas id="canvas" width="802" height="455" style="background-color: bg-dark;" class="hidden"></canvas>
     <canvas id="snakeCanvas" width="600" height="600" style="background-color: black;" class="hidden"></canvas>
 
-	<button id="snakeReplayButton" class="
-		hidden
-		bg-prim
-		hover:bg-sec
-		text-white
-		font-bold
-		py-3
-		px-8
-		rounded-lg
-		cursor-pointer
-		shadow-lg
-		hover:shadow-xl
-		transition-all
-		duration-200
-		active:scale-95
-		mt-4">
-		Rejouer
+	<button id="ReturnGameButton" 
+		class="
+			mx-auto py-3 w-full sm:w-4/6
+    		rounded-xl
+    		bg-prim bg-opacity-90 hover:bg-opacity-100
+    		text-white font-semibold font-geo
+    		shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+    		hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]
+    		transition
+			hidden">
+		Return
 	</button>
-	
-	<button id="cancelMatchButton" class="
-		bg-prim
-		hover:bg-sec
-		text-white
-		font-bold
-		py-3
-		px-6
-		rounded-lg
-		cursor-pointer
-		shadow-lg
-		hover:shadow-xl
-		transition-all
-		duration-200
-		active:scale-95
-		hidden
-	">
-		Cancel Match			
-	</button>
-	
+
 	<div id="gameQueueMsg" class="opacity-0 absolute bottom-4 text-xl"></div>
 </div>
