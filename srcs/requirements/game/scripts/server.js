@@ -120,6 +120,36 @@ function updatePlayersPosition(game) {
     }
 }
 
+function updateBallPosition(game) {
+    if (game.ball.position !== undefined) {
+        game.ball.position.x += game.ball.velocity.x
+        game.ball.position.y += game.ball.velocity.y
+
+        if (game.ball.position.x + game.ball.imgSize.width < 0) {
+            game.ball.position = {x: game.board.imgSize.width / 2, y:game.board.imgSize.height / 2}
+            game.player2.score++
+        }
+
+        if (game.ball.position.x - game.ball.imgSize.width > game.board.imgSize.width) {
+            game.ball.position = {x: game.board.imgSize.width / 2, y:game.board.imgSize.height / 2}
+            game.player1.score++
+        }
+        if (game.ball.position.y <= 0 || game.ball.position.y + game.ball.imgSize.height >= game.board.imgSize.height)
+            game.ball.velocity.y = -game.ball.velocity.y
+
+        if (game.ball.position.x <= game.player1.sprite.position.x + game.player1.sprite.imgSize.width && game.ball.position.x >= game.player1.sprite.position.x && game.ball.position.y + game.ball.imgSize.height >= game.player1.sprite.position.y && game.ball.position.y <= game.player1.sprite.position.y + game.player1.sprite.imgSize.height) {
+            game.ball.velocity.x = -game.ball.velocity.x
+            game.ball.position.x = game.player1.sprite.position.x + game.player1.sprite.imgSize.width
+        }
+        
+        if (game.ball.position.x + game.ball.imgSize.width >= game.player2.sprite.position.x && game.ball.position.x <= game.player2.sprite.position.x + game.player2.sprite.imgSize.width && game.ball.position.y + game.ball.imgSize.height >= game.player2.sprite.position.y && game.ball.position.y <= game.player2.sprite.position.y + game.player2.sprite.imgSize.height) {
+            game.ball.velocity.x = -game.ball.velocity.x
+            game.ball.position.x = game.player2.sprite.position.x - game.ball.imgSize.width
+        }
+    }
+
+}
+
 function gameLoop(game) {
     if (game.board === undefined || game.socket === undefined) {
         console.log("Game not ready yet")
@@ -131,34 +161,7 @@ function gameLoop(game) {
     }
     if (game.started === true) {
         updatePlayersPosition(game)
-        // Move Ball
-        if (game.ball.position !== undefined) {
-            game.ball.position.x += game.ball.velocity.x
-            game.ball.position.y += game.ball.velocity.y
-
-            if (game.ball.position.x + game.ball.imgSize.width < 0) {
-                game.ball.position = {x: game.board.imgSize.width / 2, y:game.board.imgSize.height / 2}
-                game.player2.score++
-            }
-
-            if (game.ball.position.x - game.ball.imgSize.width > game.board.imgSize.width) {
-                game.ball.position = {x: game.board.imgSize.width / 2, y:game.board.imgSize.height / 2}
-                game.player1.score++
-            }
-            if (game.ball.position.y <= 0 || game.ball.position.y + game.ball.imgSize.height >= game.board.imgSize.height)
-                game.ball.velocity.y = -game.ball.velocity.y
-
-            if (game.ball.position.x <= game.player1.sprite.position.x + game.player1.sprite.imgSize.width && game.ball.position.x >= game.player1.sprite.position.x && game.ball.position.y + game.ball.imgSize.height >= game.player1.sprite.position.y && game.ball.position.y <= game.player1.sprite.position.y + game.player1.sprite.imgSize.height) {
-                game.ball.velocity.x = -game.ball.velocity.x
-                game.ball.position.x = game.player1.sprite.position.x + game.player1.sprite.imgSize.width
-            }
-            
-            if (game.ball.position.x + game.ball.imgSize.width >= game.player2.sprite.position.x && game.ball.position.x <= game.player2.sprite.position.x + game.player2.sprite.imgSize.width && game.ball.position.y + game.ball.imgSize.height >= game.player2.sprite.position.y && game.ball.position.y <= game.player2.sprite.position.y + game.player2.sprite.imgSize.height) {
-                game.ball.velocity.x = -game.ball.velocity.x
-                game.ball.position.x = game.player2.sprite.position.x - game.ball.imgSize.width
-            }
-        }
-
+        updateBallPosition(game)
         if (game.player1.score === 5) {
             game.message = "END"
             game.winner = "Player1"
@@ -335,29 +338,28 @@ wss.on('listening', () => {
 })
 
 wss.on('connection', function connection(ws) {
-  ws.on('error', console.error)
-
-  ws.on('message', function message(data) {
-    const res = JSON.parse(data.toString())
-    if (res.message === "InitLocal") 
-        localGamehandler(res.id, ws)
-    else if (res.message === "InitRemote") 
-        RemoteGamehandler(res.id, ws)
-    else if (res.message === "InitTournament")
-        TournamentHandler(res.id, res.gameId, res.tournament_id, ws)
-    else if (res.message === "input") {
-        if (!games.has(parseInt(res.id, 10))) {
-            ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
-            return
+    ws.on('error', console.error)
+    ws.on('message', function message(data) {
+        const res = JSON.parse(data.toString())
+        if (res.message === "InitLocal") 
+            localGamehandler(res.id, ws)
+        else if (res.message === "InitRemote") 
+            RemoteGamehandler(res.id, ws)
+        else if (res.message === "InitTournament")
+            TournamentHandler(res.id, res.gameId, res.tournament_id, ws)
+        else if (res.message === "input") {
+            if (!games.has(parseInt(res.id, 10))) {
+                ws.send(JSON.stringify({ message: "Error", error: "Game not found" }))
+                return
+            }
+            const game = games.get(parseInt(res.id, 10))
+            if (game.mode === "local")
+                localInputHandler(game, res.key, res.event)
+            else if (game.mode === "remote" || game.mode === "tournament")
+                remoteInputHandler(game, ws.userId, res.key, res.event)
+            games.set(game.id, game)
         }
-        const game = games.get(parseInt(res.id, 10))
-        if (game.mode === "local")
-            localInputHandler(game, res.key, res.event)
-        else if (game.mode === "remote" || game.mode === "tournament")
-            remoteInputHandler(game, ws.userId, res.key, res.event)
-        games.set(game.id, game)
-    }
-  })
+    })
 })
 
 function loadSprite(game) {
@@ -708,7 +710,7 @@ fastify.post("/input", async (request, reply) => {
         }
     } catch (e) {
         console.log("Error, in API ROUTE INPUT: ", e.message)
-        reply.send({ error: e.message })
+        reply.send(JSON.stringify({ error: e.message }))
     }
 })
 
