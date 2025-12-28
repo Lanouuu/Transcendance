@@ -112,7 +112,7 @@ export async function displayTournamentPage () {
             const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
             ws.addEventListener('open', (event) => {
                 if (ws.readyState === WebSocket.OPEN)
-                    ws.send(JSON.stringify({gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "InitTournament"}))
+                    ws.send(JSON.stringify({id: response.id, tournamentId: response.tournamentId, userId: userId, message: "initTournament"}))
             })
 
             ws.addEventListener('message', (event) => {
@@ -287,7 +287,7 @@ export async function displayTournamentPage () {
             const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
             ws.addEventListener('open', (event) => {
                 if (ws.readyState === WebSocket.OPEN)
-                    ws.send(JSON.stringify({gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "InitTournament"}))
+                    ws.send(JSON.stringify({id: response.id, tournamentId: response.tournamentId, userId: userId, message: "initTournament"}))
             })
 
             ws.addEventListener('message', (event) => {
@@ -383,7 +383,7 @@ export async function displayTournamentPage () {
             const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
             ws.addEventListener('open', (event) => {
                 if (ws.readyState === WebSocket.OPEN)
-                    ws.send(JSON.stringify({gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "InitTournament"}))
+                    ws.send(JSON.stringify({id: response.id, tournamentId: response.tournamentId, userId: userId, message: "initTournament"}))
             })
 
             ws.addEventListener('message', (event) => {
@@ -418,6 +418,8 @@ export async function displayTournamentPage () {
                     game.player1.score = serverGame.player1.score
                     game.player2.score = serverGame.player2.score
                 }
+                else if (game && serverGame.message === "Error")
+                    console.log("ERROR: ", serverGame.error)
             })
 
             ws.addEventListener('error', (error) => {
