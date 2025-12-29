@@ -83,7 +83,6 @@ export async function displayAccountPage() {
 		tabTable[key].div.classList.toggle('hidden', key !== accountActiveTab);
 		tabTable[key].tab.classList.toggle('active', key === accountActiveTab);
 	});
-	// tabTable[accountActiveTab].fctn();
 }
 
 async function showInfosTab(userId: string, token: string): Promise<void> {
@@ -139,7 +138,7 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 		}
 		usernameSpan.innerText = data.name;
 		mailSpan.innerText = data.mail;
-		dblFaBox.checked = data.enable2FA || false; // checkbox plutot que du text
+		dblFaBox.checked = data.enable2FA || false;
 
 		const resImg = await fetch(`${USERS_URL}/get-avatar/${userId}`, {
 			method: "GET",
@@ -280,7 +279,6 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 		// #endregion stats //
 	} catch (error) {
 		console.error(error);
-		// Faire qqch pour informer 
 	}
 
 }
@@ -373,7 +371,7 @@ async function displayFriendList(userId: string, token: string, ulFriendsList: H
 		}
 		ulFriendsList.appendChild(frag);
 	} catch (error) {
-		console.error("Error displaying friends list:", error); // afficher msg dans une div pour le user
+		console.error("Error displaying friends list:", error);
 	}
 }
 
@@ -546,18 +544,20 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 		}); 
 		if (!inviteRes.ok) {
 			const data = await inviteRes.json();
-			console.error("Could not send game invit:", data.error);
+			const errorMsg: HTMLDivElement = document.getElementById("friendListMsg") as HTMLDivElement;
+			if (errorMsg) {
+				errorMsg.textContent = data.error;
+				errorMsg.style.color = 'red';
+			}
 			return ;
 		}
 		window.location.hash = "#game?invite=" + friendId + "&message=sendInvit";
 	}
 	playPongButton.appendChild(playPongIcon);
 
-	// Ajout du bouton de suppression d'un ami
 	const delFriendButton = document.createElement("button");
 	const delFriendIcon = document.createElement("img");
 
-	// delFriendButton.id = "fInListDelFriendButton"; // Same
 	delFriendIcon.src = "./assets/other/delete-user.svg";
 	delFriendIcon.className = "h-6 w-6 invert"
 	delFriendButton.className = "w-fit h-fit place-self-center";
@@ -591,7 +591,6 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 	const blockFriendButton = document.createElement("button");
 	const blockFriendIcon = document.createElement("img");
 	
-	// blockFriendButton.id = "fInListBlockFriendButton"; // Same
 	blockFriendIcon.src = "./assets/other/block-user.svg";
 	blockFriendIcon.className = "w-6 h-6 invert"
 	blockFriendButton.className = "w-fit h-fit place-self-center";
@@ -641,7 +640,6 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 	const acceptFriendButton = document.createElement("button");
 	const acceptFriendIcon = document.createElement("img");
 	
-	// acceptFriendButton.id = "fInListacceptFriendButton"; // Same
 	acceptFriendIcon.src = "./assets/other/add-user.svg";
 	acceptFriendIcon.width = 24;
 	acceptFriendIcon.height = 24;
@@ -675,7 +673,6 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 	const declineFriendButton = document.createElement("button");
 	const declineFriendIcon = document.createElement("img");
 	
-	// acceptFriendButton.id = "fInListacceptFriendButton"; // Same
 	declineFriendIcon.src = "./assets/other/delete-user.svg";
 	declineFriendIcon.width = 24;
 	declineFriendIcon.height = 24;
@@ -708,7 +705,6 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 	const blockFriendButton = document.createElement("button");
 	const blockFriendIcon = document.createElement("img");
 	
-	// blockFriendButton.id = "fInListBlockFriendButton"; // Same
 	blockFriendIcon.src = "./assets/other/block-user.svg";
 	blockFriendIcon.width = 24;
 	blockFriendIcon.height = 24;
@@ -756,7 +752,6 @@ function createLiBlockedItem(blockedId: string, blockedName: string, userId: str
 	const unblockFriendButton = document.createElement("button");
 	const unblockFriendIcon = document.createElement("img");
 	
-	// blockFriendButton.id = "fInListBlockFriendButton"; // Same
 	unblockFriendIcon.src = "./assets/other/unblock-user.svg";
 	unblockFriendIcon.width = 24;
 	unblockFriendIcon.height = 24;
