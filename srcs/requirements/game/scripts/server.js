@@ -494,6 +494,8 @@ fastify.post("/remote", async (request, reply) => {
                 if (parseInt(game.player1.id, 10) === parseInt(friendId, 10)) {
                     console.log("player found")
                     game.socket[0].send(JSON.stringify({message: "deny-invit"}))
+                    game.delete(gameId);
+                    break;
                 }           
             }
             const res = await fetch(`http://users:3000/clear-invit/${friendId}`, {
