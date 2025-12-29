@@ -14,55 +14,52 @@ export async function displayTournamentPage() {
 		return;
 	}
 
-	// POUR TESTER
-	let switcher: boolean = false;
-	const switcherButton: HTMLButtonElement = document.getElementById("switcher") as HTMLButtonElement;
-	if (switcherButton) {
-		switcherButton.onclick = async () => {
-			if (switcher) {
-				await displayTournamentCreation(userId, token);
-			}
-			else {
-				await displayJoinedTournament(userId, token, 'pending', 1);
-			}
-			switcher = !switcher;
-		};
+	// #region Left //
+
+	const joinedTournamentInfo: {tournamentId: number | undefined, isRegistered: boolean} = await isInTournament(userId, token);
+	if (joinedTournamentInfo.isRegistered && joinedTournamentInfo.tournamentId !== undefined) {
+		displayJoinedTournament(userId, token, joinedTournamentInfo.tournamentId);
+		console.log("Player is in tournament: id = ", joinedTournamentInfo.tournamentId);
+	}
+	else {
+		displayTournamentCreation(userId, token);
+		console.log("User not in tournament")
 	}
 
-	await displayTournamentCreation(userId, token);
+	// #endregion Left //
 
-	// #region List //
+	// #region Right //
 
 	const switchButton: HTMLButtonElement = document.getElementById('tournamentListSwitchButton') as HTMLButtonElement;
+	const switchButtonIcon: HTMLImageElement = document.getElementById('tournamentListSwitchButtonIcon') as HTMLImageElement;
 	let listDisplays: string = 'pending';
 
-	if (!switchButton) {
+	if (!switchButton || !switchButtonIcon) {
 		console.error("Could not get HTML elements");
 		return;
 	}
-
-	// AJOUTER LA STRING
+	displayTournamentList(userId, token, listDisplays);
 	switchButton.onclick = async () => {
-		if (listDisplays === 'pending')
-			listDisplays = '';
-		else if (listDisplays === '')
+		if (listDisplays === 'pending') {
+			listDisplays = 'finished';
+			switchButtonIcon.classList.add('rotate-[360deg]');
+		}
+		else if (listDisplays === 'finished') {
+			switchButtonIcon.classList.remove('rotate-[360deg]');
 			listDisplays = 'pending';
+		}
 		await displayTournamentList(userId, token, listDisplays);
+		// setTimeout(() => {switchButtonIcon.classList.remove('rotate-[360deg]');}, 500);
 	};
 
-	displayTournamentList(userId, token, listDisplays);
-
-	// #endregion List //
+	// #endregion Right //
 };
 
-// Pour les tournois en local demander a jacky comment ils ont gere le bail
-// Comment gerer pour les tournois a noms similaires ?
+// Faire en sorte que les user pas connectes puissent quand meme lancer un tournois local
 
 // Demander ces fonctions:
-// - Tester si un user est dans un tournois ou pas (pour afficher le lobby ou la creation)
 // - Quitter un tournois
 // - Supprimer un tournois (avant de le start)
-// - Recuperer les infos d'un tournois avec son ID (pour les infos dans le lobby et savoir si le user est le createur ou non)
 
 // #region Creation // 
 
@@ -164,15 +161,15 @@ async function createTournament(userId: string, token: string, tournamentName: s
 		if (!res.ok) {
 			const text = await res.json();
 			console.error(`Server error ${res.status}:`, text.error);
-			displayMsg(msg, `Error creating the tournament: ${text.error}`, "red");
+			displayMsg(msg, text.error, "red");
 			return;
 		}
 
 		const contentType = res.headers.get("content-type");
 		if (!contentType || !contentType.includes("application/json")) {
-			const text = await res.text();
-			console.error(`Server did not return JSON`, text);
-			displayMsg(msg, "Error creating the tournament", "red");
+			const text = await res.json();
+			console.error(`Server did not return JSON`, text.error);
+			displayMsg(msg, text.error, "red");
 			return;
 		}
 
@@ -224,7 +221,7 @@ async function createTournament(userId: string, token: string, tournamentName: s
 				console.error("WebSocket error:", error);
 			});
 			displayMsg(msg, "Tournament created", "green");
-			displayJoinedTournament(userId, token, tournamentMode, response.tournament_id);
+			displayJoinedTournament(userId, token, Number(response.tournament_id));
 		}
 		else {
 			displayMsg(msg, "Tournament creation failed", "red");
@@ -238,7 +235,7 @@ async function createTournament(userId: string, token: string, tournamentName: s
 
 // #region Joined //
 
-async function displayJoinedTournament(userId: string, token: string, mode: string, tournament_id: number) {
+async function displayJoinedTournament(userId: string, token: string, tournament_id: number) {
 
 	const tournamentCreationDiv: HTMLDivElement = document.getElementById("tournamentCreationDiv") as HTMLDivElement;
 	const joinedTournamentDiv: HTMLDivElement = document.getElementById("joinedTournamentDiv") as HTMLDivElement;
@@ -264,35 +261,41 @@ async function displayJoinedTournament(userId: string, token: string, mode: stri
 	}
 
 	try {
-		// tournament_id
-		const res = await fetch(`${route}/get-infos`, {
+		const data = await getTournamentInfo(userId, token, String(tournament_id), msgDiv);
 
+		if (!data) throw new Error("Could not fetch tournament infos");
+
+		nameDiv.textContent = data.tournament.name;
+
+		const resCreatorName = await fetch(`${window.location.origin}/users/get-user/${data.tournament.creator_id}`, {
+			method: "GET",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId
+			}
 		});
 
-		if (!res.ok) {
+		const dataCreator = await resCreatorName.json();
 
+		if (!resCreatorName.ok) creatorDiv.textContent = `Created by: <unknown>`;
+		else creatorDiv.textContent = `Created by: ${dataCreator.name}`;
+		modeDiv.textContent = `Mode: ${data.tournament.mode}`;
+		statusDiv.textContent = `Status: ${data.tournament.status}`;
+		playerRatioDiv.textContent = `${data.tournament.nb_current_players}/${data.tournament.nb_max_players}`;
+
+		const frag: DocumentFragment = document.createDocumentFragment();
+		const participantsArray: string[] = createParticipantsArray(data.tournament.players_names);
+
+
+		for (let userName of participantsArray) {
+			const li: HTMLLIElement = document.createElement('li');
+			li.className = "min-w-0 truncate";
+			li.textContent = userName;
+			frag.appendChild(li);
 		}
+		participantsUl.appendChild(frag);
 
-		const data = await res.json();
-
-		nameDiv.textContent = "";
-		playerRatioDiv.textContent = "";
-		modeDiv.textContent = "";
-		statusDiv.textContent = "";
-		creatorDiv.textContent = "";
-
-		// const frag: DocumentFragment = document.createDocumentFragment();
-		// // Creer un tableau avec chaque nom de participant
-
-		// for (userName of participants) {
-		// 	const li: HTMLLIElement = document.createElement('li');
-		// 	li.className = "";
-		// 	li.textContent = userName;
-		// 	frag.appendChild(li);
-		// }
-		// participantsUl.appendChild(frag);
-
-		if (data.creator_id === userId) {
+		if (data.tournament.creator_id === userId) {
 			leaveButton.classList.add('hidden');
 			startButton.classList.remove('hidden');
 			deleteButton.classList.remove('hidden');
@@ -304,7 +307,7 @@ async function displayJoinedTournament(userId: string, token: string, mode: stri
 		}
 
 		leaveButton.onclick = async () => {
-			leaveTournament(userId, token, msgDiv);
+			leaveTournament(userId, token, String(tournament_id), msgDiv);
 		};
 
 		startButton.onclick = async () => {
@@ -312,11 +315,12 @@ async function displayJoinedTournament(userId: string, token: string, mode: stri
 		};
 
 		deleteButton.onclick = async () => {
-			deleteTournament(userId, token, msgDiv);
+			deleteTournament(userId, token, String(tournament_id), msgDiv);
 		};
 
 	} catch (error) {
-
+		console.error("Error getting tournament info", error);
+		return ;
 	}
 
 	tournamentCreationDiv.classList.add('hidden');
@@ -350,12 +354,50 @@ async function startTournament(userId: string, token: string, msg: HTMLDivElemen
 	}
 }
 
-async function deleteTournament(userId: string, token: string, msg: HTMLDivElement) {
-
+// Envoie une string de l'id du tournois via le body
+async function deleteTournament(userId: string, token: string, tournamentId: string, msg: HTMLDivElement) {
+	try {
+		const res = await fetch(`${route}/deleteTournament`, {
+			method: "POST",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId,
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({tournament_id: tournamentId})
+		})
+		if (!res.ok){
+			console.error('Failed to delete tournament');
+			displayMsg(msg, "Failed to delete tournament", "red");
+			return ;
+		}
+	} catch (error) {
+		console.error('Fetch failed to deleteTournament');
+		displayMsg(msg, "Failed to fetch deleteTournament", "red");
+	}
 }
 
-async function leaveTournament(userId: string, token: string, msg: HTMLDivElement) {
-
+// Envoie une string de l'id du tournois via le body
+async function leaveTournament(userId: string, token: string, tournamentId: string, msg: HTMLDivElement) {
+	try {
+		const res = await fetch(`${route}/leaveTournament`, {
+			method: "POST",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId,
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({tournament_id: tournamentId})
+		})
+		if (!res.ok){
+			console.error('Failed to leave tournament');
+			displayMsg(msg, "Failed to leave tournament", "red");
+			return ;
+		}
+	} catch (error) {
+		console.error('Fetch failed to leaveTournament');
+		displayMsg(msg, "Failed to fetch leaveTournament", "red");
+	}
 }
 
 // #endregion Joined //
@@ -368,10 +410,12 @@ async function displayTournamentList(userId: string, token: string, wantedStatus
 	const tournamentListMsg: HTMLDivElement = document.getElementById("tournamentListMsg") as HTMLDivElement;
 	const frag: DocumentFragment = document.createDocumentFragment();
 
-	if (!tournamentList || !tournamentListMsg) {
+	if (!tournamentTitle || !tournamentList || !tournamentListMsg) {
 		console.error("Could not get HTML elements");
 		return;
 	}
+	const title: string = wantedStatus.charAt(0).toUpperCase() + wantedStatus.slice(1);
+	tournamentTitle.textContent = title;
 
 	try {
 		const res = await fetch(`${route}/tournamentList`, {
@@ -412,9 +456,14 @@ async function displayTournamentList(userId: string, token: string, wantedStatus
 
 			const winnerNameDiv:	HTMLDivElement = document.createElement('div');
 			winnerNameDiv.className = "";
-			if (wantedStatus === "finished" && tournament.status === "finished") {
+			if (wantedStatus === "finished" && tournament.status === "finished"
+				&& tournament.winner_id && tournament.winner_id !== null) {
 				const res = await fetch(`${window.location.origin}/users/get-user/${tournament.winner_id}`, {
-
+					method: "GET",
+					headers: {
+						"authorization": `Bearer ${token}`,
+						"x-user-id": userId
+					}
 				});
 
 				if (res.ok) winnerNameDiv.textContent = `Winner: ${tournament.winner_id}`;
@@ -423,10 +472,10 @@ async function displayTournamentList(userId: string, token: string, wantedStatus
 			}
 
 			const joinButton: HTMLButtonElement = document.createElement('button');
-			joinButton.className = 'col-span-1 w-fit bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded';
+			joinButton.className = 'col-span-1 w-fit min-w-0 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded';
 			joinButton.textContent = `Join\n${tournament.nb_current_players}/${tournament.nb_max_players}`;
 			joinButton.disabled = tournament.nb_current_players >= tournament.nb_max_players;
-			joinButton.onclick = async () => { await joinTournament(tournament.id, token, userId); };
+			joinButton.onclick = async () => { await joinTournament(tournament.id, token, userId, tournamentListMsg); };
 			if (joinButton.disabled) {
 				if (tournament.status === "finished") joinButton.textContent = "Finished";
 				else joinButton.textContent = 'Full';
@@ -443,7 +492,7 @@ async function displayTournamentList(userId: string, token: string, wantedStatus
 	}
 }
 
-async function joinTournament(tournamentId: number, token: string, userId: string) {
+async function joinTournament(tournamentId: number, token: string, userId: string, msg: HTMLDivElement) {
 	try {
 		const res = await fetch(`${route}/tournamentJoin`, {
 			method: "POST",
@@ -461,8 +510,9 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 		}
 
 		const response = await res.json();
-		console.log("Joined tournament:", response);
-		alert("Successfully joined tournament!");
+
+		displayJoinedTournament(userId, token, tournamentId);
+		displayMsg(msg, "Successfully joined tournament", "green");
 
 		if (response.message === "Success") {
 			let game: Game;
@@ -511,10 +561,9 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 			});
 		}
 
-
 	} catch (err) {
 		console.error("Failed to join tournament:", err);
-		alert(`Error: ${err}`);
+		displayMsg(msg, `${err}`, "red");
 	}
 }
 
@@ -529,4 +578,61 @@ function displayMsg(msgDiv: HTMLDivElement, msg: string, color: string): void {
 		msgDiv.classList.toggle('opacity-100');
 		msgDiv.classList.toggle('opacity-0');
 	}, 2000);
+}
+
+async function isInTournament(userId: string, token: string): Promise<{tournamentId: number | undefined, isRegistered: boolean}> {
+	try {
+	
+		const res = await fetch(`${route}/isInTournament`, {
+			method: "GET",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId,
+			},
+		});
+		const data = await res.json();
+		if (!res.ok) {
+			console.error("Error looking up tournament registration");
+			return (data);
+		}
+		return (data);
+		
+	} catch (error) {
+		console.error("Error fetching isInTournament:", error);
+		return ({tournamentId: undefined, isRegistered: false});
+	}
+}
+
+async function getTournamentInfo(userId: string, token: string, tournamentId: string, msg: HTMLDivElement): Promise<any | null> {
+	try {
+	
+		const res = await fetch(`${route}/getTournamentInfo/${tournamentId}`, {
+			method: "GET",
+			headers: {
+				"authorization": `Bearer ${token}`,
+				"x-user-id": userId,
+			},
+		});
+		const data = await res.json();
+		if (!res.ok) {
+			console.error("Error getting tournament infos:", data.error);
+			displayMsg(msg, data.error, "red");
+			return (null);
+		}
+		return (data);
+		
+	} catch (error) {
+		console.error("Error fetching getTournamentInfo:", error);
+		return (null);
+	}
+}
+
+function createParticipantsArray(partString: string): string[] {
+	let array: string[];
+
+	array = partString.split(",", 16);
+
+	console.log("Participants:", array);
+
+	return (array);
 }
