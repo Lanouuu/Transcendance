@@ -145,8 +145,56 @@ async function displayTournamentCreation(userId: string, token: string) {
 	joinedTournamentDiv.classList.add('hidden');
 	tournamentCreationDiv.classList.remove('hidden');
 }
+// Checker alias unique
+async function displayTournamentAlias(tournamentMode: string, maxPlayer: string): Promise<string[]> {
+	const creationDiv:	HTMLDivElement = document.getElementById('tournamentCreationDiv') as HTMLDivElement;
+	const aliasDiv:		HTMLDivElement = document.getElementById('tournamentAliasDiv') as HTMLDivElement;
+	const inputDiv:		HTMLDivElement = document.getElementById('aliasInputDiv') as HTMLDivElement;
+	let	realMaxPlayer:	number = Number(maxPlayer);
+
+	creationDiv.classList.add('hidden');
+	aliasDiv.classList.remove('hidden');
+
+	if (tournamentMode === 'remote') realMaxPlayer = 1;
+
+	aliasDiv.innerHTML = "";
+	const inputList: HTMLInputElement[] = [];
+	for (let i = 0; i < Number(realMaxPlayer); i++) {
+		const input = document.createElement('input');
+		input.className = "display-block h-[5%] w-1/2 p-4 text-black text-center";
+		input.type = 'text';
+		input.placeholder = `Alias joueur ${i + 1}`;
+
+		inputDiv.appendChild(input)
+		inputList.push(input);
+	}
+
+	aliasDiv.appendChild(inputDiv);
+
+	const confirmButton = document.createElement('button');
+	confirmButton.className = "h-[10%]";
+	confirmButton.textContent = "Confirm";
+	aliasDiv.appendChild(confirmButton);
+
+	return (new Promise<string[]>((resolve) => {
+		confirmButton.onclick = () => {
+			const values = inputList.map(input => input.value.trim());
+			if (values.every(val => val.length > 0)) {
+				aliasDiv.classList.add('hidden');
+				resolve(values);
+			}
+			else {
+
+			}
+		};
+	}));
+}
 
 async function createTournament(userId: string, token: string, tournamentName: string, maxPlayerSelected: string, tournamentMode: string, msg: HTMLDivElement) {
+
+	let	aliasArray:	string[] = await displayTournamentAlias(tournamentMode, maxPlayerSelected);
+	console.log("AliasArray = ", aliasArray);
+	// Envoyer l'alias
 
 	try {
 		const res = await fetch(`${route}/tournamentCreate`, {
@@ -493,6 +541,11 @@ async function displayTournamentList(userId: string, token: string, wantedStatus
 }
 
 async function joinTournament(tournamentId: number, token: string, userId: string, msg: HTMLDivElement) {
+
+	let	aliasArray:	string[] = await displayTournamentAlias('remote', '1');
+	console.log("AliasArray = ", aliasArray);
+	// Envoyer l'alias
+
 	try {
 		const res = await fetch(`${route}/tournamentJoin`, {
 			method: "POST",
@@ -501,7 +554,7 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 				"x-user-id": userId,
 				"Content-Type": "application/json"
 			},
-			body: JSON.stringify({ idTour: tournamentId })
+			body: JSON.stringify({ idTour: tournamentId }) // Envoyer l'alias dans le body
 		});
 
 		if (!res.ok) {
