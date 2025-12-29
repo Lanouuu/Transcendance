@@ -46,7 +46,16 @@ export async function setupGamePage(): Promise<void> {
 	const checkHash = new URLSearchParams(window.location.hash.split('?')[1] || '');
 	const inviteId = checkHash.get('invite');
 	const inviteMsg = checkHash.get('message');
+	const tournamentMsg = checkHash.get('tournament');
 
+	if (tournamentMsg === 'yes') {
+		boxGamePong.classList.add('hidden');
+		boxGamePong.classList.remove('flex');
+		boxGameSnake.classList.add('hidden');
+		boxGameSnake.classList.remove('flex');
+		loginRedirectButton.classList.add('hidden');
+		return;
+	}
 	if (inviteId) {
 		boxGamePong.classList.add('hidden');
 		boxGamePong.classList.remove('flex');
