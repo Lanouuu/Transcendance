@@ -187,6 +187,7 @@ async function launchRemoteGame() {
 
 			ws.addEventListener('message', (event) => {
 				const serverGame = JSON.parse(event.data)
+				console.log("MESSAGE: ", serverGame.message)
 				if (serverGame.message === "Init") {
 					game = serverGame.game;
 					gameLoop(game, ws);
@@ -211,6 +212,10 @@ async function launchRemoteGame() {
 					game.displayWinner = serverGame.displayWinner
 					game.player1.score = serverGame.player1.score
 					game.player2.score = serverGame.player2.score
+				}
+				else if (game && serverGame.message === "Pause") {
+					console.log("PAUSEPAUSE")
+					game.message = serverGame.message;
 				}
 			})
 		}
@@ -421,6 +426,9 @@ async function gameAnimation(game: Game, canvas: HTMLCanvasElement) {
 	canvasContext.drawImage(game.ball.image, game.ball.position.x, game.ball.position.y)
 	canvasContext.fillText(String(game.player1.score), game.board.image.width / 2 - 20, 23.5)
 	canvasContext.fillText(String(game.player2.score), game.board.image.width / 2 + 20, 23.5)
+	if (game.message === "Pause") {
+		canvasContext.fillText("Opponent disconnect, waiting...", game.board.image.width / 2, game.board.image.height / 2)		
+	}
 	if (game.message === "Countdown") {
 		canvasContext.fillText(game.timer === 0 ? "GO !" : game.timer.toString(), game.board.image.width / 2, game.board.image.height / 2)
 	}

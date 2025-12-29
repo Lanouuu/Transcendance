@@ -38,7 +38,7 @@ fastify.register(fastifyStatic, {
 });
 
 function startTimer(game) {
-
+    console.log("TIMER")
     const intervalId = setInterval(() => {
         game.socket.forEach(socket => {
             if (socket.readyState === 1) {
@@ -241,13 +241,24 @@ function localGamehandler(game, ws) {
 }
 
 function remoteGamehandler(game, ws) {
-    if (ws.userId === undefined && game.socket.length === 0) {
+    if (ws.userId === undefined && game.socket.length === 0 && game.message !== "Pause") {
         ws.userId = game.player1.id;
-    } else if (ws.userId === undefined && game.socket.length === 1) {
+    } else if (ws.userId === undefined && game.socket.length === 1 && game.message !== "Pause") {
         ws.userId = game.player2.id;
         game.message = "start";
     }
+    else if (game.message === "Pause") {
+        if (parseInt(game.socket[0].userId, 10) === parseInt(game.player1.id, 10))
+            ws.userId = game.player2.id;
+        else
+            ws.userId = game.player1.id;
+    }
     game.socket.push(ws);
+    if (game.message === "Pause") {
+        game.message === "Countdown"
+        game.timerStarted = false
+        game.timer = 3;
+    }
     ws.send(JSON.stringify({game: serialize(game), message: "Init"}))
     if (game.message === "start")
         game.loopId = setInterval(() => gameLoop(game), 16);
@@ -372,6 +383,23 @@ wss.on('connection', function connection(ws) {
                 remoteInputHandler(game, ws.userId, res.key, res.event);
             games.set(game.id, game);
         }
+    })
+    ws.on('close', (data) => {
+        console.log("SOCKET CLOSED: ", ws.userId)
+        for (const [gameId, game] of games.entries() ) {
+            if (parseInt(game.player1.id, 10) === parseInt(ws.userId, 10) || parseInt(game.player2.id, 10) === parseInt(ws.userId, 10)) {
+                game.socket = game.socket.filter(socket => socket.readyState != 3)
+                if (game.message === "Playing") {
+                    game.message = "Pause";
+                    game.started = false;
+                    game.socket.forEach(socket => {
+                        if (socket.readyState === 1) {
+                            socket.send(JSON.stringify({message: "Pause"}));
+                        }
+                    });
+                }
+            }            
+        }      
     })
 })
 
@@ -557,6 +585,14 @@ fastify.post("/remote", async (request, reply) => {
         const {message} = request.body || {};
 	    const userId = request.headers["x-user-id"];
 
+        for (const [gameId, game] of games.entries() ) {
+            if (parseInt(game.player1.id, 10) === parseInt(userId, 10) || parseInt(game.player2.id, 10) === parseInt(userId, 10)) {
+                if (game.message === "Pause") {
+                    reply.send({message: "Success", id: game.id});
+                    return ;
+                }
+            }           
+        }
         if (!message)
             throw new Error("Pong server: Message required");
 
