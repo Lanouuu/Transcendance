@@ -145,11 +145,36 @@
 
 		</div>
 
-		<!-- Div Lists tournois -->
-		<div id="tournamentListDiv" class="h-full w-5/12 min-h-0
+		<!-- Div Alias pour le tournois -->
+		<div id="tournamentAliasDiv" class="
+			h-full w-5/12 min-h-0
 			flex flex-col items-center gap-8
-        	rounded-3xl
         	p-6 sm:p-8
+        	rounded-3xl
+			bg-dark bg-opacity-40
+        	text-white text-base sm:text-lg lg:text-xl
+			overflow-y-scroll
+        	hover:outline hover:outline-accent
+        	hover:shadow-[0_-15px_50px_var(--color-accent)]
+        	transition 
+			relative
+			hidden
+		">
+		
+			<div id="aliasInputDiv" class="
+				h-3/4 w-full
+				p-4
+				flex flex-col items-center justify-center gap-8
+			"></div>
+
+		</div>
+
+		<!-- Div Lists tournois -->
+		<div id="tournamentListDiv" class="
+			h-full w-5/12 min-h-0
+			flex flex-col items-center gap-8
+        	p-6 sm:p-8
+        	rounded-3xl
         	text-white text-base sm:text-lg lg:text-xl
 			bg-dark bg-opacity-40
         	hover:outline hover:outline-accent
