@@ -1,7 +1,211 @@
-<div id="tournamentPage" class="page flex flex-col">
-	<h1 id="tournamentTitle">Tournois</h1>
-</div>
+<div id="tournamentPage" class="page tournamentLayout">
 
-<div id="tournament" style="display:flex; justify-content:center; align-items:center;">
-    <canvas id="canvas" width="802" height="455" style="background-color: black;" class="hidden"></canvas>
+	<h1 class="
+		w-full
+		text-center text-6xl text-white 
+	">
+		Tournament
+	</h1>
+
+	<div class="
+		h-4/5 w-full
+		flex flex-row items-center justify-evenly gap-6
+	">
+		
+		<!-- Div Tournois Rejoins -->
+		<div id="joinedTournamentDiv" class="
+			h-full w-5/12 min-h-0
+			grid grid-rows-[1fr_8fr_2fr] grid-cols-[5fr_1fr]
+        	p-6 sm:p-8
+        	rounded-3xl
+			bg-dark bg-opacity-40
+        	text-white text-base sm:text-lg lg:text-xl
+        	hover:outline hover:outline-accent
+        	hover:shadow-[0_-15px_50px_var(--color-accent)]
+        	transition 
+			relative
+			hidden
+        ">
+			<h1 class="
+				text-center text-6xl
+				row-span-1 col-span-2
+			">
+				Joined Tournament
+			</h1>
+
+			<div id="joinedTournamentInfosDiv" class="
+				row-span-1 col-span-1 h-full w-full min-h-0
+				flex flex-col items-center justify-evenly
+				p-4
+			">
+
+				<div id="joinedTournamentName" class="text-5xl"></div>
+
+				<div id="joinedTournamentCreator"></div>
+
+				<div id="joinedTournamentMode"></div>
+
+				<div id="joinedTournamentStatus"></div>
+
+			</div>
+
+
+			<div id="participantsDiv" class="
+				h-full w-full min-w-0
+				row-span-1 col-span-1
+				flex flex-col items-center justify-end
+				p-4
+			">
+
+				<div id="joinedTournamentPlayerRatio" class="
+					h-1/5 w-full
+					flex items-center justify-center
+					p-2
+					text-4xl
+				"></div>
+
+				<ul id="joinedTournamentParticipants" class="
+					h-3/4 w-full
+					p-2
+					flex flex-col items-center
+					overflow-y-scroll
+				">
+				</ul>
+			</div>
+			
+			<div id="tournamentAdminDiv" class="
+				row-span-1 col-span-2
+				flex flex-row items-center justify-evenly
+			">
+
+				<button id="leaveTournamentButton" class="bg-prim rounded-3xl text-3xl p-4">Leave</button>
+
+				<button id="deleteTournamentButton" class="bg-prim rounded-3xl text-3xl p-4 hidden">Delete Tournament</button>
+
+				<button id="startTournamentButton" class="bg-prim rounded-3xl text-3xl p-4 hidden">Start Tournament</button>
+
+			</div>
+
+			<div id="joinedTournamentMsg" class="
+				absolute bottom-4 left-1/2 -translate-x-1/2
+ 				text-xl
+				opacity-0 transition-all duration-300 ease-in-out
+			"></div>
+		</div>
+
+		<!-- Div Creation tournois -->
+		<div id="tournamentCreationDiv" class="
+			h-full w-5/12 min-h-0
+			flex flex-col items-center justify-center gap-8
+        	p-6 sm:p-8
+        	rounded-3xl
+			bg-dark bg-opacity-40
+        	text-white text-base sm:text-lg lg:text-xl
+        	hover:outline hover:outline-accent
+        	hover:shadow-[0_-15px_50px_var(--color-accent)]
+        	transition 
+			relative
+        ">
+			<h2 class="">Create Tournament</h2>
+
+			<label for="tournamentNameInput">Tournament Name</label>
+			<input id="tournamentNameInput" type="text" name="tournamentName" placeholder="1v1 Gare du Nord" class="text-dark">
+
+			<div class="
+				w-full 
+				flex flex-row items-center justify-evenly
+			">
+
+				<button id="4PlayersSelectionButton" class="bg-prim rounded-3xl text-2xl p-4">4 Players</button>
+
+				<button id="8PlayersSelectionButton" class="bg-prim rounded-3xl text-2xl p-4">8 Players</button>
+
+				<button id="16PlayersSelectionButton" class="bg-prim rounded-3xl text-2xl p-4">16 Players</button>
+
+			</div>
+
+			<div class="
+				w-full
+				flex flex-row items-center justify-evenly
+			">
+
+				<button id="localSelectionButton" class="bg-prim rounded-3xl text-2xl p-4">Local</button>
+
+				<button id="remoteSelectionButton" class="bg-prim rounded-3xl text-2xl p-4">Remote</button>
+
+			</div>
+
+			<button id="createTournamentButton" class="bg-prim rounded-3xl text-3xl p-4">Create</button>
+
+			<div id="tournamentCreationMsg" class="
+				absolute bottom-4 left-1/2 -translate-x-1/2
+				text-xl
+				opacity-0 transition-all duration-300 ease-in-out
+			"></div>
+
+		</div>
+
+		<!-- Div Lists tournois -->
+		<div id="tournamentListDiv" class="h-full w-5/12 min-h-0
+			flex flex-col items-center gap-8
+        	rounded-3xl
+        	p-6 sm:p-8
+        	text-white text-base sm:text-lg lg:text-xl
+			bg-dark bg-opacity-40
+        	hover:outline hover:outline-accent
+        	hover:shadow-[0_-15px_50px_var(--color-accent)]
+        	transition 
+			relative
+		">
+			<div class="h-[25%] w-full flex flex-col items-center justify-center">
+				<h2 class="
+					w-full
+					flex items-center justify-center
+					text-6xl
+				">
+					Tournament List
+				</h2>
+
+				<h3 id="tournamentListTitle" class="
+					w-full
+					flex items-center justify-center
+					text-3xl
+				">
+					Pending
+				</h3>
+			</div>
+			
+
+			<ul id="tournamentListUl" class="h-full w-5/6 min-h-0
+				m-6 p-4
+				flex flex-row flex-wrap gap-7
+				outline outline-accent 
+				overflow-y-scroll
+			"></ul>
+
+			<div id="tournamentListMsg" class="
+				absolute bottom-4 left-1/2 -translate-x-1/2
+				text-xl
+				opacity-0 transition-all duration-300 ease-in-out
+			"></div>
+
+			<button id="tournamentListSwitchButton" class="
+				absolute top-4 right-4
+				h-[6%] w-[5%] 
+				rounded-full
+				p-1
+			">
+				<img id="tournamentListSwitchButtonIcon" src="./assets/other/refresh-icon.svg" class="
+					h-fit w-fit
+					object-cover
+					cursor-pointer
+					invert
+					transition-transform duration-1000 ease-in-out
+				">
+			</button> 
+
+		</div>
+
+	</div>
+
 </div>

@@ -75,6 +75,58 @@ export async function runServer() {
 
   const dbtour = await initDB();
 
+
+  // dans le body id tournois
+  // fastify.post('/deleteTournament', async(request, reply) => {
+
+  // })
+
+  // dans le body id tournois
+  // fastify.post('/leaveTournament', async(request, reply) => {
+
+  // })
+
+  fastify.get('/isInTournament', async (request, reply) => {
+      const userId = request.headers["x-user-id"];
+      const id = await dbtour.get(
+        `SELECT id FROM tournament
+        WHERE status IN ('pending', 'playing')
+        AND (',' || IFNULL(players_ids, '') || ',') LIKE '%,' || ? || ',%'`,
+        [userId]
+      );
+      if (id) {
+        return reply.code(200).send(JSON.stringify({ tournamentId: id.id, isRegistered: true}));
+      }
+      return reply.code(200).send(JSON.stringify({tournamentId: undefined, isRegistered: false }));
+
+  })
+
+  fastify.get('/getTournamentInfo/:id', async (request, reply) => {
+    const userId = request.headers["x-user-id"];
+    const tournamentId = request.params.id;
+    try {
+
+        const checkId = await dbtour.get(
+        `SELECT id FROM tournament
+        WHERE id = ?
+          AND status IN ('pending', 'playing')
+          AND (',' || IFNULL(players_ids, '') || ',') LIKE '%,' || ? || ',%'`,
+        [tournamentId, userId]
+      );
+      if (!checkId || !checkId.id) {
+        return reply.code(403).send(JSON.stringify({error: "User not in tournament"}))
+      }
+
+      const tourInfo = await dbtour.get("SELECT * FROM tournament WHERE id = ?", [tournamentId]);
+
+      if (tourInfo)
+          return reply.code(200).send(JSON.stringify({tournament: tourInfo}))
+      return reply.code(400).send(JSON.stringify({error: "No tournament found"}))
+    }catch(err) {
+      return reply.code(400).send(JSON.stringify({error: "Failed to fetch tournament information"}))
+    }
+  })
+
   fastify.post('/tournamentCreate', async (request, reply) => {
     const { name, creator_id, nb_max_players, mode } = request.body || {};
     console.log("event detected")

@@ -216,6 +216,16 @@ body.loggedIn #signupNavLink {
 /* #endregion logout */
 
 /* #region tournament */
+.tournamentLayout {
+	@apply flex flex-col items-center gap-16
+
+	h-[calc(100vh-8rem-5rem)] w-full
+
+	p-8
+
+	font-geo 
+	;
+}
 /* #endregion tournament */
 
 /* #endregion BODY */
