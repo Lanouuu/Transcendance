@@ -956,7 +956,7 @@ export async function runServer() {
           );`);
         deleteStmt.run(gameType, userID, friendID, friendID, userID);
 
-
+        return reply.status(200).send({ success: true });
       } catch (err) {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });

@@ -21,8 +21,8 @@
 .headerLayout {
 	text-shadow: 0 0 6px rgba(255, 255, 255, 0.80), 0 0 15px rgba(255, 255, 255, 0.5);
 	@apply	flex items-center content-center justify-center
-			h-32 w-full
-			text-5xl text-white font-semibold italic font-geo;
+	h-32 w-full
+	text-5xl text-white font-semibold italic font-geo;
 }
 
 /* #endregion header */
@@ -37,8 +37,7 @@
 	text-3xl
 	text-white
 	font-light
-	outline-none
-	;
+	outline-none;
 }
 
 .navLinkLayout {
@@ -50,8 +49,7 @@
 	focus-visible:outline-none
 	transition-all
 	duration-300
-	ease-in
-	;
+	ease-in;
 }
 
 body:not(.loggedIn) #accountNavLink, body:not(.loggedIn) #logoutNavLink, body:not(.loggedIn) #notifDiv{
@@ -84,36 +82,24 @@ body.loggedIn #signupNavLink {
 
 .accountLayout {
 	@apply flex flex-col items-center gap-16
-
 	h-[calc(100vh-8rem-5rem)] w-full
-
 	p-8
-
-	font-geo 
-	;
+	font-geo;
 }
 
 .accountBoxLayout {
 	@apply grid grid-cols-[19fr_1fr]
-	
 	h-4/5 w-3/5
-
-	rounded-3xl
-	
-	;
+	rounded-3xl;
 }
 
 /* #region Tabs *******************************************/
 
 .accountBoxTabDiv{
 	@apply col-start-2 col-end-3 row-start-1 row-end-2
-
 	flex flex-col items-end justify-around
-
 	h-full w-full
-
-	rounded-r-3xl
-	;
+	rounded-r-3xl;
 }
 
 .accountBoxTabItems {
@@ -122,18 +108,14 @@ body.loggedIn #signupNavLink {
 	text-white text-lg
 	bg-dark bg-opacity-60
 	transition-all duration-500 ease-in-out
-	hover:outline hover:-outline-offset-[3px]
-	;
+	hover:outline hover:-outline-offset-[3px];
 }
 
 .accountBoxTabItems.active {
-	@apply bg-opacity-80 
-	;
+	@apply bg-opacity-80;
 }
 .accountBoxTabButtons {
-	@apply h-full w-full
-
-	;
+	@apply h-full w-full;
 }
 
 /* #endregion Tabs ****************************************/
@@ -142,17 +124,11 @@ body.loggedIn #signupNavLink {
 
 .statsLayout {
 	@apply col-start-1 col-end-2 row-start-1 row-end-2
-
 	rounded-l-3xl
-
 	h-full
-
 	flex flex-col items-center justify-center
-
 	text-white text-6xl
-
-	bg-dark bg-opacity-80
-	;
+	bg-dark bg-opacity-80;
 }
 
 /* #endregion Stats ***************************************/
@@ -169,9 +145,7 @@ body.loggedIn #signupNavLink {
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-
 	gap: 5rem;
-
 	/* background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%); */
 }
 
@@ -236,7 +210,7 @@ body.loggedIn #signupNavLink {
 	@apply page 
 	flex items-center justify-center
 	font-geo
-	text-[14rem]
+	text-[14rem];
 }
 
 /* #endregion logout */
@@ -256,19 +230,16 @@ body.loggedIn #signupNavLink {
 	hover:bg-dark/90
 	transition-all
 	duration-500
-	ease-in-out
-	;
+	ease-in-out;
 }
 
 .footerParticipant {
 	@apply flex flex-col items-center gap-2
-	min-w-40
-	;
+	min-w-40;
 }
 
 .footerParticipantLinks {
-	@apply flex flex-row items-center justify-evenly gap-4
-	;
+	@apply flex flex-row items-center justify-evenly gap-4;
 }
 
 .footerLogos {
@@ -279,8 +250,7 @@ body.loggedIn #signupNavLink {
 	@apply group-hover:invert 
 	transition-all
 	duration-500
-	ease-in-out
-	;
+	ease-in-out;
 }
 
 /* #endregion footer */

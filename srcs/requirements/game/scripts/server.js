@@ -175,6 +175,9 @@ function gameLoop(game) {
         if (game.mode === "remote" || game.mode === "tournament")
             sendResult(game)
         clearInterval(game.loopId)
+        setTimeout(() => {
+            games.delete(game.id)
+        }, 2000)
     }
 }
 
@@ -456,13 +459,13 @@ fastify.post("/remote", async (request, reply) => {
             console.log("IN ACCEPT-INVIT: ", friendId)
             console.log(games)
             for (const [gameId, game] of games.entries() ) {
-                if (parseInt(game.player1.id, 10) === parseInt(friendId, 10)) {
+                if (parseInt(game.player1.id, 10) === parseInt(friendId, 10) && game.message !== "END") {
                     gameFound = true
                     game.player2.id = userId
                     game.player2.name = await getUserName(userId)
                     games.set(game.id, game);
-                    console.log("ALEEED");
                     reply.send({message: "Success", id: game.id})
+                    break;
                 }            
             }
             const res = await fetch(`http://users:3000/clear-invit/${friendId}`, {

@@ -1,5 +1,3 @@
-import { launchInvitGame } from "./game.js";
-
 const USERS_URL: string = `${window.location.origin}/users`;
 
 export async function displayAccountPage() {
@@ -551,8 +549,7 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 			console.error("Could not send game invit:", data.error);
 			return ;
 		}
-		window.location.hash = "#game";
-		launchInvitGame(friendId, "invit");
+		window.location.hash = "#game?invite=" + friendId + "&message=sendInvit";
 	}
 	playPongButton.appendChild(playPongIcon);
 

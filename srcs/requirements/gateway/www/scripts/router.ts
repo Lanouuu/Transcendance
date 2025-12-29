@@ -514,8 +514,7 @@ async function notificationHandler(): Promise<void> {
 				const acceptButton: HTMLButtonElement = document.createElement("button");
 				acceptButton.textContent = "✓";
 				acceptButton.onclick = async () => {
-					window.location.hash = "#game";
-					launchInvitGame(invit.user_id, "accept-invit");
+					window.location.hash = "#game?invite=" + invit.user_id + "&message=acceptInvit";
 					li.remove();
 					notifNumber--;
 				};

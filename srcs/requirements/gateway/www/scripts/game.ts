@@ -43,6 +43,23 @@ export async function setupGamePage(): Promise<void> {
 	const snakeLocalButton: HTMLButtonElement = document.getElementById('snakeLocalGameButton') as HTMLButtonElement;
 	const snakeRemoteButton: HTMLButtonElement = document.getElementById('snakeRemoteGameButton') as HTMLButtonElement;
 
+	const checkHash = new URLSearchParams(window.location.hash.split('?')[1] || '');
+	const inviteId = checkHash.get('invite');
+	const inviteMsg = checkHash.get('message');
+
+	if (inviteId) {
+		boxGamePong.classList.add('hidden');
+		boxGamePong.classList.remove('flex');
+		boxGameSnake.classList.add('hidden');
+		boxGameSnake.classList.remove('flex');
+		loginRedirectButton.classList.add('hidden');
+		if (inviteMsg === 'sendInvit')
+			launchInvitGame(inviteId, "invit");
+		else if (inviteMsg === 'acceptInvit')
+			launchInvitGame(inviteId, "accept-invit");
+		return;
+	}
+
 	const isOnline = await checkToken();
 	if (!isOnline) {
 		loginRedirectButton.classList.remove('hidden');
@@ -90,6 +107,16 @@ export async function setupGamePage(): Promise<void> {
 	});
 }
 
+async function returnGamesSelection() {
+	const returnGameButton: HTMLButtonElement = document.getElementById('ReturnGameButton') as HTMLButtonElement;
+
+	returnGameButton.classList.remove('hidden');
+
+	returnGameButton.addEventListener('click', async () => {
+		window.location.hash = '#game';
+		window.dispatchEvent(new Event('hashchange'));
+	});
+}
 
 async function launchLocalGame() {
 
@@ -157,6 +184,7 @@ async function launchLocalGame() {
 					game.displayWinner = serverGame.displayWinner
 					game.player1.score = serverGame.player1.score
 					game.player2.score = serverGame.player2.score
+					returnGamesSelection();
 				}
 				else if (serverGame.message === "Error") {
 					console.log(serverGame.error)
@@ -235,6 +263,7 @@ async function launchRemoteGame() {
 					game.displayWinner = serverGame.displayWinner
 					game.player1.score = serverGame.player1.score
 					game.player2.score = serverGame.player2.score
+					returnGamesSelection();
 				}
 			})
 		}
@@ -246,7 +275,6 @@ async function launchRemoteGame() {
 export async function launchInvitGame(friendId: string, message: string) {
 	const token: string | null = sessionStorage.getItem("jwt");
 	const userId: string | null = sessionStorage.getItem("userId");
-	const localButton: HTMLButtonElement = document.getElementById('gameLocalGameButton') as HTMLButtonElement;
 	
 	if (userId === null || token === null) {
 		console.error('Could not fetch user id/token');
@@ -269,13 +297,6 @@ export async function launchInvitGame(friendId: string, message: string) {
 			console.error(`Server error ${res.status}:`, text);
 			throw new Error(`Failed to load the game`);
 		}
-		// console.log(res.text());
-		// const contentType = res.headers.get("content-type");
-		// if (!contentType || !contentType.includes("application/json")) {
-		// 	const text = await res.text();
-		// 	console.error(`Server did not return JSON`, text);
-		// 	throw new Error(`Server response is not JSON`);
-		// }
 		
 		const response = await res.json();
 		if (response.message === "Success") {
@@ -319,7 +340,8 @@ export async function launchInvitGame(friendId: string, message: string) {
 						gameQueueMsg.classList.toggle('opacity-0');
 						gameQueueMsg.classList.toggle('opacity-100');
 						gameQueueMsg.textContent = "Your invitation has been denied ! haha";
-						// aPIMPER
+						gameQueueMsg.style.color = "red";
+						returnGamesSelection();
 					}
 				}
 				else if (game && serverGame.message === "Countdown") {
@@ -345,6 +367,7 @@ export async function launchInvitGame(friendId: string, message: string) {
 					game.displayWinner = serverGame.displayWinner
 					game.player1.score = serverGame.player1.score
 					game.player2.score = serverGame.player2.score
+					returnGamesSelection();
 				}
 			})
 		}
@@ -869,12 +892,7 @@ async function snakeGameLoop(game: SnakeGame) {
 
 			// Si la partie est terminée, affiche le bouton replay
 			if (game.message === "END") {
-				// Affiche le bouton replay immédiatement
-				const replayButton = document.getElementById("snakeReplayButton") as HTMLButtonElement;
-				if (replayButton) {
-					replayButton.classList.remove('hidden');
-				}
-
+				returnGamesSelection();
 				setTimeout(cleanup, 2000);
 			}
 		});
