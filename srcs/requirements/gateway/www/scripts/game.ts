@@ -398,7 +398,7 @@ export async function gameLoop(game: Game, ws: WebSocket) { // BIZARRE LE TYPE
 			console.error('Could not fetch canvas div');
 			return;
 		}
-		// canvasDiv.innerHTML = "";
+		canvasDiv.innerHTML = "";
 		canvasDiv.appendChild(canvas);
 		gameAnimation(game, canvas);
 	} catch (error) {
@@ -430,7 +430,7 @@ async function gameAnimation(game: Game, canvas: HTMLCanvasElement) {
 		canvasContext.fillText("Opponent disconnect, waiting...", game.board.image.width / 2, game.board.image.height / 2)		
 	}
 	if (game.message === "Countdown") {
-		canvasContext.fillText(game.timer === 0 ? "GO !" : game.timer.toString(), game.board.image.width / 2, game.board.image.height / 2)
+		canvasContext.fillText(game.timer === 0 ? "GO !" : String(game.timer), game.board.image.width / 2, game.board.image.height / 2)
 	}
 	else if (game.message === "END") {
 		canvasContext.fillText(game.displayWinner, game.board.image.width / 2, game.board.image.height / 2)

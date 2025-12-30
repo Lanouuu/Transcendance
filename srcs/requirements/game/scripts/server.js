@@ -272,12 +272,14 @@ function remoteGamehandler(game, ws) {
             game.player1.status = "Online";
         }
     }
+    if (game.mode === "remote-tournament")
+        tournamentSocket.set(parseInt(ws.userId, 10), ws);
     game.socket.push(ws);
     if (game.message === "Pause") {
         clearInterval(game.intervalId);
+        game.timer = 5;
         game.message = "Countdown";
         game.timerStarted = false;
-        game.timer = 5;
     }
     ws.send(JSON.stringify({game: serialize(game), message: "Init"}))
     if (game.message === "start")
@@ -384,7 +386,7 @@ wss.on('connection', function connection(ws) {
 
         if (res.message === "InitLocal") 
             localGamehandler(game, ws);
-        else if (res.message === "InitRemote" || game && game.mode === "remote-tournament") 
+        else if (res.message === "InitRemote" || game && game.mode === "remote-tournament" && game.message === "Pause") 
             remoteGamehandler(game, ws);
         else if (res.message === "initTournament") {
             tournamentHandler(res.userId, res.id, res.tournament_id, ws);
@@ -392,7 +394,7 @@ wss.on('connection', function connection(ws) {
         else if (res.message === "input") {
             if (game.mode === "local")
                 localInputHandler(game, res.key, res.event);
-            else if (game.mode === "remote" || game.mode === "tournament")
+            else if (game.mode === "remote" || game.mode === "remote-tournament")
                 remoteInputHandler(game, ws.userId, res.key, res.event);
             games.set(game.id, game);
         }
@@ -401,6 +403,8 @@ wss.on('connection', function connection(ws) {
         for (const [gameId, game] of games.entries() ) {
             if (parseInt(game.player1.id, 10) === parseInt(ws.userId, 10) || parseInt(game.player2.id, 10) === parseInt(ws.userId, 10)) {
                 game.socket = game.socket.filter(socket => socket.readyState != 3)
+                if (game.mode === "remote-tournament")
+                    tournamentSocket.delete(parseInt(ws.user, 10));
                 if (game.message === "Playing") {
                     game.message = "Pause";
                     game.started = false;

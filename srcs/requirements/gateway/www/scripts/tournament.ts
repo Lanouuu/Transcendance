@@ -468,7 +468,7 @@ export async function displayTournamentPage () {
     
         } catch (err) {
             console.error("Failed to start tournament:", err);
-            alert(`Error starting tournament: ${err}`);
+            // alert(`Error starting tournament: ${err}`);
         }
     });
 };
