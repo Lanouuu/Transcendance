@@ -292,6 +292,8 @@ export async function displayTournamentPage () {
 
             ws.addEventListener('message', (event) => {
                 const serverGame = JSON.parse(event.data)
+				console.log("CREATE MESSAGE: ", serverGame.message)
+				console.log("CREATE ID: ", serverGame.id);
                 if (serverGame.message === "Init") {
                     console.log("Starting match")
                     game = serverGame.game;
@@ -322,6 +324,14 @@ export async function displayTournamentPage () {
                     game.player1.score = serverGame.player1.score
                     game.player2.score = serverGame.player2.score
                 }
+				else if (game && serverGame.message === "Pause") {
+					console.log("PAUSEPAUSE")
+					game.message = serverGame.message;
+					console.log("IN PAUSE: ", game.id);
+					console.log("IN PAUSE SERVERGAME: ", serverGame.id);
+				}
+				else if (game && serverGame.message === "Error")
+					console.log("CREATE ERROR: ", serverGame.error);
             })
 
             ws.addEventListener('error', (error) => {
@@ -388,6 +398,8 @@ export async function displayTournamentPage () {
 
             ws.addEventListener('message', (event) => {
                 const serverGame = JSON.parse(event.data)
+				console.log("JOIN MESSAGE: ", serverGame.message)
+				console.log("JOIN ID: ", serverGame.id);
                 if (serverGame.message === "Init") {
                     console.log("Starting match")
                     game = serverGame.game;
@@ -418,8 +430,14 @@ export async function displayTournamentPage () {
                     game.player1.score = serverGame.player1.score
                     game.player2.score = serverGame.player2.score
                 }
-                else if (game && serverGame.message === "Error")
-                    console.log("ERROR: ", serverGame.error)
+				else if (game && serverGame.message === "Pause") {
+					console.log("PAUSEPAUSE")
+					game.message = serverGame.message;
+					console.log("IN PAUSE: ", game.id);
+					console.log("IN PAUSE SERVERGAME: ", serverGame.id);
+				}
+				else if (game && serverGame.message === "Error")
+					console.log("JOIN ERROR: ", serverGame.error);
             })
 
             ws.addEventListener('error', (error) => {

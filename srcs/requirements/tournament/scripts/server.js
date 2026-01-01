@@ -281,6 +281,7 @@ export async function runServer() {
         }
       }
       reply.send({message: "Success"})
+      console.log("MESSAGE SENDED");
       
     } catch (err) {
       request.log.error({ err }, "tournamentStart failed");

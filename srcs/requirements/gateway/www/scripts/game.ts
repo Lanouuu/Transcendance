@@ -187,7 +187,8 @@ async function launchRemoteGame() {
 
 			ws.addEventListener('message', (event) => {
 				const serverGame = JSON.parse(event.data)
-				console.log("MESSAGE: ", serverGame.message)
+				console.log("REMOTE MESSAGE: ", serverGame.message)
+				console.log("REMOTE ID: ", serverGame.id);
 				if (serverGame.message === "Init") {
 					game = serverGame.game;
 					gameLoop(game, ws);
@@ -216,7 +217,11 @@ async function launchRemoteGame() {
 				else if (game && serverGame.message === "Pause") {
 					console.log("PAUSEPAUSE")
 					game.message = serverGame.message;
+					console.log("IN PAUSE: ", game.id);
+					console.log("IN PAUSE SERVERGAME: ", serverGame.id);
 				}
+				else if (game && serverGame.message === "Error")
+					console.log("REMOTE ERROR: ", serverGame.error);
 			})
 		}
 	} catch (err) {

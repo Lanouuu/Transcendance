@@ -50,6 +50,7 @@ function startTimer(game) {
         game.timer--;
         if (game.timer < 0) {
             clearInterval(game.intervalId)
+            game.intervalId = null;
             if (game.message !== "Pause") {
                 game.started = true;
                 game.message = "Playing";
@@ -204,6 +205,7 @@ function serialize(data) {
         id: data.id,
         message: data.message,
         displayWinner: data.displayWinner,
+        timer: data.timer,
         player1: {
             name: data.player1.name,
             score: data.player1.score,
@@ -248,6 +250,10 @@ function serialize(data) {
     return game;
 }
 
+function reconnectPlayer(game) {
+
+}
+
 function localGamehandler(game, ws) {
     game.socket.push(ws);
     ws.send(JSON.stringify({game, message: "Init"}))
@@ -277,6 +283,7 @@ function remoteGamehandler(game, ws) {
     game.socket.push(ws);
     if (game.message === "Pause") {
         clearInterval(game.intervalId);
+        game.intervalId = null;
         game.timer = 5;
         game.message = "Countdown";
         game.timerStarted = false;
@@ -378,7 +385,7 @@ wss.on('connection', function connection(ws) {
             return;            
         }
         if (!games.has(parseInt(res.id, 10)) && res.message !== "initTournament") {
-            console.log("NO GAME FOUND")
+            console.log("NO GAME FOUND: ", res.id)
             ws.send(JSON.stringify({ message: "Error", error: "Game not found" }));
             return;
         }
@@ -386,7 +393,7 @@ wss.on('connection', function connection(ws) {
 
         if (res.message === "InitLocal") 
             localGamehandler(game, ws);
-        else if (res.message === "InitRemote" || game && game.mode === "remote-tournament" && game.message === "Pause") 
+        else if (res.message === "InitRemote" || game && game.mode === "remote-tournament" && game.message === "Pause" && res.message === "initTournament") 
             remoteGamehandler(game, ws);
         else if (res.message === "initTournament") {
             tournamentHandler(res.userId, res.id, res.tournament_id, ws);
@@ -405,7 +412,9 @@ wss.on('connection', function connection(ws) {
                 game.socket = game.socket.filter(socket => socket.readyState != 3)
                 if (game.mode === "remote-tournament")
                     tournamentSocket.delete(parseInt(ws.user, 10));
-                if (game.message === "Playing") {
+                if (game.message === "Playing" || game.message === "Countdown") {
+                    clearInterval(game.intervalId);
+                    game.intervalId = null;
                     game.message = "Pause";
                     game.started = false;
                     game.timerStarted = false;
