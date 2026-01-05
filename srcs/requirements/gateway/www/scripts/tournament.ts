@@ -366,6 +366,8 @@ async function displayJoinedTournament(userId: string, token: string, tournament
 
 		leaveButton.onclick = async () => {
 			leaveTournament(userId, token, String(tournament_id), msgDiv);
+			window.location.hash = '#tournament';
+			window.dispatchEvent(new Event('hashchange'));
 		};
 
 		startButton.onclick = async () => {
@@ -374,6 +376,8 @@ async function displayJoinedTournament(userId: string, token: string, tournament
 
 		deleteButton.onclick = async () => {
 			deleteTournament(userId, token, String(tournament_id), msgDiv);
+			window.location.hash = '#tournament';
+			window.dispatchEvent(new Event('hashchange'));
 		};
 
 	} catch (error) {

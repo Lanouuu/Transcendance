@@ -95,6 +95,7 @@ export async function runServer() {
           return reply.code(403).send({error: "Can't delete tournament, you're not the creator"});
         if(tourInfo.status !== "pending")
           return reply.code(403).send({error: "Can't delete a playing tournament"});
+        reply.code(200).send({message: "Success"})
       }
     }catch(err) {
       return reply.code(400).send(JSON.stringify({error: "Failed to fetch tournament information"}))
@@ -136,7 +137,7 @@ export async function runServer() {
         );
         console.log(`Player ${userId} left tournament ${tournament_id}`);
       }
-      reply.send({ message: "Success", text: "Player removed from tournament" });
+      reply.code(200).send({ message: "Success", text: "Player removed from tournament" });
     } catch(err) {
       fastify.log.error({ err }, "Leave tournament failed");
       reply.code(400).send({error: "Failed to leave tournament"});
