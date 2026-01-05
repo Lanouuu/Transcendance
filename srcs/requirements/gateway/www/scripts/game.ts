@@ -207,6 +207,8 @@ async function launchLocalGame() {
 
 async function launchRemoteGame() {
 
+	const playersNamesH1: HTMLHeadingElement = document.getElementById("playersNames") as HTMLHeadingElement;
+
 	const token: string | null = sessionStorage.getItem("jwt");
 	const userId: string | null = sessionStorage.getItem("userId");
 	
@@ -253,6 +255,9 @@ async function launchRemoteGame() {
 					gameLoop(game, ws);
 				}
 				else if (game && serverGame.message === "Countdown") {
+					playersNamesH1.classList.remove("hidden");
+					const playersStr: string = `${game.player1.name} - ${game.player2.name}`;
+					playersNamesH1.textContent = playersStr;
 					game.message = serverGame.message
 					game.timer = serverGame.timer
 				}
@@ -284,6 +289,7 @@ async function launchRemoteGame() {
 export async function launchInvitGame(friendId: string, message: string) {
 	const token: string | null = sessionStorage.getItem("jwt");
 	const userId: string | null = sessionStorage.getItem("userId");
+	const playersNamesH1: HTMLHeadingElement = document.getElementById("playersNames") as HTMLHeadingElement;
 	
 	if (userId === null || token === null) {
 		console.error('Could not fetch user id/token');
@@ -354,6 +360,9 @@ export async function launchInvitGame(friendId: string, message: string) {
 					}
 				}
 				else if (game && serverGame.message === "Countdown") {
+					playersNamesH1.classList.remove("hidden");
+					const playersStr: string = `${game.player1.name} - ${game.player2.name}`;
+					playersNamesH1.textContent = playersStr;
 					game.message = serverGame.message
 					game.timer = serverGame.timer
 				}

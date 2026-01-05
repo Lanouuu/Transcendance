@@ -109,18 +109,45 @@
 			<h2 class="">Create Tournament</h2>
 
 			<label for="tournamentNameInput">Tournament Name</label>
-			<input id="tournamentNameInput" type="text" name="tournamentName" placeholder="1v1 Gare du Nord" class="text-dark">
+			<input id="tournamentNameInput" type="text" name="tournamentName" placeholder="1v1 Gare du Nord" 
+				class="px-10 p-2
+                	shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                	focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+                	rounded-xl 
+                	bg-dark bg-opacity-60 focus:outline-none 
+                	text-white font-geo">
 
 			<div class="
 				w-full 
 				flex flex-row items-center justify-evenly
 			">
 
-				<button id="4PlayersSelectionButton" class="bg-prim rounded-3xl text-2xl p-4">4 Players</button>
+				<button id="4PlayersSelectionButton" 
+					class="py-3 px-5 rounded-xl 
+                    	bg-prim bg-opacity-90 hover:bg-opacity-100 
+                    	text-white font-semibold font-geo
+                    	shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    	hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
+					4 Players
+				</button>
 
-				<button id="8PlayersSelectionButton" class="bg-prim rounded-3xl text-2xl p-4">8 Players</button>
+				<button id="8PlayersSelectionButton" 
+					class="py-3 px-5 rounded-xl 
+                    	bg-prim bg-opacity-90 hover:bg-opacity-100 
+                    	text-white font-semibold font-geo
+                    	shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    	hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
+					8 Players
+				</button>
 
-				<button id="16PlayersSelectionButton" class="bg-prim rounded-3xl text-2xl p-4">16 Players</button>
+				<button id="16PlayersSelectionButton" 
+					class="py-3 px-5 rounded-xl 
+                    	bg-prim bg-opacity-90 hover:bg-opacity-100 
+                    	text-white font-semibold font-geo
+                    	shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    	hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
+					16 Players
+				</button>
 
 			</div>
 
@@ -129,13 +156,34 @@
 				flex flex-row items-center justify-evenly
 			">
 
-				<button id="localSelectionButton" class="bg-prim rounded-3xl text-2xl p-4">Local</button>
+				<button id="localSelectionButton" 
+					class="py-3 px-5 rounded-xl 
+                    	bg-prim bg-opacity-90 hover:bg-opacity-100 
+                    	text-white font-semibold font-geo
+                    	shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    	hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
+					Local
+				</button>
 
-				<button id="remoteSelectionButton" class="bg-prim rounded-3xl text-2xl p-4">Remote</button>
+				<button id="remoteSelectionButton" 
+					class="py-3 px-5 rounded-xl 
+                    	bg-prim bg-opacity-90 hover:bg-opacity-100 
+                    	text-white font-semibold font-geo
+                    	shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    	hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
+					Remote
+				</button>
 
 			</div>
 
-			<button id="createTournamentButton" class="bg-prim rounded-3xl text-3xl p-4">Create</button>
+			<button id="createTournamentButton" 
+				class="py-3 px-5 rounded-xl 
+                    bg-prim bg-opacity-90 hover:bg-opacity-100 
+                    text-white font-semibold font-geo
+                    shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
+                    hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
+				Create
+			</button>
 
 			<div id="tournamentCreationMsg" class="
 				absolute bottom-4 left-1/2 -translate-x-1/2
