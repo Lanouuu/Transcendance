@@ -75,16 +75,73 @@ export async function runServer() {
 
   const dbtour = await initDB();
 
+  fastify.post('/deleteTournament', async(request, reply) => {
+    const { tournament_id } = request.body;
+    if(!tournament_id)
+      return reply.code(400).send({error: "ID tournament missing"});
+    const userId = request.headers["x-user-id"];
+    if(!userId)
+        return reply.code(400).send({error: "User ID missing"});
 
-  // dans le body id tournois
-  // fastify.post('/deleteTournament', async(request, reply) => {
+    try {
+      const tourInfo = await dbtour.get("SELECT * FROM tournament WHERE id = ?", [tournament_id]);
+      if (!tourInfo)
+        return reply.code(400).send(JSON.stringify({error: "No tournament found"}))
+      if (tourInfo.creator_id === userId && tourInfo.status === "pending") {
+        await dbtour.run("DELETE FROM tournament WHERE id = ?", [tournament_id]);
+      }
+      else {
+        if(tourInfo.creator_id !== userId)
+          return reply.code(403).send({error: "Can't delete tournament, you're not the creator"});
+        if(tourInfo.status !== "pending")
+          return reply.code(403).send({error: "Can't delete a playing tournament"});
+      }
+    }catch(err) {
+      return reply.code(400).send(JSON.stringify({error: "Failed to fetch tournament information"}))
+    }
+  });
 
-  // })
+  fastify.post('/leaveTournament', async(request, reply) => {
+    const { tournament_id } = request.body;
+    if(!tournament_id)
+      return reply.code(400).send({error: "ID tournament missing"});
+    const userId = request.headers["x-user-id"];
+    if(!userId)
+        return reply.code(400).send({error: "User ID missing"});
 
-  // dans le body id tournois
-  // fastify.post('/leaveTournament', async(request, reply) => {
-
-  // })
+    try {
+      const tourInfo = await dbtour.get(
+        `SELECT id, players_ids, players_names, nb_current_players, status FROM tournament
+        WHERE id = ?
+        AND status IN ('pending')
+        AND (',' || IFNULL(players_ids, '') || ',') LIKE '%,' || ? || ',%'`,
+        [tournament_id, userId]
+      );
+      if(!tourInfo)
+        return reply.code(400).send({error: "Tournament not found or user not in it"});
+      
+      const playerName = await getUserName(userId);
+      
+      if(tourInfo.nb_current_players === 1) {
+        await dbtour.run("DELETE FROM tournament WHERE id = ?", [tournament_id]);
+      }
+      else if(tourInfo.status === "pending") {
+        await dbtour.run(
+          `UPDATE tournament
+          SET players_ids = TRIM(REPLACE(',' || players_ids || ',', ',' || ? || ',', ','), ','),
+          players_names = TRIM(REPLACE(',' || players_names || ',', ',' || ? || ',', ','), ','),
+          nb_current_players = nb_current_players - 1
+          WHERE id = ?`,
+          [userId, playerName, tournament_id]
+        );
+        console.log(`✓ Player ${userId} left tournament ${tournament_id}`);
+      }
+      reply.send({ message: "Success", text: "Player removed from tournament" });
+    } catch(err) {
+      fastify.log.error({ err }, "Leave tournament failed");
+      reply.code(400).send({error: "Failed to leave tournament"});
+    }
+  });
 
   fastify.get('/isInTournament', async (request, reply) => {
       const userId = request.headers["x-user-id"];
