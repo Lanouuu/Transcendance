@@ -111,13 +111,16 @@ export function runServer() {
      */
     async function getUserName(userId) {
         try {
-            const response = await fetch(`http://users:3000/users/${userId}`, {
+            const response = await fetch(`http://users:3000/get-user/${userId}`, {
                 method: "GET",
-                headers: { "Content-Type": "application/json" }
+                headers: { 
+                    "Content-Type": "application/json",
+                    "x-user-id": userId
+                 }
             });
             if (response.ok) {
                 const data = await response.json();
-                return data.username || `Player ${userId}`;
+                return data.name || `Player ${userId}`;
             }
         } catch (e) {
             console.error("Error fetching username:", e.message);

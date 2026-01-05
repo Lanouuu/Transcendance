@@ -255,9 +255,6 @@ async function launchRemoteGame() {
 					gameLoop(game, ws);
 				}
 				else if (game && serverGame.message === "Countdown") {
-					playersNamesH1.classList.remove("hidden");
-					const playersStr: string = `${game.player1.name} - ${game.player2.name}`;
-					playersNamesH1.textContent = playersStr;
 					game.message = serverGame.message
 					game.timer = serverGame.timer
 				}
@@ -360,9 +357,6 @@ export async function launchInvitGame(friendId: string, message: string) {
 					}
 				}
 				else if (game && serverGame.message === "Countdown") {
-					playersNamesH1.classList.remove("hidden");
-					const playersStr: string = `${game.player1.name} - ${game.player2.name}`;
-					playersNamesH1.textContent = playersStr;
 					game.message = serverGame.message
 					game.timer = serverGame.timer
 				}
@@ -481,8 +475,17 @@ async function gameAnimation(game: Game, canvas: HTMLCanvasElement) {
 	canvasContext.drawImage(game.player1.sprite.image, game.player1.sprite.position.x, game.player1.sprite.position.y)
 	canvasContext.drawImage(game.player2.sprite.image, game.player2.sprite.position.x, game.player2.sprite.position.y)
 	canvasContext.drawImage(game.ball.image, game.ball.position.x, game.ball.position.y)
+
+	canvasContext.fillStyle = '#d17c58'
+	canvasContext.fillText(game.player1.name || 'Player 1', game.board.image.width / 4, 23.5)
 	canvasContext.fillText(String(game.player1.score), game.board.image.width / 2 - 20, 23.5)
+
+	canvasContext.fillStyle = "#5c7cd4"
+	canvasContext.fillText(game.player2.name || 'Player 2', (game.board.image.width * 3) / 4, 23.5)
 	canvasContext.fillText(String(game.player2.score), game.board.image.width / 2 + 20, 23.5)
+
+	canvasContext.fillStyle = 'white'
+
 	if (game.message === "Countdown") {
 		canvasContext.fillText(game.timer === 0 ? "GO !" : game.timer.toString(), game.board.image.width / 2, game.board.image.height / 2)
 	}
@@ -1285,11 +1288,11 @@ function snakeAnimation(game: SnakeGame) {
 		ctx.globalAlpha = 1;
 
 		// COUCHE 4 : SCORES
-		ctx.fillStyle = '#FFFFFF';  // Texte blanc
 		ctx.font = '24px Arial';
 		ctx.textAlign = 'center';
 
 		// Score Joueur 1 (à gauche)
+		ctx.fillStyle = game.player1.color;
 		ctx.fillText(
 			`${game.player1.name || 'Player 1'}: ${game.player1.snake.length}`,
 			canvas.width / 4,
@@ -1297,6 +1300,7 @@ function snakeAnimation(game: SnakeGame) {
 		);
 
 		// Score Joueur 2 (à droite)
+		ctx.fillStyle = game.player2.color;
 		ctx.fillText(
 			`${game.player2.name || 'Player 2'}: ${game.player2.snake.length}`,
 			(canvas.width * 3) / 4,
@@ -1306,8 +1310,10 @@ function snakeAnimation(game: SnakeGame) {
 		// COUCHE 5 : MESSAGES D'ÉTAT
 		// Affichés au centre du canvas
 
+		
 		// COUNTDOWN : 3, 2, 1, GO!
 		if (game.message === "Countdown") {
+			ctx.fillStyle = "#FFFFFF";
 			ctx.font = '48px Arial';
 			ctx.fillText(
 				game.timer === 0 ? "GO!" : game.timer.toString(),
@@ -1317,6 +1323,7 @@ function snakeAnimation(game: SnakeGame) {
 		}
 		// WAITING : En attente d'adversaire (mode remote)
 		else if (game.message === "Waiting") {
+			ctx.fillStyle = "#FFFFFF";
 			ctx.font = '36px Arial';
 			ctx.fillText(
 				"Waiting for opponent...",
@@ -1326,6 +1333,7 @@ function snakeAnimation(game: SnakeGame) {
 		}
 		// END : Partie terminée, affiche le gagnant
 		else if (game.message === "END") {
+			ctx.fillStyle = "#FFFFFF";
 			ctx.font = '36px Arial';
 			ctx.fillText(game.displayWinner, canvas.width / 2, canvas.height / 2);
 
