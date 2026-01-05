@@ -426,7 +426,11 @@ async function getUserName(id) {
     }
 }
 
-function findRemotePendingGame() {
+function findRemotePendingGame(userId) {
+    const validGames = pendingRemoteGame.filter(game => game.message !== "END" 
+        && String(game.player1.id) !== String(userId));
+    pendingRemoteGame.length = 0;
+    pendingRemoteGame.push(...validGames);
     if (pendingRemoteGame.length === 0)
         return false
     return true
@@ -479,7 +483,6 @@ fastify.post("/remote", async (request, reply) => {
             });
             if (!res.ok) {
                 console.error("Could not clear invit");
-                // return;
             }
             if (gameFound === false)
                 return reply.send({message: "deny-invit"})
@@ -515,7 +518,7 @@ fastify.post("/remote", async (request, reply) => {
         else if (message === "matchmaking") {
             queue.push([userId, await getUserName(userId), reply])
             console.log(queue)
-            if (findRemotePendingGame() === false) {
+            if (findRemotePendingGame(userId) === false) {
                 loadSprite(game)
                 game.player1.id = queue[0][0]
                 game.player1.name = queue[0][1]
@@ -534,8 +537,6 @@ fastify.post("/remote", async (request, reply) => {
             queue.shift()
         }
     } catch (e) {
-        console.log(e.message)
-        // a supprimer
         console.log("Error creating local game")
         reply.send([])
     }
@@ -558,7 +559,6 @@ async function createLocalTournament(match, rmId) {
             game.player2.id = match[1]
             game.player2.name = "player2"
             game.socket.push(tournamentSocket.get(parseInt(rmId)))
-            // game.tournament_id = game.socket[0].tournament_id
             games.set(game.id, game)
             game.socket.forEach(socket => {
                 if (socket.readyState === 1) {
@@ -599,7 +599,6 @@ async function createRemoteTournament(match) {
             game.player2.name = await getUserName(match[1])
             game.socket.push(tournamentSocket.get(parseInt(match[0])))
             game.socket.push(tournamentSocket.get(parseInt(match[1])))
-            // game.tournament_id = game.socket[0].tournament_id
             games.set(game.id, game)
             game.socket.forEach(socket => {
                 if (socket.readyState === 1) {

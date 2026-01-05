@@ -79,41 +79,41 @@ export async function setupGamePage(): Promise<void> {
 		boxGameSnake.classList.add('flex');
 	}
 
-	loginRedirectButton.addEventListener('click', async () => {
+	loginRedirectButton.onclick = () => {
 		window.location.hash = "#login";
-	});
+	};
 
-	pongLocalButton.addEventListener('click', async () => {
+	pongLocalButton.onclick = () => {
 		boxGamePong.classList.remove('flex');
 		boxGamePong.classList.add('hidden');
 		boxGameSnake.classList.remove('flex');
 		boxGameSnake.classList.add('hidden');
 		launchLocalGame();
-	});
+	};
 
-	pongRemoteButton.addEventListener('click', async () => {
+	pongRemoteButton.onclick = () => {
 		boxGamePong.classList.remove('flex');
 		boxGamePong.classList.add('hidden');
 		boxGameSnake.classList.remove('flex');
 		boxGameSnake.classList.add('hidden');
 		launchRemoteGame();
-	});
+	};
 
-	snakeLocalButton.addEventListener('click', async () => {
+	snakeLocalButton.onclick = () => {
 		boxGamePong.classList.remove('flex');
 		boxGamePong.classList.add('hidden');
 		boxGameSnake.classList.remove('flex');
 		boxGameSnake.classList.add('hidden');
 		launchSnakeLocalGame();
-	});
+	};
 
-	snakeRemoteButton.addEventListener('click', async () => {
+	snakeRemoteButton.onclick = () => {
 		boxGamePong.classList.remove('flex');
 		boxGamePong.classList.add('hidden');
 		boxGameSnake.classList.remove('flex');
 		boxGameSnake.classList.add('hidden');
 		launchSnakeRemoteGame();
-	});
+	};
 }
 
 async function returnGamesSelection() {
@@ -121,10 +121,10 @@ async function returnGamesSelection() {
 
 	returnGameButton.classList.remove('hidden');
 
-	returnGameButton.addEventListener('click', async () => {
+	returnGameButton.onclick = () => {
 		window.location.hash = '#game';
 		window.dispatchEvent(new Event('hashchange'));
-	});
+	};
 }
 
 async function launchLocalGame() {
@@ -443,8 +443,9 @@ export async function gameLoop(game: Game, ws: WebSocket) {
 				console.error("WebSocket is not open")
 		})
 		console.log('Sprite loaded');
-		const canvas: HTMLCanvasElement = document.createElement('canvas');
 		const canvasDiv: HTMLDivElement = document.getElementById('canvasDiv') as HTMLDivElement;
+		canvasDiv.innerHTML = '';
+		const canvas: HTMLCanvasElement = document.createElement('canvas');
 
 		canvas.id = String(game.id);
     	canvas.width= 802;
