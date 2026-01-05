@@ -4,53 +4,85 @@ import { Game } from "./gameClass.js"
 const ws_route: string = `://${window.location.host}/game`
 const route: string = `${window.location.origin}/tournament`;
 
+async function checkToken(): Promise<boolean> {
+	const token = sessionStorage.getItem("jwt");
+	if (!token) {
+		return false;
+	}
+	try {
+		const response = await fetch(`${window.location.origin}/auth_service/verify`, {
+			headers: { "Authorization": `Bearer ${token}` }
+		});
+		if (!response.ok) {
+			return false;
+		}
+		return true;
+	} catch (error) {
+		console.error("Auth check failed:", error);
+		return false;
+	}
+}
+
 export async function displayTournamentPage() {
 
-	const userId: string | null = sessionStorage.getItem("userId");
-	const token: string | null = sessionStorage.getItem("jwt");
+	const loginRedirectButtonDiv: HTMLDivElement = document.getElementById('loginRedirectButtonDiv') as HTMLDivElement;
+	const loginRedirectButton: HTMLButtonElement = document.getElementById('loginRedirectButton') as HTMLButtonElement;
 
-	if (userId === null || token === null) {
-		console.error('Could not fetch user id/token');
-		return;
-	}
+	const isOnline = await checkToken();
+	if (!isOnline) {
+		loginRedirectButtonDiv.classList.remove('hidden');
+		loginRedirectButton.addEventListener('click', async () => {
+		window.location.hash = "#login";
+	});
+	} else {
 
-	// #region Left //
+		const tournamentPage: HTMLDivElement = document.getElementById('tournamentPage') as HTMLDivElement;
+		tournamentPage.classList.remove('hidden');
+		const userId: string | null = sessionStorage.getItem("userId");
+		const token: string | null = sessionStorage.getItem("jwt");
 
-	const joinedTournamentInfo: {tournamentId: number | undefined, isRegistered: boolean} = await isInTournament(userId, token);
-	if (joinedTournamentInfo.isRegistered && joinedTournamentInfo.tournamentId !== undefined) {
-		displayJoinedTournament(userId, token, joinedTournamentInfo.tournamentId);
-		console.log("Player is in tournament: id = ", joinedTournamentInfo.tournamentId);
-	}
-	else {
-		displayTournamentCreation(userId, token);
-		console.log("User not in tournament")
-	}
-
-	// #endregion Left //
-
-	// #region Right //
-
-	const switchButton: HTMLButtonElement = document.getElementById('tournamentListSwitchButton') as HTMLButtonElement;
-	const switchButtonIcon: HTMLImageElement = document.getElementById('tournamentListSwitchButtonIcon') as HTMLImageElement;
-	let listDisplays: string = 'pending';
-
-	if (!switchButton || !switchButtonIcon) {
-		console.error("Could not get HTML elements");
-		return;
-	}
-	displayTournamentList(userId, token, listDisplays);
-	switchButton.onclick = async () => {
-		if (listDisplays === 'pending') {
-			listDisplays = 'finished';
-			switchButtonIcon.classList.add('rotate-[360deg]');
+		if (userId === null || token === null) {
+			console.error('Could not fetch user id/token');
+			return;
 		}
-		else if (listDisplays === 'finished') {
-			switchButtonIcon.classList.remove('rotate-[360deg]');
-			listDisplays = 'pending';
+		// #region Left //
+
+		const joinedTournamentInfo: {tournamentId: number | undefined, isRegistered: boolean} = await isInTournament(userId, token);
+		if (joinedTournamentInfo.isRegistered && joinedTournamentInfo.tournamentId !== undefined) {
+			displayJoinedTournament(userId, token, joinedTournamentInfo.tournamentId);
+			console.log("Player is in tournament: id = ", joinedTournamentInfo.tournamentId);
 		}
-		await displayTournamentList(userId, token, listDisplays);
-		// setTimeout(() => {switchButtonIcon.classList.remove('rotate-[360deg]');}, 500);
-	};
+		else {
+			displayTournamentCreation(userId, token);
+			console.log("User not in tournament")
+		}
+
+		// #endregion Left //
+
+		// #region Right //
+
+		const switchButton: HTMLButtonElement = document.getElementById('tournamentListSwitchButton') as HTMLButtonElement;
+		const switchButtonIcon: HTMLImageElement = document.getElementById('tournamentListSwitchButtonIcon') as HTMLImageElement;
+		let listDisplays: string = 'pending';
+
+		if (!switchButton || !switchButtonIcon) {
+			console.error("Could not get HTML elements");
+			return;
+		}
+		displayTournamentList(userId, token, listDisplays);
+		switchButton.onclick = async () => {
+			if (listDisplays === 'pending') {
+				listDisplays = 'finished';
+				switchButtonIcon.classList.add('rotate-[360deg]');
+			}
+			else if (listDisplays === 'finished') {
+				switchButtonIcon.classList.remove('rotate-[360deg]');
+				listDisplays = 'pending';
+			}
+			await displayTournamentList(userId, token, listDisplays);
+			// setTimeout(() => {switchButtonIcon.classList.remove('rotate-[360deg]');}, 500);
+		};
+	}
 
 	// #endregion Right //
 };
