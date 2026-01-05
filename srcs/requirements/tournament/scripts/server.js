@@ -134,7 +134,7 @@ export async function runServer() {
           WHERE id = ?`,
           [userId, playerName, tournament_id]
         );
-        console.log(`✓ Player ${userId} left tournament ${tournament_id}`);
+        console.log(`Player ${userId} left tournament ${tournament_id}`);
       }
       reply.send({ message: "Success", text: "Player removed from tournament" });
     } catch(err) {
