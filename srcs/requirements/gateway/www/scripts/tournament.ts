@@ -31,6 +31,7 @@ export async function displayTournamentPage() {
 	const isOnline = await checkToken();
 	if (!isOnline) {
 		loginRedirectButtonDiv.classList.remove('hidden');
+		loginRedirectButtonDiv.classList.add('flex');
 		loginRedirectButton.addEventListener('click', async () => {
 		window.location.hash = "#login";
 	});
