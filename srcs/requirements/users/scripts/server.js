@@ -828,29 +828,31 @@ export async function runServer() {
         `);
         saveStmt.run(player1ID, player1Name.name, player2ID, player2Name.name, winnerID, scoreP1, scoreP2, matchType, gameType);
 
-        let loserID;
+        if (Number(winnerID) !== 0) {
+          let loserID;
 
-        if (winnerID === player1ID) {
-          loserID = player2ID;
-        } else {
-          loserID = player1ID;
+          if (winnerID === player1ID) {
+            loserID = player2ID;
+          } else {
+            loserID = player1ID;
+          }
+
+          const updateWinnerStmt = usersDB.prepare(`
+            UPDATE users 
+            SET pong_wins = pong_wins + CASE WHEN ? = 'pong' THEN 1 ELSE 0 END,
+              snake_wins = snake_wins + CASE WHEN ? = 'snake' THEN 1 ELSE 0 END
+            WHERE id = ?
+          `);
+          updateWinnerStmt.run(gameType, gameType, winnerID);
+
+          const updateLoserStmt = usersDB.prepare(`
+            UPDATE users 
+            SET pong_losses = pong_losses + CASE WHEN ? = 'pong' THEN 1 ELSE 0 END,
+              snake_losses = snake_losses + CASE WHEN ? = 'snake' THEN 1 ELSE 0 END
+            WHERE id = ?
+          `);
+          updateLoserStmt.run(gameType, gameType, loserID);
         }
-
-        const updateWinnerStmt = usersDB.prepare(`
-          UPDATE users 
-          SET pong_wins = pong_wins + CASE WHEN ? = 'pong' THEN 1 ELSE 0 END,
-            snake_wins = snake_wins + CASE WHEN ? = 'snake' THEN 1 ELSE 0 END
-          WHERE id = ?
-        `);
-        updateWinnerStmt.run(gameType, gameType, winnerID);
-          
-        const updateLoserStmt = usersDB.prepare(`
-          UPDATE users 
-          SET pong_losses = pong_losses + CASE WHEN ? = 'pong' THEN 1 ELSE 0 END,
-            snake_losses = snake_losses + CASE WHEN ? = 'snake' THEN 1 ELSE 0 END
-          WHERE id = ?
-        `);
-        updateLoserStmt.run(gameType, gameType, loserID);
 
         return reply.status(201).send({ success: true, message: "Match saved" });
       } catch (err) {

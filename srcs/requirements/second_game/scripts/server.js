@@ -190,7 +190,7 @@ export function runServer() {
     async function sendResult(game) {
         try {
             // Détermine l'ID du gagnant
-            let winnerID = null;
+            let winnerID = 0;
             if (game.winner === "Player1") {
                 winnerID = game.player1.id;
             } else if (game.winner === "Player2") {
@@ -205,7 +205,8 @@ export function runServer() {
                 winnerID: winnerID,
                 scoreP1: game.player1.snake.length,  // Score = longueur du serpent
                 scoreP2: game.player2.snake.length,
-                matchType: "snake_remote"
+                matchType: "remote",
+                gameType: "snake"
             };
 
             // Envoie au service users

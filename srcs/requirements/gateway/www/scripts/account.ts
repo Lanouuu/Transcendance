@@ -815,6 +815,7 @@ async function showHistoryTab(userId: string, token: string): Promise<void> {
 		for (const match of matchList) {
 			const p1Name: string = match.player1_name;
 			const p2Name: string = match.player2_name;
+			const winnerId: number = match.winner_id;
 			const matchWon: boolean = String(match.winner_id) === String(userId);
 			const p1Score: string = match.score_p1;
 			const p2Score: string = match.score_p2;
@@ -822,7 +823,7 @@ async function showHistoryTab(userId: string, token: string): Promise<void> {
 			const matchType: string = match.match_type;
 			const playedAt: string = match.played_at;
 			
-			frag.appendChild(createLiHistoryItem(p1Name, p2Name, p1Score, p2Score, gameType, matchType, playedAt, matchWon));
+			frag.appendChild(createLiHistoryItem(p1Name, p2Name, p1Score, p2Score, gameType, matchType, playedAt, matchWon, winnerId));
 		}
 		ulHistoryList.appendChild(frag);
 	} catch (error) {
@@ -830,12 +831,18 @@ async function showHistoryTab(userId: string, token: string): Promise<void> {
 	}
 }
 
-function createLiHistoryItem(p1Name: string, p2Name: string, p1Score: string, p2Score: string, gameType: string, matchType: string, playedAt: string, matchWon: boolean): HTMLLIElement {
+function createLiHistoryItem(p1Name: string, p2Name: string, p1Score: string, p2Score: string, gameType: string, matchType: string, playedAt: string, matchWon: boolean, winnerId: number): HTMLLIElement {
 
 	const li: HTMLLIElement = document.createElement('li');
 	li.className = 'w-full grid grid-cols-[1fr_6fr] grid-rows-2 bg-opacity-50 border-b-2 border-white last:border-b-0';
 
-	matchWon ? li.classList.add('bg-green-600') : li.classList.add('bg-red-600');
+	if (winnerId === 0) {
+		li.classList.add('bg-dark');
+	} else if (matchWon) {
+		li.classList.add('bg-green-600');
+	} else {
+		li.classList.add('bg-red-600')
+	}
 
 	// #region icons //
 
