@@ -121,6 +121,13 @@ export default async function routes(fastify, options) {
       if(!testmail)
         return reply.code(400).send({error: "Wrong mail format"});
 
+
+      // check le format du password, a remettre a la fin du projet !!!!!!!!!!!
+      // //min 8 letter password, with at least a symbol, upper and lower case letters and a number
+      // let testpassword = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/.test(password);
+      // if(!testpassword)
+      //     return reply.code(400).send({error: "Wrong password format"});
+
       try {
         const rez = await fetch(`http://users:3000/name/${userName}`);
         if(rez.ok) return reply.status(400).send({ error: "User name already in use" });

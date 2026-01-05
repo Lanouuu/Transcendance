@@ -440,6 +440,11 @@ export async function runServer() {
           return reply.status(400).send({ error: "New password must be different from the current one"});
         }
 
+        // check le format du password, a remettre a la fin du projet !!!!!!!!!!!
+        // let testpassword = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/.test(newPassword);
+        // if(!testpassword)
+        //     return reply.code(400).send({error: "Wrong password format"});
+        
         if (newPassword !== confirmPassword) {
           return reply.status(400).send({ error: "Password confirmation does not match"});
         }
