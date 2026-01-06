@@ -271,7 +271,7 @@ async function createTournament(userId: string, token: string, tournamentName: s
 			const ws = new WebSocket(`wss${ws_route}/ws`);
 			ws.addEventListener('open', (event) => {
 				if (ws.readyState === WebSocket.OPEN)
-					ws.send(JSON.stringify({ gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "initTournament" }))
+					ws.send(JSON.stringify({id: response.id, tournamentId: response.tournamentId, userId: userId, message: "initTournament"}))
 			})
 
 			ws.addEventListener('message', (event) => {
@@ -630,7 +630,7 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 			const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
 			ws.addEventListener('open', (event) => {
 				if (ws.readyState === WebSocket.OPEN)
-					ws.send(JSON.stringify({ gameId: response.id, tournamentId: response.tournamentId, id: userId, message: "initTournament" }))
+					ws.send(JSON.stringify({id: response.id, tournamentId: response.tournamentId, userId: userId, message: "initTournament"}))
 			})
 
 			ws.addEventListener('message', (event) => {
