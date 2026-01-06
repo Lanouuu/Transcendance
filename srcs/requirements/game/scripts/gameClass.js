@@ -26,7 +26,8 @@ export class Game {
                 },
                 loaded: undefined
             },
-            id: undefined
+            id: undefined,
+            status: undefined
         }
 
         this.player2 = {
@@ -44,7 +45,8 @@ export class Game {
                 },
                 loaded: undefined
             },
-            id: undefined
+            id: undefined,
+            status: undefined
         }
 
         this.ball = {

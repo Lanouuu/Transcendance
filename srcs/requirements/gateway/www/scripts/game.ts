@@ -276,6 +276,18 @@ async function launchRemoteGame() {
 					game.player2.score = serverGame.player2.score
 					returnGamesSelection();
 				}
+				else if (game && serverGame.message === "Pause") {
+					game.message = serverGame.message;
+				}
+                else if (serverGame.message === "TournamentMatchs") {
+                    // Recuperer les matchs dans serverGame.matchs
+                }
+				else if (game && serverGame.message === "Error")
+					console.log("REMOTE ERROR: ", serverGame.error);
+				else {
+					game.player2.name = serverGame.name;
+					console.log("PLAYER 2 NAME: ", serverGame.name)
+				}
 			})
 		}
 	} catch (err) {
@@ -450,6 +462,7 @@ export async function gameLoop(game: Game, ws: WebSocket) {
 			console.error('Could not fetch canvas div');
 			return;
 		}
+		canvasDiv.innerHTML = "";
 		canvasDiv.appendChild(canvas);
 		gameAnimation(game, canvas);
 	} catch (error) {
@@ -486,8 +499,11 @@ async function gameAnimation(game: Game, canvas: HTMLCanvasElement) {
 
 	canvasContext.fillStyle = 'white'
 
+	if (game.message === "Pause") {
+		canvasContext.fillText("Opponent disconnect, waiting...", game.board.image.width / 2, game.board.image.height / 2)		
+	}
 	if (game.message === "Countdown") {
-		canvasContext.fillText(game.timer === 0 ? "GO !" : game.timer.toString(), game.board.image.width / 2, game.board.image.height / 2)
+		canvasContext.fillText(game.timer === 0 ? "GO !" : String(game.timer), game.board.image.width / 2, game.board.image.height / 2)
 	}
 	else if (game.message === "END") {
 		canvasContext.fillText(game.displayWinner, game.board.image.width / 2, game.board.image.height / 2)
