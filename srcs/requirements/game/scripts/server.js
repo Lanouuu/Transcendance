@@ -444,6 +444,16 @@ wss.on('connection', function connection(ws) {
                 game.socket = game.socket.filter(socket => socket.readyState != 3)
                 if (game.mode === "remote-tournament")
                     tournamentSocket.delete(parseInt(ws.userId, 10));
+
+                if (game.message === "Waiting" && parseInt(game.player1.id, 10) === parseInt(ws.userId, 10)) {
+                    const index = pendingRemoteGame.findIndex(g => g.id === game.id);
+                    if (index !== -1) {
+                        pendingRemoteGame.splice(index, 1);
+                    }
+                    games.delete(gameId);
+                    return;
+                }
+
                 if (game.message === "Playing" || game.message === "Countdown") {
                     clearInterval(game.intervalId);
                     game.intervalId = null;
@@ -611,8 +621,10 @@ async function private_matchmaking(message, userId, body, headers, reply) {
 
 async function public_matchmaking(userId, reply) {
     queue.push([userId, await getUserName(userId)]);
-    // console.log(queue);
-    if (findRemotePendingGame() === false) {
+    
+    const availableGame = findRemotePendingGame(userId);
+
+    if (availableGame === null) {
         const game = new Game({
             id: parseInt(userId, 10),
             socket: [],
@@ -628,21 +640,25 @@ async function public_matchmaking(userId, reply) {
         reply.send({message: "Success", id: game.id});
     }
     else {
-        const gameTemp = pendingRemoteGame.shift();
-        const game = games.get(gameTemp.id);
+        const game = games.get(availableGame.id);
         game.player2.id = queue[0][0];
         game.player2.name = queue[0][1];
-        game.player1.status = "Online";
+        game.player2.status = "Online";
         games.set(game.id, game);
         reply.send({message: "Success", id: game.id});
     }
     queue.shift();
 }
 
-function findRemotePendingGame() {
-    if (pendingRemoteGame.length === 0)
-        return false;
-    return true;
+function findRemotePendingGame(userId) {
+    for (const game of pendingRemoteGame) {
+        if (parseInt(game.player1.id, 10) !== parseInt(userId, 10)) {
+            const index = pendingRemoteGame.indexOf(game);
+            pendingRemoteGame.splice(index, 1);
+            return game;
+        }
+    }
+    return null;
 }
 
 fastify.post("/remote", async (request, reply) => {
