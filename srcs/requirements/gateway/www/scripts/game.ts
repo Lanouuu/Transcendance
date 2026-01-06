@@ -279,6 +279,11 @@ async function launchRemoteGame() {
 				else if (game && serverGame.message === "Pause") {
 					game.message = serverGame.message;
 				}
+				else if (serverGame.message === "Schedule") {
+					// Recuperer le planning des matchs
+					console.log("Schedule: ", serverGame.schedule);
+					console.log("Schedule names: ", serverGame.scheduleNames);
+				}
                 else if (serverGame.message === "TournamentMatchs") {
                     // Recuperer les matchs dans serverGame.matchs
                 }
@@ -392,6 +397,15 @@ export async function launchInvitGame(friendId: string, message: string) {
 					game.player1.score = serverGame.player1.score
 					game.player2.score = serverGame.player2.score
 					returnGamesSelection();
+				}
+				else if (game && serverGame.message === "Pause") {
+					game.message = serverGame.message;
+				}
+				else if (game && serverGame.message === "Error")
+					console.log("REMOTE ERROR: ", serverGame.error);
+				else {
+					game.player2.name = serverGame.name;
+					console.log("PLAYER 2 NAME: ", serverGame.name)
 				}
 			})
 		}

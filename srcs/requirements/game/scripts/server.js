@@ -326,7 +326,6 @@ function remoteGamehandler(game, ws) {
 }
 
 function tournamentHandler(userId, id, tournament_id, ws) {
-    console.log("ICICICICICICIICCI: ", userId);
     if (!userId) {
         ws.send(JSON.stringify({ message: "Error", error: "User id required"}))
         return;
@@ -335,6 +334,7 @@ function tournamentHandler(userId, id, tournament_id, ws) {
         ws.send(JSON.stringify({ message: "Error", error: "Tournament id required"}))
         return;
     }
+    console.log("tournament id in handler: ", tournament_id);
     ws.userId = userId;
     ws.gameId = id;
     ws.tournament_id = tournament_id;
@@ -428,7 +428,7 @@ wss.on('connection', function connection(ws) {
         else if (res.message === "InitRemote" || game && game.mode === "remote-tournament" && game.message === "Pause" && res.message === "initTournament") 
             remoteGamehandler(game, ws);
         else if (res.message === "initTournament") {
-            tournamentHandler(res.userId, res.id, res.tournament_id, ws);
+            tournamentHandler(res.userId, res.id, res.tournamentId, ws);
         }
         else if (res.message === "input") {
             if (game.mode === "local")
@@ -715,7 +715,7 @@ async function createLocalTournament(match, rmId) {
     })
 }
 
-async function createRemoteTournament(match) {
+async function createRemoteTournament(match, tournamentId) {
     return new Promise(async (resolve, reject) => {
         try {
             const game = new Game({
@@ -746,7 +746,7 @@ async function createRemoteTournament(match) {
             }
             else
                 game.socket.push(tournamentSocket.get(parseInt(match[1])));
-            game.tournament_id = game.socket[0].tournament_id;
+            game.tournament_id = tournamentId;
             games.set(game.id, game);
             game.socket.forEach(socket => {
                 if (socket.readyState === 1) {
@@ -791,15 +791,34 @@ fastify.post("/localTournament", async (request, reply) => {
 })
 
 fastify.post("/remoteTournament", async (request, reply) => {
-    const { schedule } = request.body || {};
-
+    const { schedule, id } = request.body || {};
+    const names = [];
     if (!schedule) {
         return reply.code(400).send({error: "schedule is empty"});
     }
 
+    if (!id) {
+        return reply.code(400).send({error: "id is empty"});
+    }
+    for (const round of schedule) {
+        const matchup = []
+        for (const match of round) {
+            const name1 =  await getUserName(match[0]);
+            const name2 =  await getUserName(match[1]);
+            matchup.push([name1, name2]);
+        }
+        names.push(matchup);
+    }
+    console.log("NAMES TAB: ", names);
+    for (const [userId, socket] of tournamentSocket.entries()) {
+        if (parseInt(socket.tournament_id, 10) === parseInt(id, 10)) {
+            if (socket.readyState === 1)
+                socket.send(JSON.stringify({message: "Schedule", schedule: schedule, scheduleNames: names}));
+        }
+    }
     try {
         for (const round of schedule) {
-            await Promise.all(round.map(match => createRemoteTournament(match)));
+            await Promise.all(round.map(match => createRemoteTournament(match, id)));
         }
         reply.send({message: "Success"});
     }catch(err) {

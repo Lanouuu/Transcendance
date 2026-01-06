@@ -271,7 +271,7 @@ async function createTournament(userId: string, token: string, tournamentName: s
 			const ws = new WebSocket(`wss${ws_route}/ws`);
 			ws.addEventListener('open', (event) => {
 				if (ws.readyState === WebSocket.OPEN)
-					ws.send(JSON.stringify({id: response.id, tournamentId: response.tournamentId, userId: userId, message: "initTournament"}))
+					ws.send(JSON.stringify({id: response.id, tournamentId: response.tournament_id, userId: userId, message: "initTournament"}))
 			})
 
 			ws.addEventListener('message', (event) => {
@@ -308,6 +308,11 @@ async function createTournament(userId: string, token: string, tournamentName: s
                 }
 				else if (game && serverGame.message === "Pause") {
 					game.message = serverGame.message;
+				}
+				else if (serverGame.message === "Schedule") {
+					// Recuperer le planning des matchs
+					console.log("Schedule: ", serverGame.schedule);
+					console.log("Schedule names: ", serverGame.scheduleNames);
 				}
                 else if (serverGame.message === "TournamentMatchs") {
                     // Recuperer les matchs dans serverGame.matchs
@@ -630,7 +635,7 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 			const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
 			ws.addEventListener('open', (event) => {
 				if (ws.readyState === WebSocket.OPEN)
-					ws.send(JSON.stringify({id: response.id, tournamentId: response.tournamentId, userId: userId, message: "initTournament"}))
+					ws.send(JSON.stringify({id: response.id, tournamentId: response.tournament_id, userId: userId, message: "initTournament"}))
 			})
 
 			ws.addEventListener('message', (event) => {
@@ -668,6 +673,14 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 				else if (game && serverGame.message === "Pause") {
 					game.message = serverGame.message;
 				}
+				else if (serverGame.message === "Schedule") {
+					// Recuperer le planning des matchs
+					console.log("Schedule: ", serverGame.schedule);
+					console.log("Schedule names: ", serverGame.scheduleNames);
+				}
+                else if (serverGame.message === "TournamentMatchs") {
+                    // Recuperer les matchs dans serverGame.matchs
+                }
 				else if (game && serverGame.message === "Error")
 					console.log("JOIN ERROR: ", serverGame.error);
             })
