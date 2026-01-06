@@ -37,6 +37,35 @@ fastify.register(fastifyStatic, {
   root: join(dirname, '..'),
 });
 
+function broadcastTournament(tournament_id) {
+    const matchs = [];
+
+    for (const [id, game] of games.entries()) {
+        if (game.mode === "remote-tournament" && game.tournament_id === tournament_id) {
+            const data = {
+                id: game.id,
+                player1: {
+                    name: game.player1.name,
+                    status: game.player1.status,
+                    score: game.player1.score
+                },
+                player2: {
+                    name: game.player2.name,
+                    status: game.player2.status,
+                    score: game.player2.score
+                }             
+            }
+            matchs.push(data);
+        }
+    }
+
+    for (const [userId, socket] of tournamentSocket.entries()) {
+        if (socket.readyState === 1 && socket.tournament_id === tournament_id) {
+            socket.send(JSON.stringify({ message: "TournamentMatchs", matchs: matchs}));
+        }
+    }
+}
+
 function startTimer(game) {
     game.intervalId = setInterval(() => {
         game.socket.forEach(socket => {
@@ -191,6 +220,8 @@ function gameLoop(game) {
             }
         });
     }
+    if (game.mode === "remote-tournament")
+        broadcastTournament(game.tournament_id);
     if (game.message === "END") {
         if (game.mode === "remote" || game.mode === "remote-tournament") {
             sendResult(game);
@@ -266,6 +297,7 @@ function remoteGamehandler(game, ws) {
         ws.userId = game.player1.id;
     } else if (ws.userId === undefined && game.socket.length === 1 && game.message !== "Pause") {
         ws.userId = game.player2.id;
+        game.socket[0].send(JSON.stringify({name: game.player2.name}));
         game.message = "start";
     }
     else if (game.message === "Pause") {
@@ -411,7 +443,7 @@ wss.on('connection', function connection(ws) {
             if (parseInt(game.player1.id, 10) === parseInt(ws.userId, 10) || parseInt(game.player2.id, 10) === parseInt(ws.userId, 10)) {
                 game.socket = game.socket.filter(socket => socket.readyState != 3)
                 if (game.mode === "remote-tournament")
-                    tournamentSocket.delete(parseInt(ws.user, 10));
+                    tournamentSocket.delete(parseInt(ws.userId, 10));
                 if (game.message === "Playing" || game.message === "Countdown") {
                     clearInterval(game.intervalId);
                     game.intervalId = null;
@@ -698,9 +730,23 @@ async function createRemoteTournament(match) {
             game.player1.name = await getUserName(match[0]);
             game.player2.id = match[1];
             game.player2.name = await getUserName(match[1]);
-            game.socket.push(tournamentSocket.get(parseInt(match[0])));
-            game.socket.push(tournamentSocket.get(parseInt(match[1])));
-            // game.tournament_id = game.socket[0].tournament_id;
+            if (tournamentSocket.get(parseInt(match[0])) === undefined) {
+                game.player1.status = "Disconnected";
+                game.message = "Pause";
+                game.timer = 30;
+                console.log("Player 1 disconnected");
+            }
+            else
+                game.socket.push(tournamentSocket.get(parseInt(match[0])));
+            if (tournamentSocket.get(parseInt(match[1])) === undefined) {
+                game.player2.status = "Disconnected";
+                game.message = "Pause";
+                game.timer = 30;
+                console.log("Player 2 disconnected");
+            }
+            else
+                game.socket.push(tournamentSocket.get(parseInt(match[1])));
+            game.tournament_id = game.socket[0].tournament_id;
             games.set(game.id, game);
             game.socket.forEach(socket => {
                 if (socket.readyState === 1) {
