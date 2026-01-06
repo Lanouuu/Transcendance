@@ -564,35 +564,39 @@ async function displayTournamentList(userId: string, token: string, wantedStatus
 			tournamentNameDiv.textContent = tournament.name;
 
 			infoDiv.append(tournamentNameDiv);
+			if (wantedStatus === "finished") {
+				const winnerNameDiv:	HTMLDivElement = document.createElement('div');
+				winnerNameDiv.className = "";
+				if (tournament.winner_id && tournament.winner_id !== null) {
+					const res = await fetch(`${window.location.origin}/users/get-user/${tournament.winner_id}`, {
+						method: "GET",
+						headers: {
+							"authorization": `Bearer ${token}`,
+							"x-user-id": userId
+						}
+					});
 
-			const winnerNameDiv:	HTMLDivElement = document.createElement('div');
-			winnerNameDiv.className = "";
-			if (wantedStatus === "finished" && tournament.status === "finished"
-				&& tournament.winner_id && tournament.winner_id !== null) {
-				const res = await fetch(`${window.location.origin}/users/get-user/${tournament.winner_id}`, {
-					method: "GET",
-					headers: {
-						"authorization": `Bearer ${token}`,
-						"x-user-id": userId
+					if (res.ok) {
+						winnerNameDiv.textContent = `Winner: ${tournament.winner_id}`;
+					} else {
+						winnerNameDiv.textContent = "Winner: ?";
 					}
-				});
-
-				if (res.ok) winnerNameDiv.textContent = `Winner: ${tournament.winner_id}`;
-				else 		winnerNameDiv.textContent = "Winner: ?";
+				}
 				infoDiv.append(winnerNameDiv);
-			}
+				li.append(infoDiv);
+			} else {
+				const joinButton: HTMLButtonElement = document.createElement('button');
+				joinButton.className = 'col-span-1 w-fit min-w-0 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded';
+				joinButton.textContent = `Join\n${tournament.nb_current_players}/${tournament.nb_max_players}`;
+				joinButton.disabled = tournament.nb_current_players >= tournament.nb_max_players;
+				joinButton.onclick = async () => { await joinTournament(tournament.id, token, userId, tournamentListMsg); };
+				if (joinButton.disabled) {
+					if (tournament.status === "finished") joinButton.textContent = "Finished";
+					else joinButton.textContent = 'Full';
+				}
 
-			const joinButton: HTMLButtonElement = document.createElement('button');
-			joinButton.className = 'col-span-1 w-fit min-w-0 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded';
-			joinButton.textContent = `Join\n${tournament.nb_current_players}/${tournament.nb_max_players}`;
-			joinButton.disabled = tournament.nb_current_players >= tournament.nb_max_players;
-			joinButton.onclick = async () => { await joinTournament(tournament.id, token, userId, tournamentListMsg); };
-			if (joinButton.disabled) {
-				if (tournament.status === "finished") joinButton.textContent = "Finished";
-				else joinButton.textContent = 'Full';
-			}
-
-			li.append(infoDiv, joinButton);
+				li.append(infoDiv, joinButton);
+			}	
 			frag.appendChild(li);
 		});
 		tournamentList.appendChild(frag);
