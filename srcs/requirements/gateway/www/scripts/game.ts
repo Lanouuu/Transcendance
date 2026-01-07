@@ -259,6 +259,7 @@ async function launchRemoteGame() {
 					game.timer = serverGame.timer
 				}
 				else if (game && serverGame.message === "Playing") {
+					hideNextMatch();
 					game.message = serverGame.message
 					game.started = serverGame.started
 					game.player1.sprite.position.y = serverGame.player1.sprite.position.y
@@ -280,9 +281,7 @@ async function launchRemoteGame() {
 					game.message = serverGame.message;
 				}
 				else if (serverGame.message === "Schedule") {
-					// Recuperer le planning des matchs
-					console.log("Schedule: ", serverGame.schedule);
-					console.log("Schedule names: ", serverGame.scheduleNames);
+					displayNextMatch(Number(userId), serverGame.schedule, serverGame.scheduleNames);
 				}
                 else if (serverGame.message === "TournamentMatchs") {
                     // Recuperer les matchs dans serverGame.matchs
@@ -297,6 +296,42 @@ async function launchRemoteGame() {
 		}
 	} catch (err) {
 		console.error(err);
+	}
+}
+
+function displayNextMatch(userId: number, schedule: number[][], scheduleNames: string[][]) {
+	const nextMatchMsg: HTMLDivElement = document.getElementById("nextMatchMsg") as HTMLDivElement;
+	const nextMatchInfo: HTMLParagraphElement = document.getElementById("nextMatchInfos") as HTMLParagraphElement;
+	if (!nextMatchMsg || !nextMatchInfo) {
+		console.error("Could not find next match");
+		return;
+	}
+
+	for (let roundIndex = 0; roundIndex < schedule.length; roundIndex++) {
+		const round = schedule[roundIndex];
+		const roundNames = scheduleNames[roundIndex];
+
+		for (let matchIndex = 0; matchIndex < round.length; matchIndex++) {
+			const match = round[matchIndex];
+			if (Array.isArray(match) && match.includes(userId)) {
+				const names = roundNames[matchIndex];
+				if (Array.isArray(names)) {
+					nextMatchInfo.textContent = `${names[0]} vs ${names[1]}`;
+				} else {
+					nextMatchInfo.textContent = `Match found => Round ${roundIndex + 1}`;
+				}
+				nextMatchMsg.classList.remove('hidden');
+				return;
+			}
+		}
+	}
+	nextMatchMsg.classList.add('hidden');
+}
+
+function hideNextMatch() {
+	const nextMatchMsg: HTMLDivElement = document.getElementById("nextMatchMsg") as HTMLDivElement;
+	if (nextMatchMsg) {
+		nextMatchMsg.classList.add('hidden');
 	}
 }
 
