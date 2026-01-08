@@ -8,6 +8,9 @@ import {WebSocketServer} from 'ws';
 import fs from 'fs';
 import { imageSize } from "image-size";
 
+// TODO : - Clear socket pour tournoi local et recuperer alias
+//        - Terminer gestion socket lors d'un changement de fenetre
+//        - Mettre fin a la partie si les 2 joueurs perdent la connexion ou attendre (a voir)
 const fastify = Fastify({
     logger: true,
     connectionTimeout: 120000,
@@ -249,7 +252,7 @@ async function gameLoop(game) {
         }
         if (game.mode === "remote-tournament")
             getScore(game);
-        else {
+        else if (game.mode === "remote" || game.mode === "local"){
             for (const socket of game.socket.values()) {
                     socket.close();
             }            
@@ -465,7 +468,7 @@ wss.on('connection', function connection(ws) {
             tournamentHandler(res.userId, res.id, res.tournamentId, ws);
         }
         else if (res.message === "input") {
-            if (game.mode === "local")
+            if (game.mode === "local" || game.mode === "local-tournament")
                 localInputHandler(game, res.key, res.event);
             else if (game.mode === "remote" || game.mode === "remote-tournament")
                 remoteInputHandler(game, ws.userId, res.key, res.event);
@@ -473,8 +476,12 @@ wss.on('connection', function connection(ws) {
         }
     })
     ws.on('close', (data) => {
+        console.log("=== WebSocket CLOSED ===");
+        console.log("ws.userId:", ws.userId);
         for (const [gameId, game] of games.entries() ) {
             if (parseInt(game.player1.id, 10) === parseInt(ws.userId, 10) || parseInt(game.player2.id, 10) === parseInt(ws.userId, 10)) {
+                if (game.mode === "local" || game.mode === "local-tournament")
+                    games.delete(parseInt(game.id, 10));
                 game.socket = game.socket.filter(socket => socket.readyState != 3)
                 if (game.message === "Playing" || game.message === "Countdown") {
                     clearInterval(game.intervalId);
@@ -548,17 +555,19 @@ fastify.post("/tournamentAlias", async (request, reply) => {
 }) 
 // END
 
-// local
+// #region local
 fastify.get("/local", async (request, reply) => {
     try {
+        const userId = request.headers["x-user-id"]
         const game = new Game({
-          id: parseInt(request.headers["x-user-id"], 10),
+          id: parseInt(userId, 10),
           socket: [],
           mode: 'local',
           message: 'start'
         })
         loadSprite(game);
         game.player1.name = "Player1";
+        game.player1.id = userId;
         game.player2.name = "Player2";
         games.set(game.id, game);
         reply.send({message: "Success"});
@@ -743,7 +752,7 @@ async function createLocalTournament(match, rmId) {
             const game = new Game({
                 id: parseInt(match[0], 10),
                 socket: [],
-                mode: 'local',
+                mode: 'local-tournament',
                 status: 'Playing',
                 message: "start",
             })

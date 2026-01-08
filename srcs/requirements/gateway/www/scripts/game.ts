@@ -7,7 +7,9 @@ const route: string = `${window.location.origin}/game`;
 const ws_route: string = `://${window.location.host}/game`;
 const snake_route: string = `${window.location.origin}/second_game`;
 const snake_ws_route: string = `://${window.location.host}/second_game`;
-
+let pongSocket: WebSocket | null = null;
+let pongAnimationId: number | null = null;
+let pongTimeoutId: number | null = null;
 // Variables globales pour gérer le replay
 let currentSnakeGameMode: 'local' | 'remote' | null = null;
 let currentWebSocket: WebSocket | null = null;
@@ -160,49 +162,7 @@ async function launchLocalGame() {
 
 		const response = await res.json();
 		if (response.message === "Success") {
-			let game : Game;
-			const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
-			ws.addEventListener('open', (event) => {
-				if (ws.readyState === WebSocket.OPEN)
-					ws.send(JSON.stringify({id: userId, message: "InitLocal"}))
-			})
-
-			ws.addEventListener('message', (event) => {
-				const serverGame = JSON.parse(event.data)
-				if (serverGame.message === "Init") {
-					game = serverGame.game;
-					gameLoop(game, ws);
-				}
-				else if (game && serverGame.message === "Countdown") {
-					game.message = serverGame.message
-					game.timer = serverGame.timer
-				}
-				else if (game && serverGame.message === "Playing") {
-					game.message = serverGame.message
-					game.started = serverGame.started
-					game.player1.sprite.position.y = serverGame.player1.sprite.position.y
-					game.player2.sprite.position.y = serverGame.player2.sprite.position.y
-					game.ball.position.x = serverGame.ball.position.x
-					game.ball.position.y = serverGame.ball.position.y
-					game.player1.score = serverGame.player1.score
-					game.player2.score = serverGame.player2.score
-				}
-				else if (game && serverGame.message === "END") {
-					game.message = serverGame.message
-					game.winner = serverGame.winner
-					game.displayWinner = serverGame.displayWinner
-					game.player1.score = serverGame.player1.score
-					game.player2.score = serverGame.player2.score
-					returnGamesSelection();
-				}
-				else if (serverGame.message === "Error") {
-					console.log(serverGame.error)
-				}
-			})
-
-			ws.addEventListener('close', () => {
-				console.log("tournament socket closed");
-			})
+			gameLoop(parseInt(userId, 10), undefined, "InitLocal", undefined);
 		}
 	} catch (err) {
 		console.error(err);
@@ -244,66 +204,8 @@ async function launchRemoteGame() {
 		}
 		
 		const response = await res.json();
-		if (response.message === "Success") {
-			let game : Game;
-			const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
-			ws.addEventListener('open', (event) => {
-				if (ws.readyState === WebSocket.OPEN)
-					ws.send(JSON.stringify({id: response.id, message: "InitRemote"}))
-			})
-
-			ws.addEventListener('message', (event) => {
-				const serverGame = JSON.parse(event.data)
-				if (serverGame.message === "Init") {
-					game = serverGame.game;
-					gameLoop(game, ws);
-				}
-				else if (game && serverGame.message === "Countdown") {
-					game.message = serverGame.message
-					game.timer = serverGame.timer
-				}
-				else if (game && serverGame.message === "Playing") {
-					hideNextMatch();
-					game.message = serverGame.message
-					game.started = serverGame.started
-					game.player1.sprite.position.y = serverGame.player1.sprite.position.y
-					game.player2.sprite.position.y = serverGame.player2.sprite.position.y
-					game.ball.position.x = serverGame.ball.position.x
-					game.ball.position.y = serverGame.ball.position.y
-					game.player1.score = serverGame.player1.score
-					game.player2.score = serverGame.player2.score
-				}
-				else if (game && serverGame.message === "END") {
-					game.message = serverGame.message
-					game.winner = serverGame.winner
-					game.displayWinner = serverGame.displayWinner
-					game.player1.score = serverGame.player1.score
-					game.player2.score = serverGame.player2.score
-					returnGamesSelection();
-				}
-				else if (game && serverGame.message === "Pause") {
-					game.message = serverGame.message;
-				}
-				else if (serverGame.message === "Schedule") {
-					displayNextMatch(Number(userId), serverGame.schedule, serverGame.scheduleNames);
-				}
-                else if (serverGame.message === "TournamentMatchs") {
-                    // Recuperer les matchs dans serverGame.matchs
-                }
-				else if (serverGame.message === "TournamentEnd") {
-					console.log("Vainqueur du tournois: ", serverGame.winner);
-				}				
-				else if (serverGame.message === "Error")
-					console.log("REMOTE ERROR: ", serverGame.error);
-				else {
-					game.player2.name = serverGame.name;
-					console.log("PLAYER 2 NAME: ", serverGame.name)
-				}
-			})
-
-			ws.addEventListener('close', () => {
-				console.log("tournament socket closed");
-			})
+		if (response.message === "Success") {;
+			gameLoop(parseInt(response.id, 10), undefined, "InitRemote", undefined);
 		}
 	} catch (err) {
 		console.error(err);
@@ -375,97 +277,211 @@ export async function launchInvitGame(friendId: string, message: string) {
 		
 		const response = await res.json();
 		if (response.message === "Success") {
-			let game : Game;
-			const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
-			ws.addEventListener('open', (event) => {
-				console.log("GAME ID: ", response.id);
-				if (ws.readyState === WebSocket.OPEN)
-					ws.send(JSON.stringify({id: response.id, message: "InitRemote"}))
-			})
-
-			ws.addEventListener('message', (event) => {
-				const serverGame = JSON.parse(event.data)
-				console.log(serverGame.message);
-				if (serverGame.message === "Init") {
-					const cancelMatchButton: HTMLButtonElement = document.getElementById('cancelMatchButton') as HTMLButtonElement;
-					if (cancelMatchButton) {
-						cancelMatchButton.classList.remove('hidden');
-						cancelMatchButton.onclick = async () => {
-							const res = await fetch(`${window.location.origin}/game/remote`, {
-            			    	method: "POST",
-            			    	headers: {
-            			    	    "x-user-id": userId,
-            			    	    "authorization": `Bearer ${token}`,
-            			    	    "Content-Type": "application/json"
-            			    	},
-            			    	body: JSON.stringify({ friendId: friendId, message: "deny-invit" })
-            				});
-            				if (!res.ok) {
-            		    		console.error("Could not clear invit");
-            				}
-							window.location.hash = "#account";
-						}
+			const cancelMatchButton: HTMLButtonElement = document.getElementById('cancelMatchButton') as HTMLButtonElement;
+			if (cancelMatchButton) {
+				cancelMatchButton.classList.remove('hidden');
+				cancelMatchButton.onclick = async () => {
+					const res = await fetch(`${window.location.origin}/game/remote`, {
+						method: "POST",
+						headers: {
+							"x-user-id": userId,
+							"authorization": `Bearer ${token}`,
+							"Content-Type": "application/json"
+						},
+						body: JSON.stringify({ friendId: friendId, message: "deny-invit" })
+					});
+					if (!res.ok) {
+						console.error("Could not clear invit");
 					}
-					game = serverGame.game;
-					gameLoop(game, ws);
+					window.location.hash = "#account";
 				}
-				else if (serverGame.message === "deny-invit") {
-					const gameQueueMsg: HTMLDivElement = document.getElementById("gameQueueMsg") as HTMLDivElement;
-
-					if (gameQueueMsg) {
-						gameQueueMsg.classList.toggle('opacity-0');
-						gameQueueMsg.classList.toggle('opacity-100');
-						gameQueueMsg.textContent = "Your invitation has been denied ! haha";
-						gameQueueMsg.style.color = "red";
-						returnGamesSelection();
-					}
-				}
-				else if (game && serverGame.message === "Countdown") {
-					game.message = serverGame.message
-					game.timer = serverGame.timer
-				}
-				else if (game && serverGame.message === "Playing") {
-					const cancelMatchButton: HTMLButtonElement = document.getElementById('cancelMatchButton') as HTMLButtonElement;				
-					if (cancelMatchButton)
-						cancelMatchButton.classList.add('hidden');
-					game.message = serverGame.message
-					game.started = serverGame.started
-					game.player1.sprite.position.y = serverGame.player1.sprite.position.y
-					game.player2.sprite.position.y = serverGame.player2.sprite.position.y
-					game.ball.position.x = serverGame.ball.position.x
-					game.ball.position.y = serverGame.ball.position.y
-					game.player1.score = serverGame.player1.score
-					game.player2.score = serverGame.player2.score
-				}
-				else if (game && serverGame.message === "END") {
-					game.message = serverGame.message
-					game.winner = serverGame.winner
-					game.displayWinner = serverGame.displayWinner
-					game.player1.score = serverGame.player1.score
-					game.player2.score = serverGame.player2.score
-					returnGamesSelection();
-				}
-				else if (game && serverGame.message === "Pause") {
-					game.message = serverGame.message;
-				}
-				else if (game && serverGame.message === "Error")
-					console.log("REMOTE ERROR: ", serverGame.error);
-				else {
-					game.player2.name = serverGame.name;
-					console.log("PLAYER 2 NAME: ", serverGame.name)
-				}
-			})
+			} else {
+				console.log("CANCEL MATTCH BUTTON NOT FOUND");
+			}
+			gameLoop(Number(response.id), undefined, "InitRemote", undefined);
 		}
 	} catch (err) {
 		console.error(err);
 	}
 }
 
-export async function gameLoop(game: Game, ws: WebSocket) {
+export function closePongSocket() {
+	if (pongSocket && pongSocket.readyState === WebSocket.OPEN) {
+		pongSocket.close();
+		pongSocket = null;
+		console.log("Closing websocket");
+	}
+
+	if (pongTimeoutId) {
+		clearTimeout(pongTimeoutId);
+		pongTimeoutId = null;
+	}
+
+	if (pongAnimationId) {
+		cancelAnimationFrame(pongAnimationId);
+		pongAnimationId = null;
+	}
+
+	const canvasDiv = document.getElementById('canvasDiv') as HTMLDivElement;
+
+	if (canvasDiv) {
+		canvasDiv.innerHTML = "";
+	}
+}
+
+export async function gameLoop(gameId: Number, tournament_id: Number | undefined, message: String, userId: Number | undefined) {
 
 	try {
-		await loadSprites(game);
+		let game : Game;
+		const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
+		pongSocket = ws;
+		ws.addEventListener('open', (event) => {
+			if (ws.readyState === WebSocket.OPEN) {
+				if (message === "InitLocal" || message === "InitRemote")
+					ws.send(JSON.stringify({id: gameId, message: message}))
+				else if (message === "initTournament")
+					ws.send(JSON.stringify({id: gameId, tournamentId: tournament_id, userId: userId, message: message}))
+			}
+		})
 
+		ws.addEventListener('message', (event) => {
+			const serverGame = JSON.parse(event.data)
+			if (serverGame.message === "Init") {
+				game = serverGame.game;
+				if (game.mode === "remote-tournament" || game.mode === "local-tournament") {
+					window.location.hash = '#game?tournament=yes';
+					window.dispatchEvent(new Event('hashchange'));			
+				}
+				// remettre le await peut etre
+				loadSprites(game);
+				 pongTimeoutId = setTimeout(() => {
+					gameAnimation(game);
+					pongTimeoutId = null;
+				}, 1000)
+			}
+			else if (game && serverGame.message === "Countdown") {
+				game.message = serverGame.message
+				game.timer = serverGame.timer
+			}
+			else if (game && serverGame.message === "Playing") {
+				hideNextMatch();
+				game.message = serverGame.message
+				game.started = serverGame.started
+				game.player1.sprite.position.y = serverGame.player1.sprite.position.y
+				game.player2.sprite.position.y = serverGame.player2.sprite.position.y
+				game.ball.position.x = serverGame.ball.position.x
+				game.ball.position.y = serverGame.ball.position.y
+				game.player1.score = serverGame.player1.score
+				game.player2.score = serverGame.player2.score
+			}
+			else if (game && serverGame.message === "END") {
+				game.message = serverGame.message
+				game.winner = serverGame.winner
+				game.displayWinner = serverGame.displayWinner
+				game.player1.score = serverGame.player1.score
+				game.player2.score = serverGame.player2.score
+				if (game.mode !== "remote-tournament")
+					returnGamesSelection();
+			}
+			else if (game && serverGame.message === "Pause") {
+				game.message = serverGame.message;
+			}
+			else if (serverGame.message === "Schedule") {
+				console.log("Schedule: ", serverGame.schedule);
+				console.log("Schedule names: ", serverGame.scheduleNames);				
+				displayNextMatch(Number(userId), serverGame.schedule, serverGame.scheduleNames);
+			}
+			else if (serverGame.message === "TournamentMatchs") {
+				// Recuperer les matchs dans serverGame.matchs
+			}
+			else if (serverGame.message === "TournamentEnd") {
+				console.log("Vainqueur du tournois: ", serverGame.winner);
+			}				
+			else if (serverGame.message === "Error")
+				console.log("ERROR: ", serverGame.error);
+			else {
+				game.player2.name = serverGame.name;
+			}
+		})
+
+		ws.addEventListener('error', (error) => {
+			console.error("WebSocket error:", error);
+		});
+	
+// === GESTIONNAIRE D'INPUTS CLAVIER ===
+		// const keydownHandler = (e: KeyboardEvent) => {
+		// 	if (['ArrowUp', 'ArrowDown', 'w', 's'].includes(e.key)) {
+		// 		e.preventDefault();
+		// 	}
+
+		// 	let updated = false;
+		// 	let key;
+		// 	switch(e.key) {
+		// 		case 'a':
+		// 			key = 'a';
+		// 			updated = true;
+		// 			break;
+		// 		case 'd':
+		// 			key = 'd';
+		// 			updated = true;
+		// 			break;
+		// 		case 'ArrowLeft':
+		// 			key = 'ArrowLeft';
+		// 			updated = true;
+		// 			break;
+		// 		case 'ArrowRight':
+		// 			key = 'ArrowRight';
+		// 			updated = true;
+		// 			break;
+		// 	}
+		// 	if (ws.readyState === WebSocket.OPEN) {
+		// 		if (updated)
+		// 			ws.send(JSON.stringify({id: game.id, message: "input", key, event: "keydown"}))
+		// 	} else
+		// 		console.error("WebSocket is not open")
+		// };
+
+		// const keyupHandler = (e: KeyboardEvent) => {
+		// 	let updated = false;
+		// 	let key;
+		// 	switch(e.key) {
+		// 		case 'a':
+		// 			key = 'a';
+		// 			updated = true;
+		// 			break;
+		// 		case 'd':
+		// 			key = 'd';
+		// 			updated = true;
+		// 			break;
+		// 		case 'ArrowLeft':
+		// 			key = 'ArrowLeft';
+		// 			updated = true;
+		// 			break;
+		// 		case 'ArrowRight':
+		// 			key = 'ArrowRight';
+		// 			updated = true;
+		// 			break;
+		// 	}
+		// 	if (ws.readyState === WebSocket.OPEN) {
+		// 		if (updated)
+		// 			ws.send(JSON.stringify({id: game.id, message: "input", key, event: "keyup"}))
+		// 	} else
+		// 		console.error("WebSocket is not open")
+		// };
+
+		// window.addEventListener('keydown', keydownHandler);
+		// window.addEventListener('keydown', keyupHandler);
+
+		// const cleanup = () => {
+		// 	window.removeEventListener('keydown', keydownHandler);
+		// 	window.removeEventListener('keydown', keyupHandler);
+		// };
+
+
+		ws.addEventListener('close', () => {
+			console.log("socket closed");
+			// cleanup();
+		})
 		window.addEventListener('keydown', (e) => {
 			let key;
 			switch (e.key) {
@@ -509,31 +525,33 @@ export async function gameLoop(game: Game, ws: WebSocket) {
 			else
 				console.error("WebSocket is not open")
 		})
-		console.log('Sprite loaded');
-		const canvasDiv: HTMLDivElement = document.getElementById('canvasDiv') as HTMLDivElement;
-		canvasDiv.innerHTML = '';
-		const canvas: HTMLCanvasElement = document.createElement('canvas');
 
-		canvas.id = String(game.id);
-    	canvas.width= 802;
-		canvas.height= 455;
-		canvas.className = "bg-color-black";
-
-		if (!canvas || !canvasDiv) {
-			console.error('Could not fetch canvas div');
-			return;
-		}
-		canvasDiv.innerHTML = "";
-		canvasDiv.appendChild(canvas);
-		gameAnimation(game, canvas);
 	} catch (error) {
 		console.error(error);
 	}
 }
 
-async function gameAnimation(game: Game, canvas: HTMLCanvasElement) {
+async function gameAnimation(game: Game) {
 
+	const canvasDiv: HTMLDivElement = document.getElementById('canvasDiv') as HTMLDivElement;
 	
+	if (!canvasDiv) {
+		console.log("canvasDiv not found");
+		return ;
+	}
+	canvasDiv.innerHTML = "";
+	const canvas: HTMLCanvasElement = document.createElement('canvas');
+
+	if (!canvas) {
+		console.error('Could not fetch canvas div');
+		return;
+	}
+	canvas.id = String(game.id);
+	canvas.width= 802;
+	canvas.height= 455;
+	canvas.className = "bg-color-black";
+
+	canvasDiv.appendChild(canvas);	
 	const canvasContext = canvas.getContext('2d');
 	if (canvasContext === null) {
 		console.error('Could not fetch canvas context');
@@ -544,7 +562,7 @@ async function gameAnimation(game: Game, canvas: HTMLCanvasElement) {
 	canvasContext.font = '30px Arial'
 	canvasContext.textAlign = 'center'
 
-	const id = window.requestAnimationFrame(() => gameAnimation(game, canvas))
+	pongAnimationId = window.requestAnimationFrame(() => gameAnimation(game))
 	canvasContext.drawImage(game.board.image, game.board.position.x, game.board.position.y)
 	canvasContext.drawImage(game.player1.sprite.image, game.player1.sprite.position.x, game.player1.sprite.position.y)
 	canvasContext.drawImage(game.player2.sprite.image, game.player2.sprite.position.x, game.player2.sprite.position.y)
@@ -568,7 +586,8 @@ async function gameAnimation(game: Game, canvas: HTMLCanvasElement) {
 	}
 	else if (game.message === "END") {
 		canvasContext.fillText(game.displayWinner, game.board.image.width / 2, game.board.image.height / 2)
-		cancelAnimationFrame(id)
+		cancelAnimationFrame(pongAnimationId)
+		return;
 	}
 }
 
@@ -634,6 +653,7 @@ async function loadSprites(game: Game) {
         game.player1.sprite.image = player1.image;
         game.player2.sprite.image = player2.image;
         game.ball = ball;
+		console.log('Sprite loaded');
     }catch(e) {
         console.error("ERREUR CHARGEMENT IMAGES", e);
     }

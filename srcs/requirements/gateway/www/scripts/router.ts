@@ -1,4 +1,4 @@
-import { launchInvitGame } from "./game.js";
+import { launchInvitGame, closePongSocket } from "./game.js";
 
 const PAGE_BACKGROUNDS: Record<string, string> = {
 	'account': '/img/Background1.png',
@@ -140,7 +140,10 @@ class Router {
 		// First load (supposed to launch main i guess)
 		this.handleRoute();
 
-		window.addEventListener('hashchange', () => this.handleRoute());
+		window.addEventListener('hashchange', () => {
+			// closePongSocket();
+			this.handleRoute();
+		});
 
 		window.addEventListener('user:login', () => this.startHeartbeat());
 		window.addEventListener('user:logout', () => this.stopHeartbeat());

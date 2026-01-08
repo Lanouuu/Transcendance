@@ -285,74 +285,7 @@ async function createTournament(userId: string, token: string, tournamentName: s
 
 			const response1 = await res1.json();
 
-			let game: Game;
-			const ws = new WebSocket(`wss${ws_route}/ws`);
-			ws.addEventListener('open', (event) => {
-				if (ws.readyState === WebSocket.OPEN)
-					ws.send(JSON.stringify({id: response.id, tournamentId: response.tournament_id, userId: userId, message: "initTournament"}))
-			})
-
-			ws.addEventListener('message', (event) => {
-				const serverGame = JSON.parse(event.data)
-				if (serverGame.message === "Init") {
-					console.log("Starting match")
-					game = serverGame.game;
-					window.location.hash = '#game?tournament=yes';
-					window.dispatchEvent(new Event('hashchange'));
-					setTimeout(() => {
-            			gameLoop(game, ws);
-       				}, 1000);
-                }
-                else if (game && serverGame.message === "Countdown") {
-                    game.message = serverGame.message
-                    game.timer = serverGame.timer
-                }
-                else if (game && serverGame.message === "Playing") {
-                    game.message = serverGame.message
-                    game.started = serverGame.started
-                    game.player1.sprite.position.y = serverGame.player1.sprite.position.y
-                    game.player2.sprite.position.y = serverGame.player2.sprite.position.y
-                    game.ball.position.x = serverGame.ball.position.x
-                    game.ball.position.y = serverGame.ball.position.y
-                    game.player1.score = serverGame.player1.score
-                    game.player2.score = serverGame.player2.score
-                }
-                else if (game && serverGame.message === "END") {
-                    game.message = serverGame.message
-                    game.winner = serverGame.winner
-                    game.displayWinner = serverGame.displayWinner
-                    game.player1.score = serverGame.player1.score
-                    game.player2.score = serverGame.player2.score
-                }
-				else if (game && serverGame.message === "Pause") {
-					game.message = serverGame.message;
-				}
-				else if (serverGame.message === "Schedule") {
-					// Recuperer le planning des matchs
-					console.log("Schedule: ", serverGame.schedule);
-					console.log("Schedule names: ", serverGame.scheduleNames);
-					displayNextMatch(Number(userId), serverGame.schedule, serverGame.scheduleNames);
-				}
-                else if (serverGame.message === "TournamentMatchs") {
-                    // Recuperer les matchs dans serverGame.matchs
-                }
-				else if (serverGame.message === "TournamentEnd") {
-					console.log("Vainqueur du tournois: ", serverGame.winner);
-				}
-				else if (game && serverGame.message === "Error")
-					console.log("CREATE ERROR: ", serverGame.error);
-				else {
-					game.player2.name = serverGame.name;
-				}
-            })
-
-			ws.addEventListener('close', () => {
-				console.log("tournament socket closed");
-			})
-			
-			ws.addEventListener('error', (error) => {
-				console.error("WebSocket error:", error);
-			});
+            gameLoop(parseInt(response.id, 10), response.tournament_id, "initTournament", parseInt(userId, 10));
 			displayMsg(msg, "Tournament created", "green");
 			displayJoinedTournament(userId, token, Number(response.tournament_id));
 		}
@@ -678,72 +611,8 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 
 			const response1 = await res1.json();
 
-			let game: Game;
-			const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
-			ws.addEventListener('open', (event) => {
-				if (ws.readyState === WebSocket.OPEN)
-					ws.send(JSON.stringify({id: response.id, tournamentId: response.tournament_id, userId: userId, message: "initTournament"}))
-			})
-
-			ws.addEventListener('message', (event) => {
-				const serverGame = JSON.parse(event.data)
-				if (serverGame.message === "Init") {
-					console.log("Starting match")
-					game = serverGame.game;
-					window.location.hash = '#game?tournament=yes';
-					window.dispatchEvent(new Event('hashchange'));
-					setTimeout(() => {
-            			gameLoop(game, ws);
-       				}, 1000);
-                }
-                else if (game && serverGame.message === "Countdown") {
-                    game.message = serverGame.message
-                    game.timer = serverGame.timer
-                }
-                else if (game && serverGame.message === "Playing") {
-                    game.message = serverGame.message
-                    game.started = serverGame.started
-                    game.player1.sprite.position.y = serverGame.player1.sprite.position.y
-                    game.player2.sprite.position.y = serverGame.player2.sprite.position.y
-                    game.ball.position.x = serverGame.ball.position.x
-                    game.ball.position.y = serverGame.ball.position.y
-                    game.player1.score = serverGame.player1.score
-                    game.player2.score = serverGame.player2.score
-                }
-                else if (game && serverGame.message === "END") {
-                    game.message = serverGame.message
-                    game.winner = serverGame.winner
-                    game.displayWinner = serverGame.displayWinner
-                    game.player1.score = serverGame.player1.score
-                    game.player2.score = serverGame.player2.score
-                }
-				else if (game && serverGame.message === "Pause") {
-					game.message = serverGame.message;
-				}
-				else if (serverGame.message === "Schedule") {
-					// Recuperer le planning des matchs
-					console.log("Schedule: ", serverGame.schedule);
-					console.log("Schedule names: ", serverGame.scheduleNames);
-					displayNextMatch(Number(userId), serverGame.schedule, serverGame.scheduleNames);
-				}
-                else if (serverGame.message === "TournamentMatchs") {
-                    // Recuperer les matchs dans serverGame.matchs
-                }
-				else if (serverGame.message === "TournamentEnd") {
-					console.log("Vainqueur du tournois: ", serverGame.winner);
-				}				
-				else if (game && serverGame.message === "Error")
-					console.log("JOIN ERROR: ", serverGame.error);
-            })
-
-			ws.addEventListener('close', () => {
-				console.log("tournament socket closed");
-			})
-			ws.addEventListener('error', (error) => {
-				console.error("WebSocket error:", error);
-			});
+            gameLoop(parseInt(response.id, 10), response.tournament_id, "initTournament", parseInt(userId, 10));
 		}
-
 	} catch (err) {
 		console.error("Failed to join tournament:", err);
 		displayMsg(msg, `${err}`, "red");
