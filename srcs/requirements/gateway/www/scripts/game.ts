@@ -352,7 +352,6 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 					window.location.hash = '#game?tournament=yes';
 					window.dispatchEvent(new Event('hashchange'));			
 				}
-				// remettre le await peut etre
 				loadSprites(game);
 				 pongTimeoutId = setTimeout(() => {
 					gameAnimation(game);
