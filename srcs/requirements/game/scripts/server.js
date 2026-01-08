@@ -910,16 +910,22 @@ fastify.post("/remoteTournament", async (request, reply) => {
     }
     console.log("schedule : ", schedule);
     console.log("scheduleNames : ", names);
-    for (const socket of tournamentSocket.values()) {
-        if (parseInt(socket.tournament_id, 10) === parseInt(id, 10)) {
-            if (socket.readyState === 1)
-                socket.send(JSON.stringify({message: "Schedule", schedule: schedule, scheduleNames: names}));
-        }
-    }
+    let i = 0;
     try {
         for (const round of schedule) {
+            for (const socket of tournamentSocket.values()) {
+                if (parseInt(socket.tournament_id, 10) === parseInt(id, 10)) {
+                    const roundName = names[i].filter(data => String(data[0]) === String(getAlias(socket.userId)) || String(data[1]) === String(getAlias(socket.userId)));
+                    console.log("roundName: ", roundName)
+                    if (roundName) {
+                        if (socket.readyState === 1)
+                            socket.send(JSON.stringify({message: "Schedule", scheduleNames: roundName}));
+                    }
+                }
+            }
             await new Promise(resolve => setTimeout(resolve, 4000));        
             await Promise.all(round.map(match => createRemoteTournament(match, id)));
+            i++;
         }
         sendTournamentResult(id);
         reply.send({message: "Success"});

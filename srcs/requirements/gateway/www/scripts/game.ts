@@ -1,5 +1,4 @@
-import { Game, Sprite, Vector2D, KeyBind, ImgSize } from "./gameClass.js"
-import { login } from "./login.js";
+import { Game, Sprite, Vector2D } from "./gameClass.js"
 import { SnakeGame, GridPosition } from "./snakeGame.js"
 
 
@@ -14,6 +13,7 @@ let pongTimeoutId: number | null = null;
 let currentSnakeGameMode: 'local' | 'remote' | null = null;
 let currentWebSocket: WebSocket | null = null;
 let currentAnimationId: number | null = null;
+let startTournament: boolean = false;
 
 async function checkToken(): Promise<boolean> {
 	const token = sessionStorage.getItem("jwt");
@@ -56,6 +56,7 @@ export async function setupGamePage(): Promise<void> {
 		boxGameSnake.classList.add('hidden');
 		boxGameSnake.classList.remove('flex');
 		loginRedirectButton.classList.add('hidden');
+
 		return;
 	}
 	if (inviteId) {
@@ -171,8 +172,6 @@ async function launchLocalGame() {
 
 async function launchRemoteGame() {
 
-	const playersNamesH1: HTMLHeadingElement = document.getElementById("playersNames") as HTMLHeadingElement;
-
 	const token: string | null = sessionStorage.getItem("jwt");
 	const userId: string | null = sessionStorage.getItem("userId");
 	
@@ -212,7 +211,7 @@ async function launchRemoteGame() {
 	}
 }
 
-export function displayNextMatch(userId: number, schedule: number[][], scheduleNames: string[][]) {
+export function displayNextMatch(scheduleNames: string[]) {
 	const nextMatchMsg: HTMLDivElement = document.getElementById("nextMatchMsg") as HTMLDivElement;
 	const nextMatchInfo: HTMLParagraphElement = document.getElementById("nextMatchInfos") as HTMLParagraphElement;
 	if (!nextMatchMsg || !nextMatchInfo) {
@@ -220,25 +219,11 @@ export function displayNextMatch(userId: number, schedule: number[][], scheduleN
 		return;
 	}
 
-	for (let roundIndex = 0; roundIndex < schedule.length; roundIndex++) {
-		const round = schedule[roundIndex];
-		const roundNames = scheduleNames[roundIndex];
+	if (scheduleNames[0][0] === undefined)
+		return ;
 
-		for (let matchIndex = 0; matchIndex < round.length; matchIndex++) {
-			const match = round[matchIndex];
-			if (Array.isArray(match) && match.includes(userId)) {
-				const names = roundNames[matchIndex];
-				if (Array.isArray(names)) {
-					nextMatchInfo.textContent = `${names[0]} vs ${names[1]}`;
-				} else {
-					nextMatchInfo.textContent = `Match found => Round ${roundIndex + 1}`;
-				}
-				nextMatchMsg.classList.remove('hidden');
-				return;
-			}
-		}
-	}
-	nextMatchMsg.classList.add('hidden');
+	nextMatchInfo.textContent = `${scheduleNames[0][0]} vs ${scheduleNames[0][1]}`;
+	nextMatchMsg.classList.remove('hidden');
 }
 
 function hideNextMatch() {
@@ -348,10 +333,6 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 			const serverGame = JSON.parse(event.data)
 			if (serverGame.message === "Init") {
 				game = serverGame.game;
-				if (game.mode === "remote-tournament" || game.mode === "local-tournament") {
-					window.location.hash = '#game?tournament=yes';
-					window.dispatchEvent(new Event('hashchange'));			
-				}
 				loadSprites(game);
 				 pongTimeoutId = setTimeout(() => {
 					gameAnimation(game);
@@ -386,15 +367,22 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 				game.message = serverGame.message;
 			}
 			else if (serverGame.message === "Schedule") {
-				console.log("Schedule: ", serverGame.schedule);
-				console.log("Schedule names: ", serverGame.scheduleNames);				
-				displayNextMatch(Number(userId), serverGame.schedule, serverGame.scheduleNames);
+				if (!startTournament) {
+					window.location.hash = '#game?tournament=yes';
+					window.dispatchEvent(new Event('hashchange'));
+					startTournament = true;
+				}			
+				console.log("Schedule names: ", serverGame.scheduleNames);
+				setTimeout(() => {
+					displayNextMatch(serverGame.scheduleNames);
+				}, 100);			
 			}
 			else if (serverGame.message === "TournamentMatchs") {
 				// Recuperer les matchs dans serverGame.matchs
 			}
 			else if (serverGame.message === "TournamentEnd") {
 				console.log("Vainqueur du tournois: ", serverGame.winner);
+				startTournament = false;
 			}				
 			else if (serverGame.message === "Error")
 				console.log("ERROR: ", serverGame.error);
