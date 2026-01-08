@@ -199,6 +199,10 @@ async function launchLocalGame() {
 					console.log(serverGame.error)
 				}
 			})
+
+			ws.addEventListener('close', () => {
+				console.log("tournament socket closed");
+			})
 		}
 	} catch (err) {
 		console.error(err);
@@ -286,12 +290,19 @@ async function launchRemoteGame() {
                 else if (serverGame.message === "TournamentMatchs") {
                     // Recuperer les matchs dans serverGame.matchs
                 }
-				else if (game && serverGame.message === "Error")
+				else if (serverGame.message === "TournamentEnd") {
+					console.log("Vainqueur du tournois: ", serverGame.winner);
+				}				
+				else if (serverGame.message === "Error")
 					console.log("REMOTE ERROR: ", serverGame.error);
 				else {
 					game.player2.name = serverGame.name;
 					console.log("PLAYER 2 NAME: ", serverGame.name)
 				}
+			})
+
+			ws.addEventListener('close', () => {
+				console.log("tournament socket closed");
 			})
 		}
 	} catch (err) {
@@ -299,7 +310,7 @@ async function launchRemoteGame() {
 	}
 }
 
-function displayNextMatch(userId: number, schedule: number[][], scheduleNames: string[][]) {
+export function displayNextMatch(userId: number, schedule: number[][], scheduleNames: string[][]) {
 	const nextMatchMsg: HTMLDivElement = document.getElementById("nextMatchMsg") as HTMLDivElement;
 	const nextMatchInfo: HTMLParagraphElement = document.getElementById("nextMatchInfos") as HTMLParagraphElement;
 	if (!nextMatchMsg || !nextMatchInfo) {
@@ -367,6 +378,7 @@ export async function launchInvitGame(friendId: string, message: string) {
 			let game : Game;
 			const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
 			ws.addEventListener('open', (event) => {
+				console.log("GAME ID: ", response.id);
 				if (ws.readyState === WebSocket.OPEN)
 					ws.send(JSON.stringify({id: response.id, message: "InitRemote"}))
 			})

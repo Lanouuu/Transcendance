@@ -21,12 +21,15 @@ const fastify = Fastify({
 const PORT = parseInt(process.env.GAME_PORT, 10);
 const HOST = process.env.GAME_HOST;
 const games = new Map();
-let gameId = 0;
+let gameId = 1;
 const filename = fileURLToPath(import.meta.url);
 const dirname = join(filename, '..');
 let queue = [];
 let pendingRemoteGame = [];
 const tournamentSocket = new Map();
+let tournamentAlias = [];
+let tournamentScore = new Map();
+
 fastify.register(cors, { 
     origin: "*",
     methods: ["GET", "POST", "DELETE"],
@@ -56,6 +59,7 @@ function broadcastTournament(tournament_id) {
                 }             
             }
             matchs.push(data);
+
         }
     }
 
@@ -131,6 +135,23 @@ async function sendResult(game) {
     }
 }
 
+function getScore(game) {
+    if (!tournamentScore.has(game.player1.name))
+        tournamentScore.set(game.player1.name, parseInt(game.player1.score - game.player2.score, 10));
+    else {
+        let score = tournamentScore.get(game.player1.name);
+        score += parseInt(game.player1.score - game.player2.score, 10);
+        tournamentScore.set(game.player1.name, parseInt(score, 10));
+    }
+    if (!tournamentScore.has(game.player2.name))
+        tournamentScore.set(game.player2.name, parseInt(game.player2.score - game.player1.score, 10));
+    else {
+        let score = tournamentScore.get(game.player2.name);
+        score += parseInt(game.player2.score - game.player1.score, 10);
+        tournamentScore.set(game.player2.name, parseInt(score, 10));
+    }
+}
+
 function updatePlayersPosition(game) {
     // Player 1
     if (game.player1.key.up) {
@@ -192,7 +213,7 @@ function updateBallPosition(game) {
 
 }
 
-function gameLoop(game) {
+async function gameLoop(game) {
     if (game.board === undefined || game.socket === undefined) {
         console.log("Game not ready yet");
         return ;
@@ -225,6 +246,13 @@ function gameLoop(game) {
     if (game.message === "END") {
         if (game.mode === "remote" || game.mode === "remote-tournament") {
             sendResult(game);
+        }
+        if (game.mode === "remote-tournament")
+            getScore(game);
+        else {
+            for (const socket of game.socket.values()) {
+                    socket.close();
+            }            
         }
         clearInterval(game.loopId);
         games.delete(parseInt(game.id, 10))
@@ -281,6 +309,8 @@ function serialize(data) {
     return game;
 }
 
+// #region WS // 
+
 function localGamehandler(game, ws) {
     game.socket.push(ws);
     ws.send(JSON.stringify({game, message: "Init"}))
@@ -300,14 +330,22 @@ function remoteGamehandler(game, ws) {
         if (parseInt(game.socket[0].userId, 10) === parseInt(game.player1.id, 10)) {
             ws.userId = game.player2.id;
             game.player2.status = "Online";
+            if (game.mode === "remote-tournament")
+                ws.surname = game.player2.name;
         }
         else {
             ws.userId = game.player1.id;
             game.player1.status = "Online";
+            if (game.mode === "remote-tournament")
+                ws.surname = game.player1.name;
         }
     }
-    if (game.mode === "remote-tournament")
+    if (game.mode === "remote-tournament") {
+        ws.gameId = game.id;
+        ws.tournament_id = game.tournament_id;
+        tournamentSocket.delete(parseInt(ws.userId, 10));
         tournamentSocket.set(parseInt(ws.userId, 10), ws);
+    }
     game.socket.push(ws);
     if (game.message === "Pause") {
         clearInterval(game.intervalId);
@@ -438,8 +476,6 @@ wss.on('connection', function connection(ws) {
         for (const [gameId, game] of games.entries() ) {
             if (parseInt(game.player1.id, 10) === parseInt(ws.userId, 10) || parseInt(game.player2.id, 10) === parseInt(ws.userId, 10)) {
                 game.socket = game.socket.filter(socket => socket.readyState != 3)
-                if (game.mode === "remote-tournament")
-                    tournamentSocket.delete(parseInt(ws.userId, 10));
                 if (game.message === "Playing" || game.message === "Countdown") {
                     clearInterval(game.intervalId);
                     game.intervalId = null;
@@ -493,6 +529,25 @@ function loadSprite(game) {
     game.player2.sprite.imgSize.width = size.width;
 }
 
+// Alias
+
+fastify.post("/tournamentAlias", async (request, reply) => {
+    const { alias } = request.body || {};
+    const userId = request.headers["x-user-id"];
+    try {
+        if (alias) {
+            console.log("ALIAS: ", alias);
+            tournamentAlias.push([userId, alias]);
+            console.log("TOURNAMENT ALIAS: ", tournamentAlias);
+        }
+        reply.code(200).send(JSON.stringify({message: "Success"}));
+    }catch(error) {
+        console.log("Error in alias API route: ", e.message);
+        reply.code(200).send(JSON.stringify({message: "Success"}));
+    }
+}) 
+// END
+
 // local
 fastify.get("/local", async (request, reply) => {
     try {
@@ -503,6 +558,8 @@ fastify.get("/local", async (request, reply) => {
           message: 'start'
         })
         loadSprite(game);
+        game.player1.name = "Player1";
+        game.player2.name = "Player2";
         games.set(game.id, game);
         reply.send({message: "Success"});
     } catch (e) {
@@ -530,7 +587,17 @@ async function getUserName(id) {
     }
 }
 
+function getAlias(id) {
+    for (const [userId, alias] of tournamentAlias) {
+        if (parseInt(userId, 10) === parseInt(id, 10)) {
+            return alias;
+        }            
+    }
+    return null; 
+}
+
 async function private_matchmaking(message, userId, body, headers, reply) {
+    console.log("Message: ", message);
     if (message === "invit") {
         const game = new Game({
             id: gameId++,
@@ -542,6 +609,7 @@ async function private_matchmaking(message, userId, body, headers, reply) {
         game.player1.id = userId;
         game.player1.name = await getUserName(userId);
         games.set(game.id, game);
+        console.log("GAME ID: ", game.id);
         reply.send({message: "Success", id: game.id});
     }
     else if (message === "accept-invit") {
@@ -710,6 +778,29 @@ async function createLocalTournament(match, rmId) {
     })
 }
 
+
+fastify.post("/localTournament", async (request, reply) => {
+    const { schedule, rmId } = request.body || {};
+    
+    if (!schedule || !rmId) {
+        return reply.code(400).send({error: "schedule is empty"});
+    }
+    
+    try {
+        for (const round of schedule) {
+            for (const match of round) {
+                await createLocalTournament(match, rmId);
+            }
+        }
+        reply.send({message: "Success"});
+    }catch(err) {
+        console.log("ERROR IN local TOURNAMENT: ", err.message);
+        reply.code(400).send({error: "Fail to create game"});
+    }
+})
+
+// #region remote tournament // 
+
 async function createRemoteTournament(match, tournamentId) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -722,25 +813,29 @@ async function createRemoteTournament(match, tournamentId) {
             })
             loadSprite(game);
             game.player1.id = match[0];
-            game.player1.name = await getUserName(match[0]);
+            game.player1.name = getAlias(match[0]);
             game.player2.id = match[1];
-            game.player2.name = await getUserName(match[1]);
+            game.player2.name = getAlias(match[1]);
             if (tournamentSocket.get(parseInt(match[0])) === undefined) {
                 game.player1.status = "Disconnected";
                 game.message = "Pause";
                 game.timer = 30;
                 console.log("Player 1 disconnected");
             }
-            else
+            else {
                 game.socket.push(tournamentSocket.get(parseInt(match[0])));
+                game.socket[0].surname = game.player1.name;
+            }
             if (tournamentSocket.get(parseInt(match[1])) === undefined) {
                 game.player2.status = "Disconnected";
                 game.message = "Pause";
                 game.timer = 30;
                 console.log("Player 2 disconnected");
             }
-            else
+            else {
                 game.socket.push(tournamentSocket.get(parseInt(match[1])));
+                game.socket[1].surname = game.player2.name;
+            }
             game.tournament_id = tournamentId;
             games.set(game.id, game);
             game.socket.forEach(socket => {
@@ -765,25 +860,25 @@ async function createRemoteTournament(match, tournamentId) {
     })
 }
 
-fastify.post("/localTournament", async (request, reply) => {
-    const { schedule, rmId } = request.body || {};
-
-    if (!schedule || !rmId) {
-        return reply.code(400).send({error: "schedule is empty"});
+function sendTournamentResult(id) {
+    const tournamentResult = [];
+    console.log("TOURNAMENT SCORE: ", tournamentScore);
+    for (const socket of tournamentSocket.values()) {
+        if (parseInt(socket.tournament_id, 10) !== parseInt(id, 10))
+            continue;
+        const score = tournamentScore.get(socket.surname);
+        if (score === undefined)
+            throw new Error(`NO SCORE FOUND FOR PLAYER: ${socket.surname}`);
+        tournamentResult.push([socket.surname, parseInt(score, 10)]);
     }
-
-    try {
-        for (const round of schedule) {
-            for (const match of round) {
-                    await createLocalTournament(match, rmId);
-            }
-        }
-        reply.send({message: "Success"});
-    }catch(err) {
-        console.log("ERROR IN local TOURNAMENT: ", err.message);
-        reply.code(400).send({error: "Fail to create game"});
+    console.log("AVANT LE TRI: ", tournamentResult);
+    tournamentResult.sort((score1, score2) => score2[1] - score1[1]);
+    console.log("APRES LE TRI: ", tournamentResult);
+    for (const socket of tournamentSocket.values()) {
+        if (parseInt(socket.tournament_id, 10) === parseInt(id, 10))
+            socket.send(JSON.stringify({message: "TournamentEnd", winner: tournamentResult[0][0]}))
     }
-})
+}
 
 fastify.post("/remoteTournament", async (request, reply) => {
     const { schedule, id } = request.body || {};
@@ -798,14 +893,15 @@ fastify.post("/remoteTournament", async (request, reply) => {
     for (const round of schedule) {
         const matchup = []
         for (const match of round) {
-            const name1 =  await getUserName(match[0]);
-            const name2 =  await getUserName(match[1]);
+            const name1 = getAlias(match[0]);
+            const name2 = getAlias(match[1]);
             matchup.push([name1, name2]);
         }
         names.push(matchup);
     }
-    console.log("NAMES TAB: ", names);
-    for (const [userId, socket] of tournamentSocket.entries()) {
+    console.log("schedule : ", schedule);
+    console.log("scheduleNames : ", names);
+    for (const socket of tournamentSocket.values()) {
         if (parseInt(socket.tournament_id, 10) === parseInt(id, 10)) {
             if (socket.readyState === 1)
                 socket.send(JSON.stringify({message: "Schedule", schedule: schedule, scheduleNames: names}));
@@ -813,15 +909,24 @@ fastify.post("/remoteTournament", async (request, reply) => {
     }
     try {
         for (const round of schedule) {
+            await new Promise(resolve => setTimeout(resolve, 4000));        
             await Promise.all(round.map(match => createRemoteTournament(match, id)));
         }
+        sendTournamentResult(id);
         reply.send({message: "Success"});
+        for (const [userId, socket] of tournamentSocket.entries()) {
+            tournamentAlias = tournamentAlias.filter(([id, alias]) => parseInt(id, 10) !== parseInt(socket.userId, 10) && parseInt(socket.userId, 10))
+            tournamentSocket.delete(parseInt(userId, 10));
+            socket.close();
+            console.log("Tournament alias after tournament end: ", tournamentAlias);
+        }
+        console.log("Tournament socket: ", tournamentSocket);
     }catch(err) {
         console.log("ERROR IN REMOTE TOURNAMENT: ", err.message);
         reply.code(400).send({error: err.message});
     }
 })
-
+// #endregion remote tournament //
 
 fastify.post("/input", async (request, reply) => {
     const {gameId, key} = request.body || {};

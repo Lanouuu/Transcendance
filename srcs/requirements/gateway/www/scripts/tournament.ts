@@ -1,8 +1,9 @@
 import { gameLoop } from './game.js'
 import { Game } from "./gameClass.js"
-
+import { displayNextMatch } from './game.js'
 const ws_route: string = `://${window.location.host}/game`
 const route: string = `${window.location.origin}/tournament`;
+const gameRoute: string = `${window.location.origin}/game`;
 
 async function checkToken(): Promise<boolean> {
 	const token = sessionStorage.getItem("jwt");
@@ -267,6 +268,23 @@ async function createTournament(userId: string, token: string, tournamentName: s
 		const response = await res.json();
 
 		if (response.message === "Success") {
+			const res1 = await fetch(`${gameRoute}/tournamentAlias`, {
+				method: "POST",
+				headers: {
+					"authorization": `Bearer ${token}`,
+					"x-user-id": userId,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({ alias: aliasArray[0] }) // Envoyer l'alias dans le body
+			});
+
+			if (!res1.ok) {
+				const error = await res1.json();
+				throw new Error(error.error || "Failed to join tournament");
+			}
+
+			const response1 = await res1.json();
+
 			let game: Game;
 			const ws = new WebSocket(`wss${ws_route}/ws`);
 			ws.addEventListener('open', (event) => {
@@ -313,10 +331,14 @@ async function createTournament(userId: string, token: string, tournamentName: s
 					// Recuperer le planning des matchs
 					console.log("Schedule: ", serverGame.schedule);
 					console.log("Schedule names: ", serverGame.scheduleNames);
+					displayNextMatch(Number(userId), serverGame.schedule, serverGame.scheduleNames);
 				}
                 else if (serverGame.message === "TournamentMatchs") {
                     // Recuperer les matchs dans serverGame.matchs
                 }
+				else if (serverGame.message === "TournamentEnd") {
+					console.log("Vainqueur du tournois: ", serverGame.winner);
+				}
 				else if (game && serverGame.message === "Error")
 					console.log("CREATE ERROR: ", serverGame.error);
 				else {
@@ -324,6 +346,10 @@ async function createTournament(userId: string, token: string, tournamentName: s
 				}
             })
 
+			ws.addEventListener('close', () => {
+				console.log("tournament socket closed");
+			})
+			
 			ws.addEventListener('error', (error) => {
 				console.error("WebSocket error:", error);
 			});
@@ -635,6 +661,23 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 		displayMsg(msg, "Successfully joined tournament", "green");
 
 		if (response.message === "Success") {
+			const res1 = await fetch(`${gameRoute}/tournamentAlias`, {
+				method: "POST",
+				headers: {
+					"authorization": `Bearer ${token}`,
+					"x-user-id": userId,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({ alias: aliasArray[0] }) // Envoyer l'alias dans le body
+			});
+
+			if (!res1.ok) {
+				const error = await res1.json();
+				throw new Error(error.error || "Failed to join tournament");
+			}
+
+			const response1 = await res1.json();
+
 			let game: Game;
 			const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
 			ws.addEventListener('open', (event) => {
@@ -681,14 +724,21 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 					// Recuperer le planning des matchs
 					console.log("Schedule: ", serverGame.schedule);
 					console.log("Schedule names: ", serverGame.scheduleNames);
+					displayNextMatch(Number(userId), serverGame.schedule, serverGame.scheduleNames);
 				}
                 else if (serverGame.message === "TournamentMatchs") {
                     // Recuperer les matchs dans serverGame.matchs
                 }
+				else if (serverGame.message === "TournamentEnd") {
+					console.log("Vainqueur du tournois: ", serverGame.winner);
+				}				
 				else if (game && serverGame.message === "Error")
 					console.log("JOIN ERROR: ", serverGame.error);
             })
 
+			ws.addEventListener('close', () => {
+				console.log("tournament socket closed");
+			})
 			ws.addEventListener('error', (error) => {
 				console.error("WebSocket error:", error);
 			});
