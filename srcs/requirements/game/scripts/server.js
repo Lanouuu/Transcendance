@@ -883,10 +883,11 @@ function sendTournamentResult(id) {
     console.log("AVANT LE TRI: ", tournamentResult);
     tournamentResult.sort((score1, score2) => score2[1] - score1[1]);
     console.log("APRES LE TRI: ", tournamentResult);
-    for (const socket of tournamentSocket.values()) {
-        if (parseInt(socket.tournament_id, 10) === parseInt(id, 10))
-            socket.send(JSON.stringify({message: "TournamentEnd", winner: tournamentResult[0][0]}))
-    }
+    return tournamentResult[0][0];
+    // for (const socket of tournamentSocket.values()) {
+    //     if (parseInt(socket.tournament_id, 10) === parseInt(id, 10))
+    //         socket.send(JSON.stringify({message: "TournamentEnd", winner: tournamentResult[0][0]}))
+    // }
 }
 
 fastify.post("/remoteTournament", async (request, reply) => {
@@ -927,8 +928,8 @@ fastify.post("/remoteTournament", async (request, reply) => {
             await Promise.all(round.map(match => createRemoteTournament(match, id)));
             i++;
         }
-        sendTournamentResult(id);
-        reply.send({message: "Success"});
+        const winner = sendTournamentResult(id);
+        reply.send({message: "Success", winner: winner});
         for (const [userId, socket] of tournamentSocket.entries()) {
             tournamentAlias = tournamentAlias.filter(([id, alias]) => parseInt(id, 10) !== parseInt(socket.userId, 10) && parseInt(socket.userId, 10))
             tournamentSocket.delete(parseInt(userId, 10));

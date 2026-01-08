@@ -219,7 +219,7 @@ export function displayNextMatch(scheduleNames: string[]) {
 		return;
 	}
 
-	if (scheduleNames[0][0] === undefined)
+	if (scheduleNames[0] === undefined)
 		return ;
 
 	nextMatchInfo.textContent = `${scheduleNames[0][0]} vs ${scheduleNames[0][1]}`;

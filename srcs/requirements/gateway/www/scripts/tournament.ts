@@ -525,22 +525,9 @@ async function displayTournamentList(userId: string, token: string, wantedStatus
 			infoDiv.append(tournamentNameDiv);
 			if (wantedStatus === "finished") {
 				const winnerNameDiv:	HTMLDivElement = document.createElement('div');
-				winnerNameDiv.className = "";
-				if (tournament.winner_id && tournament.winner_id !== null) {
-					const res = await fetch(`${window.location.origin}/users/get-user/${tournament.winner_id}`, {
-						method: "GET",
-						headers: {
-							"authorization": `Bearer ${token}`,
-							"x-user-id": userId
-						}
-					});
+				winnerNameDiv.className = "font-geo";
+				winnerNameDiv.textContent = `🏆 ${tournament.winner_alias}`;
 
-					if (res.ok) {
-						winnerNameDiv.textContent = `Winner: ${tournament.winner_id}`;
-					} else {
-						winnerNameDiv.textContent = "Winner: ?";
-					}
-				}
 				infoDiv.append(winnerNameDiv);
 				li.append(infoDiv);
 			} else {

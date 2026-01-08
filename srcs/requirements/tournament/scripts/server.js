@@ -361,9 +361,10 @@ export async function runServer() {
         if (response.message !== "Success")
           throw new Error("Fail to create match")
         else {
+          console.log("Winner: ", response.winner)
           const upd = await dbtour.run(
-          "UPDATE tournament SET status='finished' WHERE id=? AND status='playing'",
-          [res.id]
+          "UPDATE tournament SET status='finished', winner_alias = ? WHERE id=? AND status='playing'",
+          [response.winner, res.id]
           );
           if (upd.changes !== 1) {
             return reply.code(409).send({ error: "Tournament is not in playing state" });

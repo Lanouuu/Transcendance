@@ -19,7 +19,7 @@ export async function initDB() {
             players_ids         TEXT,
             players_names       TEXT,
             creator_id          TEXT,
-            winner_id           TEXT,
+            winner_alias        TEXT DEFAULT NULL,
             nb_max_players      INTEGER NOT NULL,
             nb_current_players  INTEGER DEFAULT 0,
             created_at          DATETIME DEFAULT CURRENT_TIMESTAMP
