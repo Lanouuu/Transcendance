@@ -499,6 +499,38 @@ export async function runServer() {
         }
     }));
 
+      fastify.post("/remove2fa/:id", blockGuests(async (req,reply) => {
+      try {
+        const { id } = req.params;
+        if (!id)
+          return reply.status(400).send({ error: "ID required" });
+
+        const userID = req.headers["x-user-id"];
+        if (!userID || String(userID) !== String(id))
+          return reply.status(403).send({ error: "Can only remove 2fa" });
+
+        const userStmt = usersDB.prepare("SELECT auth_type, enable2FA, mail FROM users WHERE id = ?");
+        const user = userStmt.get(id);
+        if (!user)
+          return reply.status(404).send({ error: "User not found" });
+        
+        if (user.auth_type === "oauth42")
+          return reply.status(403).send({ error: "2FA not allowed for 42 accounts" });
+        
+        if (user.enable2FA === 0)
+          return reply.status(400).send({ error: "2FA already inactivated" });
+
+        const updateStmt = usersDB.prepare("UPDATE users SET enable2FA = ?, secret2FA = ? WHERE id = ?");
+        updateStmt.run(0, null, id);
+
+        return reply.status(200).send({message: "2FA removed"});
+
+        } catch (err) {
+          fastify.log.error(err);
+          return reply.status(400).send({ error: "Internal Server Error" });
+        }
+    }));
+
     //#endregion users_data_management
 
     /****************************************************************************/
