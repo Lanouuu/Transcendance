@@ -27,29 +27,45 @@ export function signup() {
 					if (res.ok) {
                 		msg.textContent = data.message;
                 		msg.style.color = "lightgreen";
-						setTimeout(() => {
-							window.location.hash = '#login';
-						}, 800);
+						
+						// Afficher le QR code si 2FA activé
+						if (data.qrcodedata) {
+							if (typeof data.qrcodedata === 'string' && data.qrcodedata.startsWith('data:image/png;base64,')) {
+        						let img = document.querySelector("#signup-form img.qr") as HTMLImageElement;
+        						if (!img) {
+        						    img = document.createElement("img");
+        						    img.classList.add("qr");
+        						    form.appendChild(img);
+        						}
+        						img.src = data.qrcodedata;
+        						img.alt = "QR Code 2FA";
+								
+								// Ajouter un bouton de confirmation
+								let confirmBtn = document.querySelector("#signup-form button.confirm-qr") as HTMLButtonElement;
+								if (!confirmBtn) {
+									confirmBtn = document.createElement("button");
+									confirmBtn.classList.add("confirm-qr");
+									confirmBtn.textContent = "J'ai scanné le QR code";
+									confirmBtn.type = "button";
+									form.appendChild(confirmBtn);
+									
+									confirmBtn.addEventListener("click", () => {
+										window.location.hash = '#login';
+									});
+								}
+							} else {
+							    console.error('Invalid QR code data format');
+							}
+						} else {
+							// Pas de 2FA, redirection automatique
+							setTimeout(() => {
+								window.location.hash = '#login';
+							}, 800);
+						}
             		} else {
                 		msg.textContent = data.error || data.message;
                 		msg.style.color = "red";
             		}
-				}
-
-				// Afficher le QR code si 2FA activé
-				if (data.qrcodedata) {
-					if (typeof data.qrcodedata === 'string' && data.qrcodedata.startsWith('data:image/png;base64,')) {
-        				let img = document.querySelector("#signup-form img.qr") as HTMLImageElement;
-        				if (!img) {
-        				    img = document.createElement("img");
-        				    img.classList.add("qr");
-        				    form.appendChild(img);
-        				}
-        				img.src = data.qrcodedata;
-        				img.alt = "QR Code 2FA";
-    				} else {
-    				    console.error('Invalid QR code data format');
-    				}
 				}
 			} catch (err) {
 					console.error(err);

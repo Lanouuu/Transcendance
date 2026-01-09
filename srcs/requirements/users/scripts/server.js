@@ -7,6 +7,8 @@ import path from "path";
 import { pipeline } from 'stream/promises';
 import bcrypt from "bcryptjs";
 import Redis from "ioredis";
+import { authenticator } from "otplib";
+import QRCode from "qrcode";
 
 export async function runServer() {
     
@@ -459,6 +461,42 @@ export async function runServer() {
         fastify.log.error(err);
         return reply.status(400).send({ error: "Internal Server Error" });
       }
+    }));
+
+    fastify.post("/enable2fa/:id", blockGuests(async (req,reply) => {
+      try {
+        const { id } = req.params;
+        if (!id)
+          return reply.status(400).send({ error: "ID required" });
+
+        const userID = req.headers["x-user-id"];
+        if (!userID || String(userID) !== String(id))
+          return reply.status(403).send({ error: "Can only enable 2fa" });
+
+        const userStmt = usersDB.prepare("SELECT auth_type, enable2FA, mail FROM users WHERE id = ?");
+        const user = userStmt.get(id);
+        if (!user)
+          return reply.status(404).send({ error: "User not found" });
+        
+        if (user.auth_type === "oauth42")
+          return reply.status(403).send({ error: "2FA not allowed for 42 accounts" });
+        
+        if (user.enable2FA === 1)
+          return reply.status(400).send({ error: "2FA already enabled" });
+
+        const secret2FA = authenticator.generateSecret();
+        const otpauth = authenticator.keyuri(user.mail, "Transcendence42", secret2FA);
+        const qrcodedata = await QRCode.toDataURL(otpauth);
+
+        const updateStmt = usersDB.prepare("UPDATE users SET enable2FA = ?, secret2FA = ? WHERE id = ?");
+        updateStmt.run(1, secret2FA, id);
+
+        return reply.status(200).send({message: "2FA enabled", qrcodedata});
+
+        } catch (err) {
+          fastify.log.error(err);
+          return reply.status(400).send({ error: "Internal Server Error" });
+        }
     }));
 
     //#endregion users_data_management

@@ -214,37 +214,6 @@ export default async function routes(fastify, options) {
         id: user.id});
     });
 
-    // creation du code
-    fastify.post("/enable-2fa", async (req, reply) => {
-      const { mail } = req.body;
-
-      const secret = authenticator.generateSecret();
-      const otpAuthUrl = authenticator.keyuri(mail, "Transcendence", secret);
-
-      await db.run("INSERT INTO twofa (user_mail, secret) VALUES (?, ?)", [mail, secret]);
-
-      // Générer le QR Code sous forme de base64
-      const qrCodeDataUrl = await QRCode.toDataURL(otpAuthUrl);
-
-      reply.send({
-        message: "Scan this QR code with Google Authenticator",
-        qrCode: qrCodeDataUrl
-      });
-    });
-
-    //verification du code
-    fastify.post("/verify-2fa", async (req, reply) => {
-      const { mail, code } = req.body;
-
-      const user = await db.get("SELECT secret FROM twofa WHERE user_mail = ?", [mail]);
-      if (!user) return reply.status(404).send({ error: "2FA not enabled for this user" });
-
-      const isValid = authenticator.check(code, user.secret);
-      if (!isValid) return reply.status(401).send({ error: "Invalid 2FA code" });
-
-      reply.send({ success: true, message: "2FA validated" });
-    });
-
     // deconnexion
     fastify.post("/logout", async (req, reply) => {
       try {
