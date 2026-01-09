@@ -233,10 +233,22 @@ function hideNextMatch() {
 	}
 }
 
+function displayTournamentEnd(winner: string) {
+	const tournamentResult: HTMLHeadingElement = document.getElementById('tournamentResult') as HTMLHeadingElement;
+	const returnTourButton: HTMLButtonElement = document.getElementById('ReturnTourButton') as HTMLButtonElement;
+
+	tournamentResult.textContent = `The winner is 🏆 ${winner}`;
+	tournamentResult.classList.remove('hidden');
+	returnTourButton.classList.remove('hidden');
+
+	returnTourButton.onclick = () => {
+		window.location.hash = "#tournament";
+	}
+}
+
 export async function launchInvitGame(friendId: string, message: string) {
 	const token: string | null = sessionStorage.getItem("jwt");
 	const userId: string | null = sessionStorage.getItem("userId");
-	const playersNamesH1: HTMLHeadingElement = document.getElementById("playersNames") as HTMLHeadingElement;
 	
 	if (userId === null || token === null) {
 		console.error('Could not fetch user id/token');
@@ -334,7 +346,7 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 			if (serverGame.message === "Init") {
 				game = serverGame.game;
 				loadSprites(game);
-				 pongTimeoutId = setTimeout(() => {
+				pongTimeoutId = setTimeout(() => {
 					gameAnimation(game);
 					pongTimeoutId = null;
 				}, 1000)
@@ -382,6 +394,7 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 			}
 			else if (serverGame.message === "TournamentEnd") {
 				console.log("Vainqueur du tournois: ", serverGame.winner);
+				displayTournamentEnd(serverGame.winner);
 				startTournament = false;
 			}				
 			else if (serverGame.message === "Error")

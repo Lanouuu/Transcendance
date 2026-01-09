@@ -304,6 +304,7 @@ async function createTournament(userId: string, token: string, tournamentName: s
 async function displayJoinedTournament(userId: string, token: string, tournament_id: number) {
 
 	const tournamentCreationDiv: HTMLDivElement = document.getElementById("tournamentCreationDiv") as HTMLDivElement;
+	const tournamentListDiv: HTMLDivElement = document.getElementById('tournamentListDiv') as HTMLDivElement;
 	const joinedTournamentDiv: HTMLDivElement = document.getElementById("joinedTournamentDiv") as HTMLDivElement;
 	const nameDiv: HTMLDivElement = document.getElementById("joinedTournamentName") as HTMLDivElement;
 	const playerRatioDiv: HTMLDivElement = document.getElementById("joinedTournamentPlayerRatio") as HTMLDivElement;
@@ -317,7 +318,7 @@ async function displayJoinedTournament(userId: string, token: string, tournament
 	const startButton: HTMLButtonElement = document.getElementById("startTournamentButton") as HTMLButtonElement;
 	const msgDiv: HTMLDivElement = document.getElementById("joinedTournamentMsg") as HTMLDivElement;
 
-	if (!tournamentCreationDiv || !joinedTournamentDiv
+	if (!tournamentCreationDiv || !joinedTournamentDiv || !tournamentListDiv
 		|| !nameDiv || !playerRatioDiv || !modeDiv || !statusDiv
 		|| !creatorDiv || !participantsUl || !leaveButton
 		|| !adminDiv || !deleteButton || !startButton
@@ -394,6 +395,7 @@ async function displayJoinedTournament(userId: string, token: string, tournament
 	}
 
 	tournamentCreationDiv.classList.add('hidden');
+	tournamentListDiv.classList.add('hidden');
 	joinedTournamentDiv.classList.remove('hidden');
 }
 

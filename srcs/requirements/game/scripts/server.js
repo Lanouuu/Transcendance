@@ -7,6 +7,7 @@ import cors from '@fastify/cors';
 import {WebSocketServer} from 'ws';
 import fs from 'fs';
 import { imageSize } from "image-size";
+import { resolve } from 'dns';
 
 // TODO : - Clear socket pour tournoi local et recuperer alias
 //        - Terminer gestion socket lors d'un changement de fenetre
@@ -883,11 +884,11 @@ function sendTournamentResult(id) {
     console.log("AVANT LE TRI: ", tournamentResult);
     tournamentResult.sort((score1, score2) => score2[1] - score1[1]);
     console.log("APRES LE TRI: ", tournamentResult);
+    for (const socket of tournamentSocket.values()) {
+        if (parseInt(socket.tournament_id, 10) === parseInt(id, 10))
+            socket.send(JSON.stringify({message: "TournamentEnd", winner: tournamentResult[0][0]}))
+    }
     return tournamentResult[0][0];
-    // for (const socket of tournamentSocket.values()) {
-    //     if (parseInt(socket.tournament_id, 10) === parseInt(id, 10))
-    //         socket.send(JSON.stringify({message: "TournamentEnd", winner: tournamentResult[0][0]}))
-    // }
 }
 
 fastify.post("/remoteTournament", async (request, reply) => {
@@ -930,6 +931,8 @@ fastify.post("/remoteTournament", async (request, reply) => {
         }
         const winner = sendTournamentResult(id);
         reply.send({message: "Success", winner: winner});
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
         for (const [userId, socket] of tournamentSocket.entries()) {
             tournamentAlias = tournamentAlias.filter(([id, alias]) => parseInt(id, 10) !== parseInt(socket.userId, 10) && parseInt(socket.userId, 10))
             tournamentSocket.delete(parseInt(userId, 10));
