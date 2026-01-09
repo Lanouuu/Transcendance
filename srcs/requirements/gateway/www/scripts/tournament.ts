@@ -192,6 +192,7 @@ async function displayTournamentAlias(tournamentMode: string, maxPlayer: string)
 	if (tournamentMode === 'remote') realMaxPlayer = 1;
 
 	aliasDiv.innerHTML = "";
+	inputDiv.innerHTML = "";
 	const inputList: HTMLInputElement[] = [];
 	for (let i = 0; i < Number(realMaxPlayer); i++) {
 		const input = document.createElement('input');
@@ -240,6 +241,9 @@ async function createTournament(userId: string, token: string, tournamentName: s
 	console.log("AliasArray = ", aliasArray);
 	// Envoyer l'alias
 
+	const tournamentCreationDiv: HTMLDivElement = document.getElementById("tournamentCreationDiv") as HTMLDivElement;
+	const tournamentAliasDiv: HTMLDivElement = document.getElementById("tournamentAliasDiv") as HTMLDivElement;
+
 	try {
 		const res = await fetch(`${route}/tournamentCreate`, {
 			method: "POST",
@@ -254,6 +258,8 @@ async function createTournament(userId: string, token: string, tournamentName: s
 			const text = await res.json();
 			console.error(`Server error ${res.status}:`, text.error);
 			displayMsg(msg, text.error, "red");
+			tournamentAliasDiv.classList.add('hidden');
+			tournamentCreationDiv.classList.remove('hidden');
 			return;
 		}
 
@@ -262,6 +268,8 @@ async function createTournament(userId: string, token: string, tournamentName: s
 			const text = await res.json();
 			console.error(`Server did not return JSON`, text.error);
 			displayMsg(msg, text.error, "red");
+			tournamentAliasDiv.classList.add('hidden');
+			tournamentCreationDiv.classList.remove('hidden');
 			return;
 		}
 
@@ -291,9 +299,14 @@ async function createTournament(userId: string, token: string, tournamentName: s
 		}
 		else {
 			displayMsg(msg, "Tournament creation failed", "red");
+			tournamentAliasDiv.classList.add('hidden');
+			tournamentCreationDiv.classList.remove('hidden');
 		}
 	} catch (err) {
 		console.error(err);
+		displayMsg(msg, `Error: ${err}`, "red");
+		tournamentAliasDiv.classList.add('hidden');
+		tournamentCreationDiv.classList.remove('hidden');
 	}
 }
 

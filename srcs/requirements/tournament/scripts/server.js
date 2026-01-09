@@ -216,6 +216,14 @@ export async function runServer() {
         });
       }
 
+      const duplicateName = await dbtour.get(
+        "SELECT id, name FROM tournament WHERE name = ? AND status IN ('pending', 'playing')",
+        [name]
+      );
+      if (duplicateName) {
+        return reply.code(400).send({ error: `A tournament named "${name}" already exists` });
+      }
+
       const playerName = await getUserName(playerId);
       const result = await dbtour.run(
         "INSERT INTO tournament (name, mode, creator_id, nb_max_players, players_ids, players_names, nb_current_players) VALUES (?, ?, ?, ?, ?, ?, ?)",
