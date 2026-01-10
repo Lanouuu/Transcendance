@@ -217,7 +217,7 @@ export async function runServer() {
       }
 
       const duplicateName = await dbtour.get(
-        "SELECT id, name FROM tournament WHERE name = ? AND status IN ('pending', 'playing')",
+        "SELECT id, name FROM tournament WHERE name = ?",
         [name]
       );
       if (duplicateName) {

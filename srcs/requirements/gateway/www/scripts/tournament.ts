@@ -534,14 +534,16 @@ async function displayTournamentList(userId: string, token: string, wantedStatus
 			infoDiv.className = "col-span-1 h-full w-full flex flex-row items-center justify-evenly relative min-w-0";
 
 			const tournamentNameDiv: HTMLDivElement = document.createElement('div');
-			tournamentNameDiv.className = "w-3/4 text-xl text-center min-w-0 truncate";
+			tournamentNameDiv.className = "w-3/4 text-5xl text-center min-w-0 truncate";
 			tournamentNameDiv.textContent = tournament.name;
 
 			infoDiv.append(tournamentNameDiv);
 			if (wantedStatus === "finished") {
 				const winnerNameDiv:	HTMLDivElement = document.createElement('div');
-				winnerNameDiv.className = "font-geo";
-				winnerNameDiv.textContent = `🏆 ${tournament.winner_alias}`;
+				infoDiv.classList.remove('flex-row');
+				infoDiv.classList.add('flex-col');
+				winnerNameDiv.className = "font-geo text-3xl";
+				winnerNameDiv.textContent = `🏆 Winner : ${tournament.winner_alias}`;
 
 				infoDiv.append(winnerNameDiv);
 				li.append(infoDiv);
