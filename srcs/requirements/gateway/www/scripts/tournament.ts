@@ -81,8 +81,9 @@ export async function displayTournamentPage() {
 				switchButtonIcon.classList.remove('rotate-[360deg]');
 				listDisplays = 'pending';
 			}
-			await displayTournamentList(userId, token, listDisplays);
-			// setTimeout(() => {switchButtonIcon.classList.remove('rotate-[360deg]');}, 500);
+			setTimeout(async () => {
+				await displayTournamentList(userId, token, listDisplays)
+			}, 500);
 		};
 	}
 

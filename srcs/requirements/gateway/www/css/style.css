@@ -72,7 +72,7 @@ body.loggedIn #signupNavLink {
 
 .mainLayout{
 	@apply flex grow flex-col
-	min-h-[calc(100vh-8rem-5rem)]
+	h-[calc(100vh-8rem-5rem)]
 	/* Ajouter du responsive */
 }
 
@@ -135,75 +135,6 @@ body.loggedIn #signupNavLink {
 
 /* #endregion account */
 
-/* #region game */
-/* #endregion game */
-
-/* #region home */
-
-#homePage {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	gap: 5rem;
-	/* background: radial-gradient(ellipse 150% 95% at center bottom, var(--color-light) 0% 20%, var(--color-sec) 90%, var(--color-prim) 100%); */
-}
-
-#homePageSteleInfo {
-
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	grid-template-rows: 2fr 10fr;
-
-	height: 50vh;
-	width: 13vw;
-	padding: 2rem;
-	gap: 2rem;
-
-	border-radius: 5%;
-	border-bottom-right-radius: 15%;
-	border: none;
-
-
-
-
-	background: linear-gradient(to bottom, var(--color-dark) 15%, var(--color-prim));
-
-	font-family: "Geo";
-	color: var(--color-light);
-}
-
-#homePageSteleInfo:hover {
-	outline: 1px solid var(--color-accent);
-	box-shadow: 0px -15px 50px var(--color-accent);
-	color: white;
-}
-
-#homePageSteleInfo h1 {
-	text-align: center;
-	grid-column: 1/3;
-	grid-row: 1/2;
-}
-
-#homePageSteleInfo p {
-	grid-row: 2/3;
-	font-size: 0.9em;
-}
-
-#homePageSteleInfoText {
-	grid-column: 1/2;
-	grid-row: 2/3;
-	text-align: left;
-}
-
-#homePageSteleInfoGlyphs {
-	grid-column: 2/3;
-	grid-row: 2/3;
-	text-align: right;
-}
-
-/* #endregion home */
-
 /* #region logout */
 
 .logoutLayout {
@@ -216,6 +147,7 @@ body.loggedIn #signupNavLink {
 /* #endregion logout */
 
 /* #region tournament */
+
 .tournamentLayout {
 	@apply flex flex-col items-center gap-16
 
