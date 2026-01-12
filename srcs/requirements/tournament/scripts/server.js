@@ -384,7 +384,7 @@ export async function runServer() {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ schedule, mode: res.mode, rmId: creator })
+          body: JSON.stringify({ schedule, mode: res.mode, rmId: creator, id: res.id })
         })
         const response = await data.json()
         if (response.message !== "Success")

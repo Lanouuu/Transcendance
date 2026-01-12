@@ -283,7 +283,7 @@ async function createTournament(userId: string, token: string, tournamentName: s
 					"x-user-id": userId,
 					"Content-Type": "application/json"
 				},
-				body: JSON.stringify({ alias: aliasArray[0] }) // Envoyer l'alias dans le body
+				body: JSON.stringify({ alias: aliasArray, mode: tournamentMode }) // Envoyer l'alias dans le body
 			});
 
 			if (!res1.ok) {
@@ -605,7 +605,7 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 					"x-user-id": userId,
 					"Content-Type": "application/json"
 				},
-				body: JSON.stringify({ alias: aliasArray[0] }) // Envoyer l'alias dans le body
+				body: JSON.stringify({ alias: aliasArray[0], mode: "remote" }) // Envoyer l'alias dans le body
 			});
 
 			if (!res1.ok) {
