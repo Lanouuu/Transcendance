@@ -21,6 +21,18 @@ export function home () {
 			quartzShadow.style.width = `${size}px`;
 			quartzShadow.style.height = `${size/1.2}px`;
 			quartzShadow.style.opacity = `${opacity}`;
+			if (ratio > 0.5 && ratio <= 0.8){
+				draggableQuartz.classList.remove('quartz80Perc');
+				draggableQuartz.classList.add('quartz50Perc');
+			}
+			else if (ratio > 0.8){
+				draggableQuartz.classList.remove('quartz50Perc');
+				draggableQuartz.classList.add('quartz80Perc');
+			}
+			else {
+				draggableQuartz.classList.remove('quartz50Perc');
+				draggableQuartz.classList.remove('quartz80Perc');
+			}
 		};
 
 		const animate = () => {

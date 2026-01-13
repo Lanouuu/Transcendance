@@ -141,6 +141,14 @@ body.loggedIn #signupNavLink {
 	@apply text-white antialiased font-bold;
 }
 
+.quartz50Perc {
+	@apply drop-shadow-[0_0_75px_white];
+}
+
+.quartz80Perc{
+	@apply drop-shadow-[0_40px_90px_white];
+}
+
 /* #endregion home */
 
 /* #region logout */
