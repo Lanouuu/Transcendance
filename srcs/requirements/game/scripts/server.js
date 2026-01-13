@@ -9,7 +9,7 @@ import fs from 'fs';
 import { imageSize } from "image-size";
 import { resolve } from 'dns';
 
-// TODO : - Clear socket pour tournoi local et recuperer alias
+// TODO : - Clear socket pour tournoi local et recuperer alias -> DONE
 //        - Terminer gestion socket lors d'un changement de fenetre
 //        - Mettre fin a la partie si les 2 joueurs perdent la connexion ou attendre (a voir)
 const fastify = Fastify({
@@ -546,23 +546,25 @@ fastify.post("/tournamentAlias", async (request, reply) => {
     if (!alias) {
         return reply.code(400).send(JSON.stringify("Alias required"));
     }
+
     if (!mode) {
-        return reply.code(400).send(JSON.stringify("Mode required"));       
+        return reply.code(400).send(JSON.stringify("Mode required"));
     }
     try {
         if (mode === "remote") {
             console.log("ALIAS: ", alias);
-            tournamentAlias.push([userId, alias]);
+            tournamentAlias.push([Number(userId), alias]);
             console.log("TOURNAMENT ALIAS: ", tournamentAlias);
         }
         else if (mode === "local") {
             console.log("ALIAS: ", alias);
-            tournamentAlias.push([userId, alias]);
+            for (let i = 0; i < alias.length; i++)
+                tournamentAlias.push([Number(userId) + i, alias[i]]);
             console.log("TOURNAMENT ALIAS: ", tournamentAlias);  
         }
         reply.code(200).send(JSON.stringify({message: "Success"}));
     }catch(error) {
-        console.log("Error in alias API route: ", e.message);
+        console.log("Error in alias API route: ", error.message);
         reply.code(200).send(JSON.stringify({message: "Success"}));
     }
 }) 
@@ -759,6 +761,7 @@ fastify.post("/remote", async (request, reply) => {
 })
 //END remote 
 
+// #region local tournament
 async function createLocalTournament(match, rmId, id) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -771,9 +774,9 @@ async function createLocalTournament(match, rmId, id) {
             })
             loadSprite(game);
             game.player1.id = match[0];
-            game.player1.name = "player1";
+            game.player1.name = getAlias(match[0]);
             game.player2.id = match[1];
-            game.player2.name = "player2";
+            game.player2.name = getAlias(match[1]);
             console.log("RMID: ", rmId)
             game.socket.push(tournamentSocket.get(Number(rmId)));
             game.tournament_id = id;
@@ -802,7 +805,7 @@ async function createLocalTournament(match, rmId, id) {
 
 
 fastify.post("/localTournament", async (request, reply) => {
-    const { schedule, rmId, id} = request.body || {};
+    const { schedule, rmId, id, nb_player } = request.body || {};
     
     if (!schedule) {
         return reply.code(400).send({error: "schedule is missing"});
@@ -826,20 +829,29 @@ fastify.post("/localTournament", async (request, reply) => {
         }
         names.push(matchup);
     }
-    let webSocket = tournamentSocket.get(Number(id));
+    let webSocket = tournamentSocket.get(Number(rmId));
     try {
         for (const round of schedule) {
             for (const match of round) {
                 const roundName = names[i][j];
                 console.log("roundName: ", roundName)
                 if (webSocket.readyState === 1)
-                    socket.send(JSON.stringify({message: "Schedule", scheduleNames: roundName}));
+                    webSocket.send(JSON.stringify({message: "Schedule", scheduleNames: [roundName]}));
+                await new Promise(resolve => setTimeout(resolve, 4000));
                 await createLocalTournament(match, rmId, id);
                 j++;
             }
+            j = 0;
             i++;
         }
+        // const winner = sendTournamentResult(id);
         reply.send({message: "Success"});
+        for (i = 0; i < Number(nb_player); i++) {
+            tournamentAlias = tournamentAlias.filter(([id, alias]) => parseInt(id, 10) !== parseInt(webSocket.userId, 10) + i)
+            console.log("Tournament alias after tournament end: ", tournamentAlias);
+        }
+        tournamentSocket.delete(parseInt(rmId, 10));
+        webSocket.close();
     }catch(err) {
         console.log("ERROR IN local TOURNAMENT: ", err.message);
         reply.code(400).send({error: "Fail to create game"});
@@ -971,7 +983,7 @@ fastify.post("/remoteTournament", async (request, reply) => {
 
         await new Promise(resolve => setTimeout(resolve, 1000));
         for (const [userId, socket] of tournamentSocket.entries()) {
-            tournamentAlias = tournamentAlias.filter(([id, alias]) => parseInt(id, 10) !== parseInt(socket.userId, 10) && parseInt(socket.userId, 10))
+            tournamentAlias = tournamentAlias.filter(([id, alias]) => parseInt(id, 10) !== parseInt(socket.userId, 10))
             tournamentSocket.delete(parseInt(userId, 10));
             socket.close();
             console.log("Tournament alias after tournament end: ", tournamentAlias);
