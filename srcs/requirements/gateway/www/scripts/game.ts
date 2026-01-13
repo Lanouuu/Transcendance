@@ -13,6 +13,7 @@ let pongTimeoutId: number | null = null;
 let currentSnakeGameMode: 'local' | 'remote' | null = null;
 let currentWebSocket: WebSocket | null = null;
 let currentAnimationId: number | null = null;
+let localPlayerId: string | null = null;  // ID du joueur local (pour mode remote)
 let startTournament: boolean = false;
 
 async function checkToken(): Promise<boolean> {
@@ -722,6 +723,7 @@ async function launchSnakeLocalGame() {
 
 		// Stocke le mode pour le replay
 		currentSnakeGameMode = 'local';
+		localPlayerId = null;  // Pas besoin en mode local
 
 		// Lance la boucle de jeu (WebSocket + rendu Canvas)
 		snakeGameLoop(game);
@@ -789,8 +791,9 @@ async function launchSnakeRemoteGame() {
 		const gameData = await res.json();
 		const game = new SnakeGame(gameData);  // Crée l'instance locale
 
-		// Stocke le mode pour le replay
+		// Stocke le mode et l'ID du joueur local pour le replay
 		currentSnakeGameMode = 'remote';
+		localPlayerId = userId;  // Stocke l'ID pour identifier quel joueur on contrôle
 
 		// Lance la boucle de jeu (WebSocket + rendu Canvas)
 		snakeGameLoop(game);
@@ -921,46 +924,116 @@ async function snakeGameLoop(game: SnakeGame) {
 
 			let updated = false;  // Flag pour savoir si on doit envoyer au serveur
 
-			// JOUEUR 1 : Touches WASD (insensible à la casse)
-			switch(e.key) {
-				case 'w':
-				case 'W':
-					game.player1.nextDirection = {x: 0, y: -1};  // Haut
-					updated = true;
-					break;
-				case 's':
-				case 'S':
-					game.player1.nextDirection = {x: 0, y: 1};  // Bas
-					updated = true;
-					break;
-				case 'a':
-				case 'A':
-					game.player1.nextDirection = {x: -1, y: 0};  // Gauche
-					updated = true;
-					break;
-				case 'd':
-				case 'D':
-					game.player1.nextDirection = {x: 1, y: 0};  // Droite
-					updated = true;
-					break;
+			// === MODE LOCAL ===
+			if (currentSnakeGameMode === 'local') {
+				// JOUEUR 1 : Touches WASD (insensible à la casse)
+				switch(e.key) {
+					case 'w':
+					case 'W':
+						if (game.player1.nextDirection.y !== 1) {
+							game.player1.nextDirection = {x: 0, y: -1};  // Haut
+							updated = true;
+						}
+						break;
+					case 's':
+					case 'S':
+						if (game.player1.nextDirection.y !== -1) {
+							game.player1.nextDirection = {x: 0, y: 1};  // Bas
+							updated = true;
+						}
+						break;
+					case 'a':
+					case 'A':
+						if (game.player1.nextDirection.x !== 1) {
+							game.player1.nextDirection = {x: -1, y: 0};  // Gauche
+							updated = true;
+						}
+						break;
+					case 'd':
+					case 'D':
+						if (game.player1.nextDirection.x !== -1) {
+							game.player1.nextDirection = {x: 1, y: 0};  // Droite
+							updated = true;
+						}
+						break;
 
-				// JOUEUR 2 : Touches fléchées
-				case 'ArrowUp':
-					game.player2.nextDirection = {x: 0, y: -1};  // Haut
-					updated = true;
-					break;
-				case 'ArrowDown':
-					game.player2.nextDirection = {x: 0, y: 1};  // Bas
-					updated = true;
-					break;
-				case 'ArrowLeft':
-					game.player2.nextDirection = {x: -1, y: 0};  // Gauche
-					updated = true;
-					break;
-				case 'ArrowRight':
-					game.player2.nextDirection = {x: 1, y: 0};  // Droite
-					updated = true;
-					break;
+					// JOUEUR 2 : Touches fléchées
+					case 'ArrowUp':
+						if (game.player2.nextDirection.y !== 1) {
+							game.player2.nextDirection = {x: 0, y: -1};  // Haut
+							updated = true;
+						}
+						break;
+					case 'ArrowDown':
+						if (game.player2.nextDirection.y !== -1) {
+							game.player2.nextDirection = {x: 0, y: 1};  // Bas
+							updated = true;
+						}
+						break;
+					case 'ArrowLeft':
+						if (game.player2.nextDirection.x !== 1) {
+							game.player2.nextDirection = {x: -1, y: 0};  // Gauche
+							updated = true;
+						}
+						break;
+					case 'ArrowRight':
+						if (game.player2.nextDirection.x !== -1) {
+							game.player2.nextDirection = {x: 1, y: 0};  // Droite
+							updated = true;
+						}
+						break;
+				}
+			}
+
+			// === MODE REMOTE ===
+			else if (currentSnakeGameMode === 'remote') {
+				// Identifier quel joueur on contrôle
+				const isPlayer1 = (localPlayerId === game.player1.id?.toString());
+				const isPlayer2 = (localPlayerId === game.player2.id?.toString());
+
+				// WASD contrôle le joueur local (player1 OU player2)
+				switch(e.key) {
+					case 'w':
+					case 'W':
+						if (isPlayer1 && game.player1.nextDirection.y !== 1) {
+							game.player1.nextDirection = {x: 0, y: -1};  // Haut
+							updated = true;
+						} else if (isPlayer2 && game.player2.nextDirection.y !== 1) {
+							game.player2.nextDirection = {x: 0, y: -1};  // Haut
+							updated = true;
+						}
+						break;
+					case 's':
+					case 'S':
+						if (isPlayer1 && game.player1.nextDirection.y !== -1) {
+							game.player1.nextDirection = {x: 0, y: 1};  // Bas
+							updated = true;
+						} else if (isPlayer2 && game.player2.nextDirection.y !== -1) {
+							game.player2.nextDirection = {x: 0, y: 1};  // Bas
+							updated = true;
+						}
+						break;
+					case 'a':
+					case 'A':
+						if (isPlayer1 && game.player1.nextDirection.x !== 1) {
+							game.player1.nextDirection = {x: -1, y: 0};  // Gauche
+							updated = true;
+						} else if (isPlayer2 && game.player2.nextDirection.x !== 1) {
+							game.player2.nextDirection = {x: -1, y: 0};  // Gauche
+							updated = true;
+						}
+						break;
+					case 'd':
+					case 'D':
+						if (isPlayer1 && game.player1.nextDirection.x !== -1) {
+							game.player1.nextDirection = {x: 1, y: 0};  // Droite
+							updated = true;
+						} else if (isPlayer2 && game.player2.nextDirection.x !== -1) {
+							game.player2.nextDirection = {x: 1, y: 0};  // Droite
+							updated = true;
+						}
+						break;
+				}
 			}
 
 			// Si une direction a été modifiée, envoie au serveur
