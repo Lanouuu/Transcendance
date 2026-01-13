@@ -24,9 +24,22 @@ module.exports = {
         		'light': '#BDD2CA',
         		'dark': '#0C0F38',
 				'other': '#dd5b5b',
+			},
+			keyframes: {
+				'flowting-sm': {
+					'0%': { transform: 'translateY(0)' },
+					'100%': { transform: 'translateY(10px)' }
+				},
+				'flowting-lg': {
+					'0%': { transform: 'translateY(0)' },
+					'100%': { transform: 'translateY(-10px)' }
+				}
+			},
+			animation: {
+				flowtingQuartz: 'flowting-lg 2s ease-in-out infinite alternate',
+				flowtingStele: 'flowting-sm 3s ease-in-out infinite alternate'
 			}
 		},
-
 
 		fontFamily: {
 			'geo': ['"Geo"', 'sans-serif'],

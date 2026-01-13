@@ -135,6 +135,14 @@ body.loggedIn #signupNavLink {
 
 /* #endregion account */
 
+/* #region home */
+
+#homePage p b {
+	@apply text-white antialiased font-bold;
+}
+
+/* #endregion home */
+
 /* #region logout */
 
 .logoutLayout {
