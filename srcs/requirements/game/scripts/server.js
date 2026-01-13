@@ -140,19 +140,25 @@ async function sendResult(game) {
 }
 
 function getScore(game) {
-    if (!tournamentScore.has(game.player1.name))
-        tournamentScore.set(game.player1.name, parseInt(game.player1.score - game.player2.score, 10));
-    else {
-        let score = tournamentScore.get(game.player1.name);
-        score += parseInt(game.player1.score - game.player2.score, 10);
-        tournamentScore.set(game.player1.name, parseInt(score, 10));
+
+    if (!tournamentScore.has(Number(game.tournament_id))) {
+        tournamentScore.set(Number(game.tournament_id), []);
+        const value = tournamentScore.get(Number(game.tournament_id));
+        value.push([game.player1.name, Number(game.player1.score - game.player2.score)]);
+        value.push([game.player2.name, Number(game.player2.score - game.player1.score)]);
     }
-    if (!tournamentScore.has(game.player2.name))
-        tournamentScore.set(game.player2.name, parseInt(game.player2.score - game.player1.score, 10));
     else {
-        let score = tournamentScore.get(game.player2.name);
-        score += parseInt(game.player2.score - game.player1.score, 10);
-        tournamentScore.set(game.player2.name, parseInt(score, 10));
+        const value = tournamentScore.get(Number(game.tournament_id));
+        const player1Score = value.filter(data => data[0] === game.player1.name);
+        if (player1Score.length !== 0)
+            player1Score[0][1] += Number(game.player1.score - game.player2.score);
+        else 
+            value.push([game.player1.name, Number(game.player1.score - game.player2.score)]);
+        const player2Score = value.filter(data => data[0] === game.player2.name);
+        if (player2Score.length !== 0)
+            player2Score[0][1] += Number(game.player2.score - game.player1.score);
+        else 
+            value.push([game.player2.name, Number(game.player2.score - game.player1.score)]);
     }
 }
 
@@ -216,7 +222,7 @@ function updateBallPosition(game) {
     }
 
 }
-
+// #region main loop
 async function gameLoop(game) {
     if (game.board === undefined || game.socket === undefined) {
         console.log("Game not ready yet");
@@ -251,7 +257,7 @@ async function gameLoop(game) {
         if (game.mode === "remote" || game.mode === "remote-tournament") {
             sendResult(game);
         }
-        if (game.mode === "remote-tournament")
+        if (game.mode === "remote-tournament" || game.mode === "local-tournament")
             getScore(game);
         else if (game.mode === "remote" || game.mode === "local"){
             for (const socket of game.socket.values()) {
@@ -316,6 +322,7 @@ function serialize(data) {
 // #region WS // 
 
 function localGamehandler(game, ws) {
+    ws.userId = game.player1.id;
     game.socket.push(ws);
     ws.send(JSON.stringify({game, message: "Init"}))
     if (game.message === "start");
@@ -558,26 +565,32 @@ fastify.post("/tournamentAlias", async (request, reply) => {
     try {
         if (mode === "remote") {
             console.log("ALIAS: ", alias);
-            if (!tournamentAlias.get(Number(tournament_id)))
-                tournamentAlias.set([Number(tournament_id), [Number(userId), alias]]);
+            if (!tournamentAlias.has(Number(tournament_id)))
+                tournamentAlias.set(Number(tournament_id), [[Number(userId), alias[0]]]);
             else {
                 const aliasTab = tournamentAlias.get(Number(tournament_id));
-                aliasTab.push([Number(userId), alias]);
+                for (let i = 0; i < aliasTab.length; i++) {
+                    console.log("aliastab: ", aliasTab[i][1]);
+                    if (alias[0] === aliasTab[i][1])
+                        throw new Error("Alias already taken");
+                }
+                aliasTab.push([Number(userId), alias[0]]);
             }
             console.log("TOURNAMENT ALIAS: ", tournamentAlias);
         }
         else if (mode === "local") {
             console.log("ALIAS: ", alias);
-            tournamentAlias.set([Number(tournament_id), []]);
+            tournamentAlias.set(Number(tournament_id), []);
             const aliasTab = tournamentAlias.get(Number(tournament_id));
-            for (let i = 0; alias.length; i++)
+            for (let i = 0; i < alias.length; i++) {
                 aliasTab.push([Number(userId) + i, alias[i]]);
+            }
             console.log("TOURNAMENT ALIAS: ", tournamentAlias);  
         }
         reply.code(200).send(JSON.stringify({message: "Success"}));
     }catch(error) {
         console.log("Error in alias API route: ", error.message);
-        reply.code(200).send(JSON.stringify({message: "Success"}));
+        reply.code(400).send(JSON.stringify({message: "Error", error: error.message}));
     }
 }) 
 // END
@@ -622,9 +635,12 @@ async function getUserName(id) {
         throw new Error("Fetch data from docker users failed")
     }
 }
-
-function getAlias(id) {
-    for (const [userId, alias] of tournamentAlias) {
+// #region getAlias
+function getAlias(id, tournamentId) {
+    if(!tournamentAlias.has(Number(tournamentId)))
+        return null;
+    const aliases = tournamentAlias.get(Number(tournamentId));
+    for (const [userId, alias] of aliases) {
         if (parseInt(userId, 10) === parseInt(id, 10)) {
             return alias;
         }            
@@ -786,9 +802,9 @@ async function createLocalTournament(match, rmId, id) {
             })
             loadSprite(game);
             game.player1.id = match[0];
-            // game.player1.name = getAlias(match[0]);
+            game.player1.name = getAlias(match[0], id);
             game.player2.id = match[1];
-            // game.player2.name = getAlias(match[1]);
+            game.player2.name = getAlias(match[1], id);
             console.log("RMID: ", rmId)
             game.socket.push(tournamentSocket.get(Number(rmId)));
             game.tournament_id = id;
@@ -832,37 +848,36 @@ fastify.post("/localTournament", async (request, reply) => {
     const names = [];
     let i = 0;
     let j = 0;
-    // for (const round of schedule) {
-    //     const matchup = []
-    //     for (const match of round) {
-    //         const name1 = getAlias(match[0]);
-    //         const name2 = getAlias(match[1]);
-    //         matchup.push([name1, name2]);
-    //     }
-    //     names.push(matchup);
-    // }
+    for (const round of schedule) {
+        const matchup = []
+        for (const match of round) {
+            const name1 = getAlias(match[0], id);
+            const name2 = getAlias(match[1], id);
+            matchup.push([name1, name2]);
+        }
+        names.push(matchup);
+    }
     let webSocket = tournamentSocket.get(Number(rmId));
     try {
         for (const round of schedule) {
-            // for (const match of round) {
-            //     const roundName = names[i][j];
-            //     console.log("roundName: ", roundName)
-            //     if (webSocket.readyState === 1)
-            //         webSocket.send(JSON.stringify({message: "Schedule", scheduleNames: [roundName]}));
-            //     await new Promise(resolve => setTimeout(resolve, 4000));
+            for (const match of round) {
+                const roundName = names[i][j];
+                console.log("roundName: ", roundName)
+                if (webSocket.readyState === 1)
+                    webSocket.send(JSON.stringify({message: "Schedule", scheduleNames: [roundName]}));
+                await new Promise(resolve => setTimeout(resolve, 4000));
                 await createLocalTournament(match, rmId, id);
-                // j++;
-            // }
-            // j = 0;
-            // i++;
+                j++;
+            }
+            j = 0;
+            i++;
         }
-        // const winner = sendTournamentResult(id);
-        reply.send({message: "Success"});
-        for (i = 0; i < Number(nb_player); i++) {
-            // tournamentAlias = tournamentAlias.filter(([id, alias]) => parseInt(id, 10) !== parseInt(webSocket.userId, 10) + i)
-            // console.log("Tournament alias after tournament end: ", tournamentAlias);
-        }
+        const winner = sendTournamentResult(id);
+        reply.send({message: "Success", winner: winner});
+        //cleanup
+        tournamentAlias.delete(Number(id)); 
         tournamentSocket.delete(parseInt(rmId, 10));
+        console.log("Tournament alias after tournament end: ", tournamentAlias);
         webSocket.close();
     }catch(err) {
         console.log("ERROR IN local TOURNAMENT: ", err.message);
@@ -884,9 +899,9 @@ async function createRemoteTournament(match, tournamentId) {
             })
             loadSprite(game);
             game.player1.id = match[0];
-            // game.player1.name = getAlias(match[0]);
+            game.player1.name = getAlias(match[0], tournamentId);
             game.player2.id = match[1];
-            // game.player2.name = getAlias(match[1]);
+            game.player2.name = getAlias(match[1], tournamentId);
             if (tournamentSocket.get(parseInt(match[0])) === undefined) {
                 game.player1.status = "Disconnected";
                 game.message = "Pause";
@@ -895,7 +910,7 @@ async function createRemoteTournament(match, tournamentId) {
             }
             else {
                 game.socket.push(tournamentSocket.get(parseInt(match[0])));
-                // game.socket[0].surname = game.player1.name;
+                game.socket[0].surname = game.player1.name;
             }
             if (tournamentSocket.get(parseInt(match[1])) === undefined) {
                 game.player2.status = "Disconnected";
@@ -905,7 +920,7 @@ async function createRemoteTournament(match, tournamentId) {
             }
             else {
                 game.socket.push(tournamentSocket.get(parseInt(match[1])));
-                // game.socket[1].surname = game.player2.name;
+                game.socket[1].surname = game.player2.name;
             }
             game.tournament_id = tournamentId;
             games.set(game.id, game);
@@ -932,24 +947,18 @@ async function createRemoteTournament(match, tournamentId) {
 }
 
 function sendTournamentResult(id) {
-    const tournamentResult = [];
     console.log("TOURNAMENT SCORE: ", tournamentScore);
-    for (const socket of tournamentSocket.values()) {
-        if (parseInt(socket.tournament_id, 10) !== parseInt(id, 10))
-            continue;
-        const score = tournamentScore.get(socket.surname);
-        if (score === undefined)
-            throw new Error(`NO SCORE FOUND FOR PLAYER: ${socket.surname}`);
-        tournamentResult.push([socket.surname, parseInt(score, 10)]);
-    }
-    console.log("AVANT LE TRI: ", tournamentResult);
-    tournamentResult.sort((score1, score2) => score2[1] - score1[1]);
-    console.log("APRES LE TRI: ", tournamentResult);
+    const scores = tournamentScore.get(Number(id));
+    if (scores === undefined)
+        throw new Error(`NO SCORE FOUND FOR THIS TOURNAMENT`);
+    console.log("AVANT LE TRI: ", scores);
+    scores.sort((score1, score2) => score2[1] - score1[1]);
+    console.log("APRES LE TRI: ", scores);
     for (const socket of tournamentSocket.values()) {
         if (parseInt(socket.tournament_id, 10) === parseInt(id, 10))
-            socket.send(JSON.stringify({message: "TournamentEnd", winner: tournamentResult[0][0]}))
+            socket.send(JSON.stringify({message: "TournamentEnd", winner: scores[0][0]}))
     }
-    return tournamentResult[0][0];
+    return scores[0][0];
 }
 
 fastify.post("/remoteTournament", async (request, reply) => {
@@ -962,44 +971,45 @@ fastify.post("/remoteTournament", async (request, reply) => {
     if (!id) {
         return reply.code(400).send({error: "id is empty"});
     }
-    // for (const round of schedule) {
-    //     const matchup = []
-    //     for (const match of round) {
-    //         const name1 = getAlias(match[0]);
-    //         const name2 = getAlias(match[1]);
-    //         matchup.push([name1, name2]);
-    //     }
-    //     names.push(matchup);
-    // }
-    // console.log("schedule : ", schedule);
-    // console.log("scheduleNames : ", names);
+    for (const round of schedule) {
+        const matchup = []
+        for (const match of round) {
+            const name1 = getAlias(match[0], id);
+            const name2 = getAlias(match[1], id);
+            matchup.push([name1, name2]);
+        }
+        names.push(matchup);
+    }
+    console.log("schedule : ", schedule);
+    console.log("scheduleNames : ", names);
     let i = 0;
     try {
         for (const round of schedule) {
-            // for (const socket of tournamentSocket.values()) {
-            //     if (parseInt(socket.tournament_id, 10) === parseInt(id, 10)) {
-            //         const roundName = names[i].filter(data => String(data[0]) === String(getAlias(socket.userId)) || String(data[1]) === String(getAlias(socket.userId)));
-            //         console.log("roundName: ", roundName)
-            //         if (roundName) {
-            //             if (socket.readyState === 1)
-            //                 socket.send(JSON.stringify({message: "Schedule", scheduleNames: roundName}));
-            //         }
-            //     }
-            // }
+            for (const socket of tournamentSocket.values()) {
+                if (parseInt(socket.tournament_id, 10) === parseInt(id, 10)) {
+                    const roundName = names[i].filter(data => String(data[0]) === String(getAlias(socket.userId, id)) || String(data[1]) === String(getAlias(socket.userId, id)));
+                    console.log("roundName: ", roundName)
+                    if (roundName) {
+                        if (socket.readyState === 1)
+                            socket.send(JSON.stringify({message: "Schedule", scheduleNames: roundName}));
+                    }
+                }
+            }
             await new Promise(resolve => setTimeout(resolve, 4000));        
             await Promise.all(round.map(match => createRemoteTournament(match, id)));
-            // i++;
+            i++;
         }
         const winner = sendTournamentResult(id);
         reply.send({message: "Success", winner: winner});
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        //Cleanup
         for (const [userId, socket] of tournamentSocket.entries()) {
-            // tournamentAlias = tournamentAlias.filter(([id, alias]) => parseInt(id, 10) !== parseInt(socket.userId, 10))
-            tournamentSocket.delete(parseInt(userId, 10));
-            socket.close();
-            // console.log("Tournament alias after tournament end: ", tournamentAlias);
+            if (Number(socket.tournament_id) === Number(id)) {
+                tournamentSocket.delete(parseInt(userId, 10));
+                socket.close();
+            }
         }
+        tournamentAlias.delete(Number(id));
+        console.log("Tournament alias after tournament end: ", tournamentAlias);
         console.log("Tournament socket: ", tournamentSocket);
     }catch(err) {
         console.log("ERROR IN REMOTE TOURNAMENT: ", err.message);

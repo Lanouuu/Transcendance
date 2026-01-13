@@ -58,6 +58,19 @@ function generateGuestPlayer(nbPlayer, ids, creator){
   return ids
 }
 
+function checkUniqueAlias(alias) {
+  for (let i = 0; i < alias.length; i++) {
+    let j = 0;
+    for (j = j + i + 1; j < alias.length; j++) {
+      console.log("alias[i]: ", alias[i]);
+      console.log("alias[j]: ", alias[j]);
+      if (alias[i] === alias[j])
+        return false;
+    }
+  }
+  return true;
+}
+
 export async function runServer() {
 
   const fastify = Fastify({
@@ -185,10 +198,11 @@ export async function runServer() {
     }
   })
 
+  // #region create
   fastify.post('/tournamentCreate', async (request, reply) => {
-    const { name, creator_id, nb_max_players, mode } = request.body || {};
+    const { name, creator_id, nb_max_players, mode, alias } = request.body || {};
     console.log("event detected")
-    if (!name || !creator_id || !nb_max_players || !mode) {
+    if (!name || !creator_id || !nb_max_players || !mode || !alias) {
       console.log("name: ", name)
       console.log("creator_id: ", creator_id)
       console.log("nb_max_player: ", nb_max_players)
@@ -201,6 +215,10 @@ export async function runServer() {
       const playerId = request.headers["x-user-id"];
       const playerStr = String(playerId);
 
+      if (mode === "local") {
+        if (checkUniqueAlias(alias) === false)
+          return reply.code(400).send(JSON.stringify({message: "Error", error:"Alias already taken"}));
+      }
       const alreadyIn = await dbtour.get(
         "SELECT id, name FROM tournament \
         WHERE status IN ('pending','playing') \
@@ -230,6 +248,20 @@ export async function runServer() {
         [name, mode, creator_id, nb_max_players, `${creator_id}`, playerName, 1]
       );
       console.log(`✓ Tournament created: "${name}" (ID: ${result.lastID}) by user ${creator_id}`);
+			const res = await fetch(`https://game:3002/tournamentAlias`, {
+				method: "POST",
+				headers: {
+					"x-user-id": playerId,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({ alias: alias, mode: mode, tournament_id: result.lastID }) // Envoyer l'alias dans le body
+			});
+
+			if (!res.ok) {
+				const error = await res.json();
+				throw new Error(error.error || "Alias already taken");
+			}
+
       reply.send({ message: "Success", tournament_id: result.lastID, name , id: creator_id});
     } catch (err) {
       fastify.log.error({ err }, "Tournament creation failed");
@@ -247,9 +279,13 @@ export async function runServer() {
     }
   });
 
+  // #region Join
   fastify.post('/tournamentJoin', async (request, reply) => {
-    const { idTour } = request.body || {};
+    const { idTour, alias } = request.body || {};
+    const playerId = request.headers["x-user-id"];
     if (!idTour) return reply.code(400).send({ error: "tournament id required" });
+
+    if (!alias) return reply.code(400).send({ error: "Alias required" });
 
     try {
       const res = await dbtour.get(
@@ -257,59 +293,76 @@ export async function runServer() {
         [idTour]
       );
       if (!res) return reply.code(400).send({ error: "Tournament not found" });
-
+      
       if (parseInt(res.nb_current_players, 10) === parseInt(res.nb_max_players, 10)) {
         return reply.code(400).send({error: "Tournament already full"});
       }
-
-      const playerId = request.headers["x-user-id"];
-      const playerName = await getUserName(playerId);
-      const playerStr = String(playerId);
-
-      const alreadyHere = await dbtour.get(
-        "SELECT 1 FROM tournament " +
-        "WHERE id = ? " +
-        "  AND (',' || IFNULL(players_ids, '') || ',') LIKE '%,' || ? || ',%'",
-        [idTour, playerStr]
-      );
-      if (alreadyHere) {
-        return reply.code(409).send({ error: "User already registered in this tournament" });
+      
+      const aliasRes = await fetch(`https://game:3002/tournamentAlias`, {
+        method: "POST",
+        headers: {
+          "x-user-id": playerId,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ alias: alias, mode: "remote", tournament_id: idTour }) // Envoyer l'alias dans le body
+      });
+      
+      if (!aliasRes.ok) {
+        const error = await aliasRes.json();
+        return reply.code(400).send({ error: error.error })
       }
+      
+      const response = await aliasRes.json();
 
-      const other = await dbtour.get(
-        "SELECT id, name FROM tournament \
-        WHERE id <> ? \
-         AND status IN ('pending','playing') \
-         AND (',' || IFNULL(players_ids, '') || ',') LIKE '%,' || ? || ',%' \
-        ORDER BY created_at DESC LIMIT 1",
-        [idTour, playerStr]
-      );
-      if (other) {
-        return reply.code(409).send({
-          error: "User already registered in another tournament",
-          tournament_id: other.id,
-          name: other.name
-        });
+      if (response.message === "Success") {
+        const playerName = await getUserName(playerId);
+        const playerStr = String(playerId);
+  
+        const alreadyHere = await dbtour.get(
+          "SELECT 1 FROM tournament " +
+          "WHERE id = ? " +
+          "  AND (',' || IFNULL(players_ids, '') || ',') LIKE '%,' || ? || ',%'",
+          [idTour, playerStr]
+        );
+        if (alreadyHere) {
+          return reply.code(409).send({ error: "User already registered in this tournament" });
+        }
+  
+        const other = await dbtour.get(
+          "SELECT id, name FROM tournament \
+          WHERE id <> ? \
+           AND status IN ('pending','playing') \
+           AND (',' || IFNULL(players_ids, '') || ',') LIKE '%,' || ? || ',%' \
+          ORDER BY created_at DESC LIMIT 1",
+          [idTour, playerStr]
+        );
+        if (other) {
+          return reply.code(409).send({
+            error: "User already registered in another tournament",
+            tournament_id: other.id,
+            name: other.name
+          });
+        }
+  
+        const result = await dbtour.run(
+          `UPDATE tournament
+          SET players_ids = CASE
+          WHEN players_ids IS NULL OR players_ids = '' THEN ?
+          ELSE  players_ids || ',' || ?
+          END,
+          players_names = CASE
+          WHEN players_names IS NULL OR players_names = '' THEN ?
+          ELSE players_names || ',' || ?
+          END,
+          nb_current_players = nb_current_players + 1
+          WHERE id = ?`, [playerId, playerId, playerName, playerName, idTour]
+        );
+        console.log(`✓ Player ${playerId} joined tournament ${idTour}`);
+        reply.send({ message: "Success", text: "Player added to tournament", tournament_id: idTour, id: res.creator_id });
       }
-
-      const result = await dbtour.run(
-        `UPDATE tournament
-        SET players_ids = CASE
-        WHEN players_ids IS NULL OR players_ids = '' THEN ?
-        ELSE  players_ids || ',' || ?
-        END,
-        players_names = CASE
-        WHEN players_names IS NULL OR players_names = '' THEN ?
-        ELSE players_names || ',' || ?
-        END,
-        nb_current_players = nb_current_players + 1
-        WHERE id = ?`, [playerId, playerId, playerName, playerName, idTour]
-      );
-      console.log(`✓ Player ${playerId} joined tournament ${idTour}`);
-      reply.send({ message: "Success", text: "Player added to tournament", tournament_id: idTour, id: res.creator_id });
     } catch (err) {
       fastify.log.error({ err }, "Add player to tournament failed");
-      reply.code(400).send({ error: "Database update failed" });
+      reply.code(400).send({ error: err.error || "Database update failed" });
     }
   });
 
@@ -390,9 +443,10 @@ export async function runServer() {
         if (response.message !== "Success")
           throw new Error("Fail to create match")
         else {
+          console.log("Winner: ", response.winner)
           const upd = await dbtour.run(
-          "UPDATE tournament SET status='finished' WHERE id=? AND status='playing'",
-          [res.id]
+          "UPDATE tournament SET status='finished', winner_alias = ? WHERE id=? AND status='playing'",
+          [response.winner, res.id]
           );
           if (upd.changes !== 1) {
             return reply.code(409).send({ error: "Tournament is not in playing state" });
