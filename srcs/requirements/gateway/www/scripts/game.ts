@@ -407,80 +407,9 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 		ws.addEventListener('error', (error) => {
 			console.error("WebSocket error:", error);
 		});
-	
-// === GESTIONNAIRE D'INPUTS CLAVIER ===
-		// const keydownHandler = (e: KeyboardEvent) => {
-		// 	if (['ArrowUp', 'ArrowDown', 'w', 's'].includes(e.key)) {
-		// 		e.preventDefault();
-		// 	}
-
-		// 	let updated = false;
-		// 	let key;
-		// 	switch(e.key) {
-		// 		case 'a':
-		// 			key = 'a';
-		// 			updated = true;
-		// 			break;
-		// 		case 'd':
-		// 			key = 'd';
-		// 			updated = true;
-		// 			break;
-		// 		case 'ArrowLeft':
-		// 			key = 'ArrowLeft';
-		// 			updated = true;
-		// 			break;
-		// 		case 'ArrowRight':
-		// 			key = 'ArrowRight';
-		// 			updated = true;
-		// 			break;
-		// 	}
-		// 	if (ws.readyState === WebSocket.OPEN) {
-		// 		if (updated)
-		// 			ws.send(JSON.stringify({id: game.id, message: "input", key, event: "keydown"}))
-		// 	} else
-		// 		console.error("WebSocket is not open")
-		// };
-
-		// const keyupHandler = (e: KeyboardEvent) => {
-		// 	let updated = false;
-		// 	let key;
-		// 	switch(e.key) {
-		// 		case 'a':
-		// 			key = 'a';
-		// 			updated = true;
-		// 			break;
-		// 		case 'd':
-		// 			key = 'd';
-		// 			updated = true;
-		// 			break;
-		// 		case 'ArrowLeft':
-		// 			key = 'ArrowLeft';
-		// 			updated = true;
-		// 			break;
-		// 		case 'ArrowRight':
-		// 			key = 'ArrowRight';
-		// 			updated = true;
-		// 			break;
-		// 	}
-		// 	if (ws.readyState === WebSocket.OPEN) {
-		// 		if (updated)
-		// 			ws.send(JSON.stringify({id: game.id, message: "input", key, event: "keyup"}))
-		// 	} else
-		// 		console.error("WebSocket is not open")
-		// };
-
-		// window.addEventListener('keydown', keydownHandler);
-		// window.addEventListener('keydown', keyupHandler);
-
-		// const cleanup = () => {
-		// 	window.removeEventListener('keydown', keydownHandler);
-		// 	window.removeEventListener('keydown', keyupHandler);
-		// };
-
 
 		ws.addEventListener('close', () => {
 			console.log("socket closed");
-			// cleanup();
 		})
 		window.addEventListener('keydown', (e) => {
 			let key;
@@ -498,7 +427,7 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 					key = 'ArrowRight'
 					break
 			}
-			if (ws.readyState === WebSocket.OPEN)
+			if (ws.readyState === WebSocket.OPEN && game && game.message === "Playing")
 				ws.send(JSON.stringify({id: game.id, message: "input", key, event: "keydown"}))
 			else
 				console.error("WebSocket is not open")
@@ -520,7 +449,7 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 					key = 'ArrowRight'
 					break
 			}
-			if (ws.readyState === WebSocket.OPEN)
+			if (ws.readyState === WebSocket.OPEN && game && game.message === "Playing")
 				ws.send(JSON.stringify({id: game.id, message: "input", key, event: "keyup"}))
 			else
 				console.error("WebSocket is not open")
@@ -610,34 +539,6 @@ function initSprite(board: Sprite, player1: Sprite, player2: Sprite, ball: Sprit
         player1.loaded = true
         player2.loaded = true
         ball.loaded = true
-        
-        board.position = {
-            x: 0,
-            y: 0
-        }
-        board.imgSize.height = board.image.height
-        board.imgSize.width = board.image.width
-
-        player1.position = {
-            x: 0,
-            y: board.image.height / 2 - player1.image.height / 2
-        }
-        player1.imgSize.height = player1.image.height
-        player1.imgSize.width = player1.image.width
-
-        player2.position = {
-            x: board.image.width - player2.image.width,
-            y: board.image.height / 2 - player2.image.height / 2
-        }
-        player2.imgSize.height = player2.image.height
-        player2.imgSize.width = player2.image.width
-        
-        ball.position = {
-            x: board.image.width / 2 - ball.image.width / 2,
-            y: board.image.height / 2 - ball.image.height / 2
-        }
-        ball.imgSize.height = ball.image.height
-        ball.imgSize.width = ball.image.width
 }
 
 async function loadSprites(game: Game) {
@@ -649,10 +550,10 @@ async function loadSprites(game: Game) {
             loadImage('../assets/pong/Ball.png', {x:-9, y:9})]
         )
         initSprite(board, player1, player2, ball)
-        game.board = board;
+        game.board.image = board.image;
         game.player1.sprite.image = player1.image;
         game.player2.sprite.image = player2.image;
-        game.ball = ball;
+        game.ball.image = ball.image;
 		console.log('Sprite loaded');
     }catch(e) {
         console.error("ERREUR CHARGEMENT IMAGES", e);

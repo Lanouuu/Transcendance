@@ -253,7 +253,7 @@ async function createTournament(userId: string, token: string, tournamentName: s
 				"x-user-id": userId,
 				"Content-Type": "application/json"
 			},
-			body: JSON.stringify({ name: tournamentName, creator_id: userId, nb_max_players: maxPlayerSelected, mode: tournamentMode })
+			body: JSON.stringify({ name: tournamentName, creator_id: userId, nb_max_players: maxPlayerSelected, mode: tournamentMode, alias: aliasArray })
 		});
 		if (!res.ok) {
 			const text = await res.json();
@@ -277,26 +277,9 @@ async function createTournament(userId: string, token: string, tournamentName: s
 		const response = await res.json();
 
 		if (response.message === "Success") {
-			const res1 = await fetch(`${gameRoute}/tournamentAlias`, {
-				method: "POST",
-				headers: {
-					"authorization": `Bearer ${token}`,
-					"x-user-id": userId,
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify({ alias: aliasArray, mode: tournamentMode }) // Envoyer l'alias dans le body
-			});
-
-			if (!res1.ok) {
-				const error = await res1.json();
-				throw new Error(error.error || "Failed to join tournament");
-			}
-
-			const response1 = await res1.json();
-
-            gameLoop(parseInt(response.id, 10), response.tournament_id, "initTournament", parseInt(userId, 10));
 			displayMsg(msg, "Tournament created", "green");
 			displayJoinedTournament(userId, token, Number(response.tournament_id));
+            gameLoop(parseInt(response.id, 10), response.tournament_id, "initTournament", parseInt(userId, 10));
 		}
 		else {
 			displayMsg(msg, "Tournament creation failed", "red");
@@ -578,46 +561,29 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 	// Envoyer l'alias
 
 	try {
-		const res = await fetch(`${route}/tournamentJoin`, {
+			const res = await fetch(`${route}/tournamentJoin`, {
 			method: "POST",
 			headers: {
 				"authorization": `Bearer ${token}`,
 				"x-user-id": userId,
 				"Content-Type": "application/json"
 			},
-			body: JSON.stringify({ idTour: tournamentId }) // Envoyer l'alias dans le body
-		});
-
-		if (!res.ok) {
-			const error = await res.json();
-			throw new Error(error.error || "Failed to join tournament");
-		}
-
-		const response = await res.json();
-
-		displayJoinedTournament(userId, token, tournamentId);
-		displayMsg(msg, "Successfully joined tournament", "green");
-
-		if (response.message === "Success") {
-			const res1 = await fetch(`${gameRoute}/tournamentAlias`, {
-				method: "POST",
-				headers: {
-					"authorization": `Bearer ${token}`,
-					"x-user-id": userId,
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify({ alias: aliasArray[0], mode: "remote" }) // Envoyer l'alias dans le body
+			body: JSON.stringify({ idTour: tournamentId, alias: aliasArray }) // Envoyer l'alias dans le body
 			});
 
-			if (!res1.ok) {
-				const error = await res1.json();
+			if (!res.ok) {
+				const error = await res.json();
 				throw new Error(error.error || "Failed to join tournament");
 			}
 
-			const response1 = await res1.json();
-
-            gameLoop(parseInt(response.id, 10), response.tournament_id, "initTournament", parseInt(userId, 10));
-		}
+			const response = await res.json();
+			if (response.message === "Success") {
+				displayJoinedTournament(userId, token, tournamentId);
+				displayMsg(msg, "Successfully joined tournament", "green");
+				gameLoop(parseInt(response.id, 10), response.tournament_id, "initTournament", parseInt(userId, 10));
+			}
+			else 
+				displayMsg(msg, response.error, "red");				
 	} catch (err) {
 		console.error("Failed to join tournament:", err);
 		displayMsg(msg, `${err}`, "red");
