@@ -162,8 +162,36 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 		}
 
 		dblFaBox.addEventListener('change', async () => {
-			if (!dblFaBox.checked && !confirm("Enable double authentification ?")) return ;
-			if (!confirm("Do you wish to enable double authentification ?")) return ; 
+			if (dblFaBox.checked){
+ 				if (!confirm("Enable double authentification ?")){
+					dblFaBox.checked = false;
+					return ;
+				}
+
+				const res = await fetch(`${window.location.origin}/auth_service/enable2fa/${userId}`, {
+					method: "POST",
+					headers: {
+						"authorization": `Bearer ${token}`,
+						"x-user-id": userId
+					},
+				});
+
+				const data = await res.json();
+				if (!res.ok){
+					userInfoMsg.style.color = 'red';
+					userInfoMsg.textContent = data.error;
+					return ;
+				}
+
+
+			}
+			if (!dblFaBox.checked){
+ 				if (!confirm("Disable double authentification ?")){
+					dblFaBox.checked = true;
+					return ;
+				}
+			}
+
 		});
 
 		// #endregion display //
