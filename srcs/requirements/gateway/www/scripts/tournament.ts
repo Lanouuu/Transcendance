@@ -105,9 +105,7 @@ async function displayTournamentCreation(userId: string, token: string) {
 
 	const tournamentNameInput: HTMLInputElement = document.getElementById("tournamentNameInput") as HTMLInputElement;
 
-	const fourPlayersButton: HTMLButtonElement = document.getElementById("4PlayersSelectionButton") as HTMLButtonElement;
-	const eightPlayersButton: HTMLButtonElement = document.getElementById("8PlayersSelectionButton") as HTMLButtonElement;
-	const sixteenPlayersButton: HTMLButtonElement = document.getElementById("16PlayersSelectionButton") as HTMLButtonElement;
+	const nbPlayersSelect: HTMLSelectElement = document.getElementById("nbPlayers") as HTMLSelectElement;
 
 	const localSelectionButton: HTMLButtonElement = document.getElementById("localSelectionButton") as HTMLButtonElement;
 	const remoteSelectionButton: HTMLButtonElement = document.getElementById("remoteSelectionButton") as HTMLButtonElement;
@@ -117,35 +115,11 @@ async function displayTournamentCreation(userId: string, token: string) {
 	const tournamentCreationMsg: HTMLDivElement = document.getElementById("tournamentCreationMsg") as HTMLDivElement;
 
 	if (!tournamentCreationDiv || !joinedTournamentDiv
-		|| !tournamentNameInput
-		|| !fourPlayersButton || !eightPlayersButton || !sixteenPlayersButton
+		|| !tournamentNameInput || !nbPlayersSelect 
 		|| !localSelectionButton || !remoteSelectionButton
 		|| !createTournamentButton || !tournamentCreationMsg) {
 		console.error("Could not get HTML elements");
 		return;
-	}
-
-	let maxPlayerSelected = "";
-
-	fourPlayersButton.onclick = () => {
-		maxPlayerSelected = "4";
-		fourPlayersButton.classList.add('outline', 'outline-accent');
-		eightPlayersButton.classList.remove('outline', 'outline-accent');
-		sixteenPlayersButton.classList.remove('outline', 'outline-accent');
-	}
-
-	eightPlayersButton.onclick = () => {
-		maxPlayerSelected = "8";
-		eightPlayersButton.classList.add('outline', 'outline-accent');
-		fourPlayersButton.classList.remove('outline', 'outline-accent');
-		sixteenPlayersButton.classList.remove('outline', 'outline-accent');
-	}
-
-	sixteenPlayersButton.onclick = () => {
-		maxPlayerSelected = "16";
-		sixteenPlayersButton.classList.add('outline', 'outline-accent');
-		eightPlayersButton.classList.remove('outline', 'outline-accent');
-		fourPlayersButton.classList.remove('outline', 'outline-accent');
 	}
 
 	let modeSelected = "";
@@ -162,12 +136,13 @@ async function displayTournamentCreation(userId: string, token: string) {
 
 	createTournamentButton.onclick = async () => {
 		const tournamentName = tournamentNameInput.value.trim();
+		const maxPlayerSelected = nbPlayersSelect.value;
 		if (!tournamentName) {
 			displayMsg(tournamentCreationMsg, "Please chose a name for the tournament", "red");
 			return;
 		}
-		if (maxPlayerSelected !== "4" && maxPlayerSelected !== "8" && maxPlayerSelected !== "16") {
-			displayMsg(tournamentCreationMsg, "Please select the max player number option", "red");
+		if (!maxPlayerSelected || maxPlayerSelected === "") {
+			displayMsg(tournamentCreationMsg, "Please select the number of players", "red");
 			return;
 		}
 		if (modeSelected !== "local" && modeSelected !== "remote") {

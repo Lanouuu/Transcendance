@@ -158,35 +158,30 @@
 
 			<div class="
 				w-full 
-				flex flex-row items-center justify-evenly
+				flex flex-col items-center justify-evenly
 			">
 
-				<button id="4PlayersSelectionButton" 
-					class="py-3 px-5 rounded-xl 
-                    	bg-prim bg-opacity-90 hover:bg-opacity-100 
-                    	text-white font-semibold font-geo
-                    	shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    	hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
-					4 Players
-				</button>
-
-				<button id="8PlayersSelectionButton" 
-					class="py-3 px-5 rounded-xl 
-                    	bg-prim bg-opacity-90 hover:bg-opacity-100 
-                    	text-white font-semibold font-geo
-                    	shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    	hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
-					8 Players
-				</button>
-
-				<button id="16PlayersSelectionButton" 
-					class="py-3 px-5 rounded-xl 
-                    	bg-prim bg-opacity-90 hover:bg-opacity-100 
-                    	text-white font-semibold font-geo
-                    	shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)]
-                    	hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)]">
-					16 Players
-				</button>
+				<label for="nbPlayers" class="font-geo mb-2">
+					Number of Players
+				</label>
+				<select id="nbPlayers"
+					class="px-10 p-2
+            			shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
+            			focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
+            			rounded-xl 
+            			bg-dark bg-opacity-60 focus:outline-none 
+            			text-white font-geo
+            			cursor-pointer">
+					<option value="">-- Select --</option>
+					<option value="3">3 Players</option>
+					<option value="4">4 Players</option>
+					<option value="5">5 Players</option>
+					<option value="6">6 Players</option>
+					<option value="7">7 Players</option>
+					<option value="8">8 Players</option>
+					<option value="9">9 Players</option>
+					<option value="10">10 Players</option>
+				</select>
 
 			</div>
 
