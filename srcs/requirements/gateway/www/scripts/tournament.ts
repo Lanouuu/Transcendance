@@ -568,13 +568,11 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 // #endregion List // 
 
 function displayMsg(msgDiv: HTMLDivElement, msg: string, color: string): void {
-	msgDiv.classList.toggle('opacity-0');
-	msgDiv.classList.toggle('opacity-100');
+	msgDiv.classList.remove('opacity-0');
 	msgDiv.textContent = msg;
 	msgDiv.style.color = color;
 	setTimeout(() => {
-		msgDiv.classList.toggle('opacity-100');
-		msgDiv.classList.toggle('opacity-0');
+		msgDiv.classList.add('opacity-0');
 	}, 2000);
 }
 

@@ -96,7 +96,7 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 	const snakeWinrateDiv: HTMLDivElement = document.getElementById("accountInfosSnakeWinrate") as HTMLDivElement;
 
 
-	if (!usernameSpan || !mailSpan || !dblFaBox
+	if (!usernameSpan || !mailSpan || !dblFaBox || !userInfoMsg
 		|| !profilePic || !profilePicInput || !profilePicButton
 		|| !profilePicButtonConfirm || !profilePicButtonCancel
 		|| !pongWinrateDiv || !snakeWinrateDiv) {
@@ -117,21 +117,20 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 		});
 
 		const data = await res.json();
-		if (userInfoMsg) {
-			userInfoMsg.classList.toggle('opacity-0');
-			userInfoMsg.classList.toggle('opacity-100');
+		if (!res.ok){
+			userInfoMsg.classList.remove('opacity-0');
 			if (!res.ok){
 				userInfoMsg.textContent = data.error;
 				userInfoMsg.style.color = 'red';
 			} 
 			setTimeout(async () => {
-				userInfoMsg.classList.toggle('opacity-100');
-				userInfoMsg.classList.toggle('opacity-0');
+				userInfoMsg.classList.add('opacity-0');
 			}, 2000);
 		}
 		usernameSpan.innerText = data.name;
 		mailSpan.innerText = data.mail;
-		dblFaBox.checked = data.enable2FA || false;
+		dblFaBox.checked = data.enable2FA;
+		console.log(`2fa = ${data.enable2FA}`);
 
 		const resImg = await fetch(`${USERS_URL}/get-avatar/${userId}`, {
 			method: "GET",
@@ -148,27 +147,54 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 			profilePic.src = imgUrl;
 		} else {
 			if (userPicMsg) {
-				userPicMsg.classList.toggle('opacity-0');
-				userPicMsg.classList.toggle('opacity-100');
+				userPicMsg.classList.remove('opacity-0');
 				userPicMsg.textContent = "Failed loading profile picture";
 				userPicMsg.style.color = 'red';
 				setTimeout(async () => {
-					userPicMsg.classList.toggle('opacity-100');
-					userPicMsg.classList.toggle('opacity-0');
+					userPicMsg.classList.add('opacity-0');
 				}, 2000);
 			}
 			profilePic.src = "./img/cristal_profile_base.jpg";
 			console.error("Fetch user profile picture failed");
 		}
 
-		dblFaBox.addEventListener('change', async () => {
+		dblFaBox.onclick = async () => {
 			if (dblFaBox.checked){
  				if (!confirm("Enable double authentification ?")){
 					dblFaBox.checked = false;
 					return ;
 				}
 
-				const res = await fetch(`${window.location.origin}/auth_service/enable2fa/${userId}`, {
+				const res = await fetch(`${USERS_URL}/enable2fa/${userId}`, {
+					method: "POST",
+					headers: {
+						"x-user-id": userId,
+						"authorization": `Bearer ${token}`
+					},
+				});
+
+				const data = await res.json();
+				if (!res.ok){
+					userInfoMsg.style.color = 'red';
+					userInfoMsg.textContent = data.error;
+					dblFaBox.checked = false;
+					userInfoMsg.classList.remove('opacity-0');
+					setTimeout(() => {userInfoMsg.classList.add('opacity-0')}, 2000);
+					return ;
+				}
+				userInfoMsg.style.color = 'green';
+				userInfoMsg.textContent = data.message + " | Please SCAN THE QRCode mon copain";
+				userInfoMsg.classList.remove('opacity-0');
+				setTimeout(() => {userInfoMsg.classList.add('opacity-0')}, 2000);
+				window.open(`${data.qrcodedata}`);
+			}
+			if (!dblFaBox.checked){
+ 				if (!confirm("Disable double authentification ?")){
+					dblFaBox.checked = true;
+					return ;
+				}
+				
+				const res = await fetch(`${USERS_URL}/remove2fa/${userId}`, {
 					method: "POST",
 					headers: {
 						"authorization": `Bearer ${token}`,
@@ -180,19 +206,18 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 				if (!res.ok){
 					userInfoMsg.style.color = 'red';
 					userInfoMsg.textContent = data.error;
-					return ;
-				}
-
-
-			}
-			if (!dblFaBox.checked){
- 				if (!confirm("Disable double authentification ?")){
 					dblFaBox.checked = true;
+					userInfoMsg.classList.remove('opacity-0');
+					setTimeout(() => {userInfoMsg.classList.add('opacity-0')}, 2000);
 					return ;
 				}
+				userInfoMsg.style.color = 'green';
+				userInfoMsg.textContent = data.message;
+				userInfoMsg.classList.remove('opacity-0');
+				setTimeout(() => {userInfoMsg.classList.add('opacity-0')}, 2000);
 			}
 
-		});
+		};
 
 		// #endregion display //
 
@@ -253,8 +278,7 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 				});
 
 				if (userPicMsg) {
-					userPicMsg.classList.toggle('opacity-0');
-					userPicMsg.classList.toggle('opacity-100');
+					userPicMsg.classList.remove('opacity-0');
 					if (res.ok) {
 						userPicMsg.textContent = "Upload success";
 						userPicMsg.style.color = "green";
@@ -264,8 +288,7 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 						userPicMsg.style.color = "red";
 					}
 					setTimeout(async () => {
-						userPicMsg.classList.toggle('opacity-100');
-						userPicMsg.classList.toggle('opacity-0');
+						userPicMsg.classList.add('opacity-0');
 					}, 2000);
 				}
 				if (!res.ok) {
@@ -342,15 +365,13 @@ async function displayFriendList(userId: string, token: string, ulFriendsList: H
 			},
 		});
 		if (friendListMsg) {
-			friendListMsg.classList.toggle('opacity-0');
-			friendListMsg.classList.toggle('opacity-100');
+			friendListMsg.classList.remove('opacity-0');
 			if (!res.ok) {
 				friendListMsg.textContent = "Loading Failure";
 				friendListMsg.style.color = "red";
 			}
 			setTimeout(async () => {
-				friendListMsg.classList.toggle('opacity-0');
-				friendListMsg.classList.toggle('opacity-100');
+				friendListMsg.classList.add('opacity-0');
 			}, 2000);
 		}
 		if (!res.ok) {
@@ -548,13 +569,11 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 		else if (!onlineData.online) {
 			const errorMsg: HTMLDivElement = document.getElementById("friendListMsg") as HTMLDivElement;
 			if (errorMsg) {
-				errorMsg.classList.toggle('opacity-0');
-				errorMsg.classList.toggle('opacity-100');
+				errorMsg.classList.remove('opacity-0');
 				errorMsg.textContent = "Cannot invite an offline user";
 				errorMsg.style.color = 'red';
 				setTimeout(() => {
-					errorMsg.classList.toggle('opacity-100');
-					errorMsg.classList.toggle('opacity-0');
+					errorMsg.classList.add('opacity-0');
 				}, 2000);
 			}
 			return ;
