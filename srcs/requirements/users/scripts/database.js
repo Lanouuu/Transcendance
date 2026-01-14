@@ -3,7 +3,6 @@ import Database from 'better-sqlite3';
 export async function initDB() {
     const usersDB = new Database('./data/usersDB.db');
     
-    ///// REMETTRE WIN ET LOSSES A DEFAULT 0 !!!!!!!!!!!!!!!!!!!!!!!!!!
     usersDB.exec(
         `CREATE TABLE IF NOT EXISTS users (
             id          	INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -14,10 +13,10 @@ export async function initDB() {
             secret2FA   	TEXT DEFAULT NULL,
             auth_type   	TEXT DEFAULT 'local',
             avatar_path 	TEXT NOT NULL DEFAULT 'default.png',
-            pong_wins       INTEGER DEFAULT 2,
-            pong_losses     INTEGER DEFAULT 2,
-            snake_wins      INTEGER DEFAULT 1,
-            snake_losses    INTEGER DEFAULT 1,
+            pong_wins       INTEGER DEFAULT 0,
+            pong_losses     INTEGER DEFAULT 0,
+            snake_wins      INTEGER DEFAULT 0,
+            snake_losses    INTEGER DEFAULT 0,
             is_guest        BOOLEAN DEFAULT 0,
             created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
         );
@@ -51,17 +50,5 @@ export async function initDB() {
             sent_at         DATETIME DEFAULT CURRENT_TIMESTAMP
         );`
     );
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// A SUPPRIMER
-    usersDB.exec(`INSERT INTO matches 
-        (player1_id, player1_name, player2_id, player2_name, winner_id, score_p1, score_p2, match_type, game_type)
-        VALUES 
-            (1, 'alice', 2, 'bob', 1, 5, 0, 'remote', 'pong'),
-            (1, 'alice', 2, 'bob', 2, 0, 5, 'remote', 'pong'),
-            (1, 'alice', 2, 'bob', 1, 5, 0, 'tournament', 'pong'),
-            (1, 'alice', 2, 'bob', 2, 0, 5, 'tournament', 'pong'),
-            (1, 'alice', 2, 'bob', 1, 5, 0, 'remote', 'snake'),
-            (1, 'alice', 2, 'bob', 2, 0, 5, 'remote', 'snake')
-    `);
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// A SUPPRIMER
     return usersDB;
 }

@@ -22,7 +22,7 @@ RUN test -f /app/www/css/output.css || (echo "ERROR: output.css not generated!" 
 FROM nginx:stable-alpine
 
 #supprimer bash une fois le projet termine !!!
-RUN apk add --no-cache bash openssl
+RUN apk add --no-cache openssl
 
 # A SUPPRIMER | Seulement pour le dev
 RUN apk add --no-cache npm inotify-tools
