@@ -25,12 +25,6 @@ export async function displayAccountPage() {
 			'tab': document.getElementById("friendsTabLi") as HTMLLIElement,
 			'fctn': () => showFriendsTab(userId, token)
 		},
-		'stats': {
-			'div': document.getElementById("statsTab") as HTMLDivElement,
-			'btn': document.getElementById("statsTabButton") as HTMLButtonElement,
-			'tab': document.getElementById("statsTabLi") as HTMLLIElement,
-			'fctn': () => showStatsTab()
-		},
 		'history': {
 			'div': document.getElementById("historyTab") as HTMLDivElement,
 			'btn': document.getElementById("historyTabButton") as HTMLButtonElement,
@@ -41,7 +35,6 @@ export async function displayAccountPage() {
 
 	if (!tabTable.infos.div || !tabTable.infos.btn || !tabTable.infos.tab
 		|| !tabTable.friends.div || !tabTable.friends.btn || !tabTable.friends.tab
-		|| !tabTable.stats.div || !tabTable.stats.btn || !tabTable.stats.tab
 		|| !tabTable.history.div || !tabTable.history.btn || !tabTable.history.tab) {
 		console.error("HTML element not found: tab display / div / button");
 		return;
@@ -89,7 +82,7 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 
 	const usernameSpan: HTMLElement | null | undefined = document.getElementById("accountBoxUsername")?.querySelector("span");
 	const mailSpan: HTMLElement | null | undefined = document.getElementById("accountBoxMail")?.querySelector("span");
-	const dblFaBox: HTMLInputElement | null | undefined = document.getElementById("accountBox2fa")?.querySelector("input") as HTMLInputElement;
+	const dblFaBox: HTMLInputElement | null | undefined = document.getElementById("toggle2Fa") as HTMLInputElement;
 	const userInfoMsg: HTMLDivElement = document.getElementById("userInfosMsg") as HTMLDivElement;
 
 	const profilePic: HTMLImageElement | null | undefined = document.getElementById("accountBoxProfilePic")?.querySelector("img") as HTMLImageElement;
@@ -167,6 +160,11 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 			profilePic.src = "./img/cristal_profile_base.jpg";
 			console.error("Fetch user profile picture failed");
 		}
+
+		dblFaBox.addEventListener('change', async () => {
+			if (!dblFaBox.checked && !confirm("Enable double authentification ?")) return ;
+			if (!confirm("Do you wish to enable double authentification ?")) return ; 
+		});
 
 		// #endregion display //
 
@@ -786,9 +784,7 @@ function createLiBlockedItem(blockedId: string, blockedName: string, userId: str
 }
 // #endregion FriendsTab //
 
-async function showStatsTab(): Promise<void> {
-	console.log('showStatsTab function called');
-}
+// #region HistoryTab //
 
 async function showHistoryTab(userId: string, token: string): Promise<void> {
 
@@ -905,3 +901,5 @@ function createLiHistoryItem(p1Name: string, p2Name: string, p1Score: string, p2
 
 	return (li);
 }
+
+// #endregion HistoryTab //

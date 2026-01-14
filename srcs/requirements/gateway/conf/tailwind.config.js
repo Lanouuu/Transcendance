@@ -28,11 +28,11 @@ module.exports = {
 			keyframes: {
 				'flowting-sm': {
 					'0%': { transform: 'translateY(0)' },
-					'100%': { transform: 'translateY(10px)' }
+					'100%': { transform: 'translateY(20px)' }
 				},
 				'flowting-lg': {
 					'0%': { transform: 'translateY(0)' },
-					'100%': { transform: 'translateY(-10px)' }
+					'100%': { transform: 'translateY(-20px)' }
 				}
 			},
 			animation: {
