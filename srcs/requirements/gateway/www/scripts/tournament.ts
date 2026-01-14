@@ -283,7 +283,6 @@ async function displayJoinedTournament(userId: string, token: string, tournament
 	const modeDiv: HTMLDivElement = document.getElementById("joinedTournamentMode") as HTMLDivElement;
 	const statusDiv: HTMLDivElement = document.getElementById("joinedTournamentStatus") as HTMLDivElement;
 	const creatorDiv: HTMLDivElement = document.getElementById("joinedTournamentCreator") as HTMLDivElement;
-	const participantsUl: HTMLUListElement = document.getElementById("joinedTournamentParticipants") as HTMLUListElement;
 	const adminDiv: HTMLDivElement = document.getElementById("tournamentAdminDiv") as HTMLDivElement;
 	const leaveButton: HTMLButtonElement = document.getElementById("leaveTournamentButton") as HTMLButtonElement;
 	const deleteButton: HTMLButtonElement = document.getElementById("deleteTournamentButton") as HTMLButtonElement;
@@ -292,7 +291,7 @@ async function displayJoinedTournament(userId: string, token: string, tournament
 
 	if (!tournamentCreationDiv || !joinedTournamentDiv || !tournamentListDiv
 		|| !nameDiv || !playerRatioDiv || !modeDiv || !statusDiv
-		|| !creatorDiv || !participantsUl || !leaveButton
+		|| !creatorDiv || !leaveButton
 		|| !adminDiv || !deleteButton || !startButton
 		|| !msgDiv) {
 		console.error("Could not get HTML elements");
@@ -320,19 +319,10 @@ async function displayJoinedTournament(userId: string, token: string, tournament
 		else creatorDiv.textContent = `Created by: ${dataCreator.name}`;
 		modeDiv.textContent = `Mode: ${data.tournament.mode}`;
 		statusDiv.textContent = `Status: ${data.tournament.status}`;
-		playerRatioDiv.textContent = `${data.tournament.nb_current_players}/${data.tournament.nb_max_players}`;
-
-		const frag: DocumentFragment = document.createDocumentFragment();
-		const participantsArray: string[] = createParticipantsArray(data.tournament.players_names);
-
-
-		for (let userName of participantsArray) {
-			const li: HTMLLIElement = document.createElement('li');
-			li.className = "min-w-0 truncate";
-			li.textContent = userName;
-			frag.appendChild(li);
-		}
-		participantsUl.appendChild(frag);
+		if (data.tournament.mode === 'local')
+			playerRatioDiv.textContent = `${data.tournament.nb_max_players}/${data.tournament.nb_max_players}`;
+		else
+			playerRatioDiv.textContent = `${data.tournament.nb_current_players}/${data.tournament.nb_max_players}`;
 
 		if (data.tournament.creator_id === userId) {
 			leaveButton.classList.add('hidden');
