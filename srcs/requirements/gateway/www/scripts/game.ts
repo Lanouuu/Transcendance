@@ -9,6 +9,7 @@ const snake_ws_route: string = `://${window.location.host}/second_game`;
 let pongSocket: WebSocket | null = null;
 let pongAnimationId: number | null = null;
 let pongTimeoutId: number | null = null;
+let game : Game;
 // Variables globales pour gérer le replay
 let currentSnakeGameMode: 'local' | 'remote' | null = null;
 let currentWebSocket: WebSocket | null = null;
@@ -321,33 +322,30 @@ export async function launchInvitGame(friendId: string, message: string) {
 }
 
 export function closePongSocket() {
-	if (pongSocket && pongSocket.readyState === WebSocket.OPEN) {
-		pongSocket.close();
-		pongSocket = null;
-		console.log("Closing websocket");
-	}
-
-	if (pongTimeoutId) {
-		clearTimeout(pongTimeoutId);
-		pongTimeoutId = null;
-	}
-
-	if (pongAnimationId) {
-		cancelAnimationFrame(pongAnimationId);
-		pongAnimationId = null;
-	}
-
-	const canvasDiv = document.getElementById('canvasDiv') as HTMLDivElement;
-
-	if (canvasDiv) {
-		canvasDiv.innerHTML = "";
+	console.log("game: ", game);
+	console.log("startTournament: ", startTournament);
+	if (game && startTournament) {
+		if (pongSocket && pongSocket.readyState === WebSocket.OPEN) {
+			pongSocket.close();
+			pongSocket = null;
+			console.log("Closing websocket");
+		}
+	
+		if (pongTimeoutId) {
+			clearTimeout(pongTimeoutId);
+			pongTimeoutId = null;
+		}
+	
+		if (pongAnimationId) {
+			cancelAnimationFrame(pongAnimationId);
+			pongAnimationId = null;
+		}
 	}
 }
 
 export async function gameLoop(gameId: Number, tournament_id: Number | undefined, message: String, userId: Number | undefined) {
 
 	try {
-		let game : Game;
 		const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
 		pongSocket = ws;
 		ws.addEventListener('open', (event) => {
@@ -362,9 +360,12 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 		ws.addEventListener('message', (event) => {
 			const serverGame = JSON.parse(event.data)
 			if (serverGame.message === "Init") {
+				if (!startTournament) {
+					startTournament = true;
+				}	
 				game = serverGame.game;
 				loadSprites(game);
-				pongTimeoutId = setTimeout(() => {
+				pongTimeoutId = window.setTimeout(() => {
 					gameAnimation(game);
 					pongTimeoutId = null;
 				}, 1000)
@@ -390,6 +391,7 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 				game.displayWinner = serverGame.displayWinner
 				game.player1.score = serverGame.player1.score
 				game.player2.score = serverGame.player2.score
+				startTournament = false;
 				if (game.mode !== "remote-tournament" && game.mode !== "local-tournament")
 					returnGamesSelection();
 			}
@@ -400,7 +402,6 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 				if (!startTournament) {
 					window.location.hash = '#game?tournament=yes';
 					window.dispatchEvent(new Event('hashchange'));
-					startTournament = true;
 				}			
 				console.log("Schedule names: ", serverGame.scheduleNames);
 				setTimeout(() => {

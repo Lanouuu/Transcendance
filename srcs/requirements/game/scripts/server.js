@@ -8,6 +8,7 @@ import {WebSocketServer} from 'ws';
 import fs from 'fs';
 import { imageSize } from "image-size";
 import { resolve } from 'dns';
+import { json } from 'stream/consumers';
 
 // TODO : - Clear socket pour tournoi local et recuperer alias -> DONE
 //        - Terminer gestion socket lors d'un changement de fenetre
@@ -347,12 +348,15 @@ function localGamehandler(game, ws) {
 }
 
 function remoteGamehandler(game, ws) {
-    if (ws.userId === undefined && game.socket.length === 0 && game.message !== "Pause") {
+    if (ws.userId === undefined && game.socket.length === 0 && game.message !== "Pause") { {
         ws.userId = game.player1.id;
+        console.log("ICI");
+    }
     } else if (ws.userId === undefined && game.socket.length === 1 && game.message !== "Pause") {
         ws.userId = game.player2.id;
         game.socket[0].send(JSON.stringify({name: game.player2.name}));
         game.message = "start";
+        console.log("ICI2");
     }
     else if (game.message === "Pause") {
         console.log("GAME FOUND IN HANDLER");
@@ -518,6 +522,19 @@ wss.on('connection', function connection(ws) {
                 //         if (Number(ws.userId) === Number(userId))
                 //     }
                 // }
+                if (game.mode === "remote" && game.message === "Waiting") {
+                    const queueIndex = queue.findIndex(data => Number(data[0]) === Number(ws.userId));
+                    if (queueIndex > -1) {
+                        queue.splice(queueIndex, 1);
+                        console.log("PLAYER REMOVED FROM QUEUE");
+                    }
+                    const pendingIndex = pendingRemoteGame.findIndex(game => Number(game.id) === Number(gameId));
+                    if (pendingIndex > -1) {
+                        pendingRemoteGame.splice(pendingIndex, 1);
+                        console.log("GAME REMOVED FROM QUEUE");
+                    }
+                    games.delete(Number(gameId));
+                }
                 game.socket = game.socket.filter(socket => socket.readyState != 3)
                 if (parseInt(game.player1.id, 10) === parseInt(ws.userId, 10))
                     game.player1.status = "Disconnected";
@@ -855,11 +872,14 @@ fastify.post("/remote", async (request, reply) => {
         for (const [gameId, game] of games.entries() ) {
             if (parseInt(game.player1.id, 10) === parseInt(userId, 10) || parseInt(game.player2.id, 10) === parseInt(userId, 10)) {
                 console.log("GAME FOUND");
-                if (game.message === "Pause") {
-                    console.log("GAME PAUSED");
+                // if (game.message === "Pause") {
+                //     console.log("GAME PAUSED");
+                if (game.message === "Pause")
                     reply.send({message: "Success", id: game.id});
-                    return ;
-                }
+                else
+                    reply.code(400).send(JSON.stringify({message: "Error", error: "You're already in game"}));
+                return ;
+                // }
             }           
         }
         if (!message)
