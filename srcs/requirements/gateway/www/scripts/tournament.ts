@@ -172,7 +172,7 @@ async function displayTournamentAlias(tournamentMode: string, maxPlayer: string)
 	const inputList: HTMLInputElement[] = [];
 	for (let i = 0; i < Number(realMaxPlayer); i++) {
 		const input = document.createElement('input');
-		input.className = `w-4/6 p-2
+		input.className = `w-4/6 p-2 h-[8%]
                         shadow-[inset_3px_3px_6px_rgba(0,0,0,0.5),_inset_-3px_-3px_6px_rgba(255,255,255,0.1)]
                         focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.1)]
                         rounded-xl 
