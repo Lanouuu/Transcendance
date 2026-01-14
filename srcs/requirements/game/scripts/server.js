@@ -7,12 +7,7 @@ import cors from '@fastify/cors';
 import {WebSocketServer} from 'ws';
 import fs from 'fs';
 import { imageSize } from "image-size";
-import { resolve } from 'dns';
-import { json } from 'stream/consumers';
 
-// TODO : - Clear socket pour tournoi local et recuperer alias -> DONE
-//        - Terminer gestion socket lors d'un changement de fenetre
-//        - Mettre fin a la partie si les 2 joueurs perdent la connexion ou attendre (a voir)
 const fastify = Fastify({
     logger: true,
     connectionTimeout: 120000,
