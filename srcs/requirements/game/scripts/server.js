@@ -685,7 +685,7 @@ fastify.get("/local", async (request, reply) => {
     try {
         const userId = request.headers["x-user-id"]
         const game = new Game({
-          id: parseInt(userId, 10),
+          id: Number(userId),
           socket: [],
           mode: 'local',
           message: 'start'
@@ -726,7 +726,7 @@ function getAlias(id, tournamentId) {
         return null;
     const aliases = tournamentAlias.get(Number(tournamentId));
     for (const [userId, alias] of aliases) {
-        if (parseInt(userId, 10) === parseInt(id, 10)) {
+        if (Number(userId) === Number(id)) {
             return alias;
         }            
     }
@@ -758,7 +758,7 @@ async function private_matchmaking(message, userId, body, headers, reply) {
 
         let gameFound = false;
         for (const [gameId, game] of games.entries() ) {
-            if (parseInt(game.player1.id, 10) === parseInt(friendId, 10)) {
+            if (Number(game.player1.id) === Number(friendId)) {
                 gameFound = true;
                 game.player2.id = userId;
                 game.player2.name = await getUserName(userId);
@@ -791,7 +791,7 @@ async function private_matchmaking(message, userId, body, headers, reply) {
             throw new Error("Friend id required");
 
         for (const [gameId, game] of games.entries() ) {
-            if (parseInt(game.player1.id, 10) === parseInt(friendId, 10)) {
+            if (Number(game.player1.id) === Number(friendId)) {
                 game.socket[0].send(JSON.stringify({message: "deny-invit"}));
                 break;
             }           
@@ -816,7 +816,7 @@ async function public_matchmaking(userId, reply) {
     queue.push([userId, await getUserName(userId)]);
     if (findRemotePendingGame() === false) {
         const game = new Game({
-            id: parseInt(userId, 10),
+            id: Number(userId),
             socket: [],
             mode: 'remote',
             message: "Waiting"
@@ -853,7 +853,7 @@ fastify.post("/remote", async (request, reply) => {
 	    const userId = request.headers["x-user-id"];
 
         for (const [gameId, game] of games.entries() ) {
-            if (parseInt(game.player1.id, 10) === parseInt(userId, 10) || parseInt(game.player2.id, 10) === parseInt(userId, 10)) {
+            if (Number(game.player1.id) === Number(userId) || Number(game.player2.id) === Number(userId)) {
                 console.log("GAME FOUND");
                 if (game.message === "Pause") {
                     console.log("GAME PAUSED");
@@ -883,7 +883,7 @@ async function createLocalTournament(match, rmId, id) {
     return new Promise(async (resolve, reject) => {
         try {
             const game = new Game({
-                id: parseInt(match[0], 10),
+                id: Number(match[0]),
                 socket: [],
                 mode: 'local-tournament',
                 status: 'Playing',
@@ -965,7 +965,7 @@ fastify.post("/localTournament", async (request, reply) => {
         reply.send({message: "Success", winner: winner});
         //cleanup
         tournamentAlias.delete(Number(id)); 
-        tournamentSocket.delete(parseInt(rmId, 10));
+        tournamentSocket.delete(Number(rmId));
         console.log("Tournament alias after tournament end: ", tournamentAlias);
         webSocket.close();
     }catch(err) {
@@ -980,7 +980,7 @@ async function createRemoteTournament(match, tournamentId) {
     return new Promise(async (resolve, reject) => {
         try {
             const game = new Game({
-                id: parseInt(match[0], 10),
+                id: Number(match[0]),
                 socket: [],
                 mode: 'remote-tournament',
                 status: 'Playing',
@@ -991,26 +991,24 @@ async function createRemoteTournament(match, tournamentId) {
             game.player1.name = getAlias(match[0], tournamentId);
             game.player2.id = match[1];
             game.player2.name = getAlias(match[1], tournamentId);
-            if (tournamentSocket.get(parseInt(match[0])) === undefined) {
+            if (tournamentSocket.get(Number(match[0])) === undefined) {
                 game.player1.status = "Disconnected";
                 game.message = "Pause";
                 game.timer = 30;
                 console.log("Player 1 disconnected");
             }
             else {
-                game.socket.push(tournamentSocket.get(parseInt(match[0])));
-                // game.socket[0].surname = game.player1.name;
+                game.socket.push(tournamentSocket.get(Number(match[0])));
                 game.player1.status = "Online";
             }
-            if (tournamentSocket.get(parseInt(match[1])) === undefined) {
+            if (tournamentSocket.get(Number(match[1])) === undefined) {
                 game.player2.status = "Disconnected";
                 game.message = "Pause";
                 game.timer = 30;
                 console.log("Player 2 disconnected");
             }
             else {
-                game.socket.push(tournamentSocket.get(parseInt(match[1])));
-                // game.socket[1].surname = game.player2.name;
+                game.socket.push(tournamentSocket.get(Number(match[1])));
                 game.player2.status = "Online";
             }
             game.tournament_id = tournamentId;
@@ -1046,7 +1044,7 @@ function sendTournamentResult(id) {
     scores.sort((score1, score2) => score2[1] - score1[1]);
     console.log("APRES LE TRI: ", scores);
     for (const socket of tournamentSocket.values()) {
-        if (parseInt(socket.tournament_id, 10) === parseInt(id, 10))
+        if (Number(socket.tournament_id) === Number(id))
             socket.send(JSON.stringify({message: "TournamentEnd", winner: scores[0][0]}))
     }
     return scores[0][0];
@@ -1118,44 +1116,48 @@ fastify.post("/input", async (request, reply) => {
         if (!userId)
             throw new Error("User id required");
         if (key) {
-            if (!games.has(parseInt(gameId, 10))) {
-                reply.send(JSON.stringify({ error: "Game not found" }));
+            if (!games.has(Number(gameId))) {
+                reply.code(400).send(JSON.stringify({ error: "Game not found" }));
                 return;
             }
-            const game = games.get(parseInt(gameId, 10));
-            if (game.message === "Playing") {
-                if (game.mode === "local") {
-                    localInputHandler(game, key, "keydown");
-                    updatePlayersPosition(game);
-                    localInputHandler(game, key, "keyup");
+            const game = games.get(Number(gameId));
+            if (Number(userId) === Number(game.player1.id) || Number(userId) === Number(game.player2.id)) {
+                if (game.message === "Playing") {
+                    if (game.mode === "local" || game.mode === "local-tournament") {
+                        localInputHandler(game, key, "keydown");
+                        updatePlayersPosition(game);
+                        localInputHandler(game, key, "keyup");
+                    }
+                    else if (game.mode === "remote" || game.mode === "remote-tournament") {
+                        remoteInputHandler(game, userId, key, "keydown");
+                        updatePlayersPosition(game);
+                        remoteInputHandler(game, userId, key, "keyup");
+                    }
                 }
-                else if (game.mode === "remote" || game.mode === "tournament") {
-                    remoteInputHandler(game, userId, key, "keydown");
-                    updatePlayersPosition(game);
-                    remoteInputHandler(game, userId, key, "keyup");
-                }
+                else
+                    throw new Error("Game haven't started yet");
             }
             else
-                throw new Error("Game haven't started yet");
+                reply.code(403).send(JSON.stringify({error: "Forbidden"}));
         }
     } catch (e) {
         console.log("Error, in API ROUTE INPUT: ", e.message);
-        reply.send(JSON.stringify({ error: e.message }));
+        reply.code(400).send(JSON.stringify({ error: e.message }));
     }
 })
 
 
 fastify.get("/state/:id", async (request, reply) => {
     try {
-        const id = parseInt(request.params.id, 10);
+        const id = Number(request.params.id);
         if (!games.has(id)) {
-            return reply.status(404).send({ error: "Game not found" });
+            return reply.code(404).send({ error: "Game not found" });
         }
         const game = games.get(id);
         console.log("GAME FOUND");
         reply.send(JSON.stringify(game));
     }catch(e) {
-        reply.status(404).send({ error: e.message });
+        reply.code(404).send({ error: e.message });
     }
 })
 
