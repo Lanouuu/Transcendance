@@ -430,8 +430,6 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 			}
 			if (ws.readyState === WebSocket.OPEN && game && game.message === "Playing")
 				ws.send(JSON.stringify({id: game.id, message: "input", key, event: "keydown"}))
-			else
-				console.error("WebSocket is not open")
 		})
 
 		window.addEventListener('keyup', (e) => {
@@ -452,8 +450,6 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 			}
 			if (ws.readyState === WebSocket.OPEN && game && game.message === "Playing")
 				ws.send(JSON.stringify({id: game.id, message: "input", key, event: "keyup"}))
-			else
-				console.error("WebSocket is not open")
 		})
 
 	} catch (error) {
