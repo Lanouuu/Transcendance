@@ -287,7 +287,7 @@ export async function runServer() {
         if (reqID !== id) {
           stmt = usersDB.prepare("SELECT id, name, pong_wins, pong_losses, snake_wins, snake_losses FROM users WHERE id = ?");
         } else {
-          stmt = usersDB.prepare("SELECT id, name, mail, pong_wins, pong_losses, snake_wins, snake_losses, created_at FROM users WHERE id = ?");
+          stmt = usersDB.prepare("SELECT id, name, mail, enable2FA, pong_wins, pong_losses, snake_wins, snake_losses, created_at FROM users WHERE id = ?");
         }
         const user = stmt.get(id);
         if (!user) {
@@ -298,6 +298,7 @@ export async function runServer() {
           id: user.id,
           name: user.name,
           mail: String(reqID) === String(id) ? user.mail : undefined,
+          enable2FA: user.enable2FA,
           pong_wins: user.pong_wins,
           pong_losses: user.pong_losses,
           snake_wins: user.snake_wins,
@@ -523,7 +524,7 @@ export async function runServer() {
         const updateStmt = usersDB.prepare("UPDATE users SET enable2FA = ?, secret2FA = ? WHERE id = ?");
         updateStmt.run(0, null, id);
 
-        return reply.status(200).send({message: "2FA removed"});
+        return reply.status(200).send({message: "2FA disabled"});
 
         } catch (err) {
           fastify.log.error(err);

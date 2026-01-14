@@ -22,14 +22,6 @@
 				</button>
 			</li>
 
-			<li id="statsTabLi" class="accountBoxTabItems accountBoxInactiveTab">
-				<button id="statsTabButton" class="accountBoxTabButtons">
-
-					Stats
-
-				</button>
-			</li>
-
 			<li id="historyTabLi" class="accountBoxTabItems accountBoxInactiveTab rounded-br-3xl">
 				<button id="historyTabButton" class="accountBoxTabButtons">
 
@@ -110,18 +102,36 @@
 							?
 						</span>
 					</p>
+
 					<p id="accountBoxMail" class="text-center w-full">
 						Mail<br>
 						<span class="text-5xl break-words block">
 							?
 						</span>
 					</p>
-					<p id="accountBox2fa" class="text-center w-full flex flex-col items-center justify-normal">
-						2FA<br>
-						<input type="checkbox" disabled>
-					</p>
 
-					<div id="userInfosMsg" class="opacity-0 absolute -top-2
+					<div class="flex flex-col items-center justify-center gap-4
+						w-full
+					">
+						<h1>2FA</h1>
+	    				<label class="relative inline-flex items-center cursor-pointer">
+	    					<input id="toggle2Fa" type="checkbox" class="sr-only peer">
+	    					<div class="w-16 h-8 rounded-full
+								bg-dark
+								peer peer-checked:bg-prim
+								transition-colors duration-300
+							"></div>
+	    					<div class="absolute left-1 top-1
+								w-6 h-6 rounded-full
+								bg-white
+								shadow
+								peer-checked:translate-x-8
+								transition-transform duration-300
+							"></div>
+	    				</label>
+  					</div>
+
+					<div id="userInfosMsg" class="opacity-0 absolute bottom-4
 						text-center h-4 text-xl
 						transition-all duration-200 ease-in-out
 					"></div>
@@ -375,13 +385,6 @@
 
 			</div>
 
-
-		</div>
-
-		<!-- Stats -->
-		<div id="statsTab" class="statsLayout hidden">
-
-			OUAI LES STATS
 
 		</div>
 
