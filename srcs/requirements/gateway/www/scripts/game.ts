@@ -214,32 +214,49 @@ async function launchRemoteGame() {
 export function displayNextMatch(scheduleNames: string[]) {
 	const nextMatchMsg: HTMLDivElement = document.getElementById("nextMatchMsg") as HTMLDivElement;
 	const nextMatchInfo: HTMLParagraphElement = document.getElementById("nextMatchInfos") as HTMLParagraphElement;
+	const waitingMatchMsg: HTMLDivElement = document.getElementById("waitingMatchMsg") as HTMLDivElement;
+	const userId: string | null = sessionStorage.getItem("userId");
 	if (!nextMatchMsg || !nextMatchInfo) {
 		console.error("Could not find next match");
 		return;
 	}
 
-	if (scheduleNames[0] === undefined)
-		return ;
+	if (!scheduleNames || scheduleNames.length === 0) {
+		nextMatchMsg.classList.add('hidden');
+		if (waitingMatchMsg) {
+			waitingMatchMsg.classList.remove('hidden');
+		}
+		return;
+	}
 
-	nextMatchInfo.textContent = `${scheduleNames[0][0]} vs ${scheduleNames[0][1]}`;
+	const nextMatch = scheduleNames[0] as any;
+	nextMatchInfo.textContent = `${nextMatch[0]} vs ${nextMatch[1]}`;
 	nextMatchMsg.classList.remove('hidden');
+	if (waitingMatchMsg) {
+		waitingMatchMsg.classList.add('hidden');
+	}
 }
 
 function hideNextMatch() {
 	const nextMatchMsg: HTMLDivElement = document.getElementById("nextMatchMsg") as HTMLDivElement;
+	const waitingMatchMsg: HTMLDivElement = document.getElementById("waitingMatchMsg") as HTMLDivElement;
 	if (nextMatchMsg) {
 		nextMatchMsg.classList.add('hidden');
+	}
+	if (waitingMatchMsg) {
+		waitingMatchMsg.classList.add('hidden');
 	}
 }
 
 function displayTournamentEnd(winner: string) {
 	const tournamentResult: HTMLHeadingElement = document.getElementById('tournamentResult') as HTMLHeadingElement;
 	const returnTourButton: HTMLButtonElement = document.getElementById('ReturnTourButton') as HTMLButtonElement;
+	const waitingMatchMsg: HTMLDivElement = document.getElementById("waitingMatchMsg") as HTMLDivElement;
 
 	tournamentResult.textContent = `The winner is 🏆 ${winner}`;
 	tournamentResult.classList.remove('hidden');
 	returnTourButton.classList.remove('hidden');
+	waitingMatchMsg.classList.add('hidden');
 
 	returnTourButton.onclick = () => {
 		window.location.hash = "#tournament";
