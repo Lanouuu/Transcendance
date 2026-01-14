@@ -844,7 +844,9 @@ fastify.post("/localTournament", async (request, reply) => {
             j = 0;
             i++;
         }
-        // const winner = sendTournamentResult(id);
+        if (webSocket.readyState === 1) {
+            webSocket.send(JSON.stringify({message: "TournamentEnd", winner: "Local Champion"}));
+        }
         reply.send({message: "Success"});
         for (i = 0; i < Number(nb_player); i++) {
             tournamentAlias = tournamentAlias.filter(([id, alias]) => parseInt(id, 10) !== parseInt(webSocket.userId, 10) + i)
