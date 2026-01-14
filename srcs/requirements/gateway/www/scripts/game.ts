@@ -243,6 +243,7 @@ function displayTournamentEnd(winner: string) {
 
 	returnTourButton.onclick = () => {
 		window.location.hash = "#tournament";
+		window.dispatchEvent(new Event('hashchange'));
 	}
 }
 
@@ -372,7 +373,7 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 				game.displayWinner = serverGame.displayWinner
 				game.player1.score = serverGame.player1.score
 				game.player2.score = serverGame.player2.score
-				if (game.mode !== "remote-tournament")
+				if (game.mode !== "remote-tournament" && game.mode !== "local-tournament")
 					returnGamesSelection();
 			}
 			else if (game && serverGame.message === "Pause") {
