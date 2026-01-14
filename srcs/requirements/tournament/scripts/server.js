@@ -150,10 +150,33 @@ export async function runServer() {
         );
         console.log(`Player ${userId} left tournament ${tournament_id}`);
       }
+      const res = await fetch(`https://game:3002/deleteAlias`, {
+        method: "POST",
+        headers: {
+          "x-user-id": userId,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({tournament_id: tournament_id})
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        console.error(`Server error ${res.status}:`, text);
+        throw new Error(`Failed to load the game`);
+      }
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error(`Server did not return JSON`, text);
+        throw new Error(`Server response is not JSON`);
+      }
+      
+      const response = await res.json();
+      if (response.message !== "Success")
+        throw new Error(response.error);
       reply.code(200).send({ message: "Success", text: "Player removed from tournament" });
     } catch(err) {
       fastify.log.error({ err }, "Leave tournament failed");
-      reply.code(400).send({error: "Failed to leave tournament"});
+      reply.code(400).send({error: err.message});
     }
   });
 
