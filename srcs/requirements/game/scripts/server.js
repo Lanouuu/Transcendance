@@ -694,8 +694,22 @@ fastify.post("/deleteAlias", async (request, reply) => {
 
 // #region local
 fastify.get("/local", async (request, reply) => {
+    const userId = request.headers["x-user-id"];
+    
+    for (const [gameId, game] of games.entries() ) {
+        if (parseInt(game.player1.id, 10) === parseInt(userId, 10) || parseInt(game.player2.id, 10) === parseInt(userId, 10)) {
+            console.log("GAME FOUND");
+            // if (game.message === "Pause") {
+            //     console.log("GAME PAUSED");
+            if (game.message === "Pause")
+                reply.send({message: "Success", id: game.id});
+            else
+                reply.code(400).send(JSON.stringify({message: "Error", error: "You're already in game"}));
+            return ;
+            // }
+        }           
+    }
     try {
-        const userId = request.headers["x-user-id"]
         const game = new Game({
           id: parseInt(userId, 10),
           socket: [],

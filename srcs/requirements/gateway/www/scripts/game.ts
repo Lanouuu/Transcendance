@@ -10,11 +10,12 @@ let pongSocket: WebSocket | null = null;
 let pongAnimationId: number | null = null;
 let pongTimeoutId: number | null = null;
 let game : Game;
+let selectedGame : String | null = null;
 // Variables globales pour gérer le replay
 let currentSnakeGameMode: 'local' | 'remote' | null = null;
 let currentWebSocket: WebSocket | null = null;
 let currentAnimationId: number | null = null;
-let startTournament: boolean = false;
+let start: boolean = false;
 
 async function checkToken(): Promise<boolean> {
 	const token = sessionStorage.getItem("jwt");
@@ -209,6 +210,7 @@ async function launchRemoteGame() {
 		}
 	} catch (err) {
 		console.error(err);
+		returnGamesSelection();
 	}
 }
 
@@ -323,28 +325,30 @@ export async function launchInvitGame(friendId: string, message: string) {
 
 export function closePongSocket() {
 	console.log("game: ", game);
-	console.log("startTournament: ", startTournament);
-	if (game && startTournament) {
-		if (pongSocket && pongSocket.readyState === WebSocket.OPEN) {
-			pongSocket.close();
-			pongSocket = null;
-			console.log("Closing websocket");
-		}
-	
-		if (pongTimeoutId) {
-			clearTimeout(pongTimeoutId);
-			pongTimeoutId = null;
-		}
-	
-		if (pongAnimationId) {
-			cancelAnimationFrame(pongAnimationId);
-			pongAnimationId = null;
+	console.log("start: ", start);
+	if (selectedGame === "Pong") {
+		if (game && start) {
+			if (pongSocket && pongSocket.readyState === WebSocket.OPEN) {
+				pongSocket.close();
+				pongSocket = null;
+				console.log("Closing websocket");
+			}
+		
+			if (pongTimeoutId) {
+				clearTimeout(pongTimeoutId);
+				pongTimeoutId = null;
+			}
+		
+			if (pongAnimationId) {
+				cancelAnimationFrame(pongAnimationId);
+				pongAnimationId = null;
+			}
 		}
 	}
 }
 
 export async function gameLoop(gameId: Number, tournament_id: Number | undefined, message: String, userId: Number | undefined) {
-
+	selectedGame = "Pong";
 	try {
 		const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
 		pongSocket = ws;
@@ -360,8 +364,8 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 		ws.addEventListener('message', (event) => {
 			const serverGame = JSON.parse(event.data)
 			if (serverGame.message === "Init") {
-				if (!startTournament) {
-					startTournament = true;
+				if (!start) {
+					start = true;
 				}	
 				game = serverGame.game;
 				loadSprites(game);
@@ -391,7 +395,7 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 				game.displayWinner = serverGame.displayWinner
 				game.player1.score = serverGame.player1.score
 				game.player2.score = serverGame.player2.score
-				startTournament = false;
+				start = false;
 				if (game.mode !== "remote-tournament" && game.mode !== "local-tournament")
 					returnGamesSelection();
 			}
@@ -399,10 +403,10 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 				game.message = serverGame.message;
 			}
 			else if (serverGame.message === "Schedule") {
-				if (!startTournament) {
+				if (!start) {
 					window.location.hash = '#game?tournament=yes';
 					window.dispatchEvent(new Event('hashchange'));
-				}			
+				}
 				console.log("Schedule names: ", serverGame.scheduleNames);
 				setTimeout(() => {
 					displayNextMatch(serverGame.scheduleNames);
@@ -414,7 +418,7 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 			else if (serverGame.message === "TournamentEnd") {
 				console.log("Vainqueur du tournois: ", serverGame.winner);
 				displayTournamentEnd(serverGame.winner);
-				startTournament = false;
+				start = false;
 			}				
 			else if (serverGame.message === "Error")
 				console.log("ERROR: ", serverGame.error);
