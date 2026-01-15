@@ -11,59 +11,84 @@ const fastify = Fastify({ logger: true });
 const PORT = parseInt(process.env.AUTH_PORT, 10);
 const HOST = process.env.AUTH_HOST;
 
-fastify.register(fastifyOauth2, {
+try {
+  await fastify.register(fastifyOauth2, {
     name: "fortyTwoOauth2",
     credentials: {
-        client: {
-            id: process.env.CLIENT_ID,
-            secret: process.env.CLIENT_SECRET,
-        },
-        auth: {
-            authorizeHost: "https://api.intra.42.fr",
-            authorizePath: process.env.APP_URI,
-            tokenHost: "https://api.intra.42.fr",
-            tokenPath: "/oauth/token",
-        },
+      client: {
+        id: process.env.CLIENT_ID,
+        secret: process.env.CLIENT_SECRET,
+      },
+      auth: {
+        authorizeHost: "https://api.intra.42.fr",
+        authorizePath: process.env.APP_URI,
+        tokenHost: "https://api.intra.42.fr",
+        tokenPath: "/oauth/token",
+      },
     },
     scope: ["public"],
     startRedirectPath: "/login/42",
     callbackUri: "https://localhost:8443/auth_service/login/42/callback",
-});
+  });
+} catch (err) {
+  fastify.log.error("OAuth2 registration failed:", err);
+  process.exit(1);
+}
 
-fastify.register(jwt, { secret: process.env.JWT_SECRET });
+try {
+  await fastify.register(jwt, { secret: process.env.JWT_SECRET });
+} catch (err) {
+  fastify.log.error("JWT registration failed:", err);
+  process.exit(1);
+}
 
-await fastify.register(cors, {
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true
-});
+try {
+  await fastify.register(cors, {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true
+  });
+} catch (err) {
+  fastify.log.error("CORS registration failed:", err);
+  process.exit(1);
+}
 
 fastify.decorate("authenticate", async function(request, reply) {
-try {
+  try {
     const authHeader = request.headers.authorization;
     if (!authHeader) {
-    return reply.status(401).send({ error: "No token provided" });
+      return reply.code(401).send({ error: "No token provided" });
     }
 
     const token = authHeader.split(" ")[1];
     if (!token) {
-        return reply.code(401).send({ error: "No token provided" });
+      return reply.code(401).send({ error: "No token provided" });
     }
-    console.log("verify token logout");
-    const decoded = await verifyToken(fastify,token);
+    
+    const decoded = await verifyToken(fastify, token);
     
     request.user = decoded;
     request.token = token;
-
-} catch (err) {
-    console.error("Auth error:", err);
-    reply.status(401).send({ error: "Not authorized" });
-}
+  } catch (err) {
+    fastify.log.error("Auth error:", err);
+    return reply.code(401).send({ error: "Not authorized" });
+  }
 });
 
-const dbSessions = await initDB();
+let dbSessions;
+try {
+  dbSessions = await initDB();
+} catch (err) {
+  fastify.log.error("Database initialization failed:", err);
+  process.exit(1);
+}
 
-fastify.register(authRoutes, { dbSessions });
+try {
+  await fastify.register(authRoutes, { dbSessions });
+} catch (err) {
+  fastify.log.error("Auth routes registration failed:", err);
+  process.exit(1);
+}
 
 fastify.listen({ port: PORT, host: HOST }, (err) => {
     if(err) {

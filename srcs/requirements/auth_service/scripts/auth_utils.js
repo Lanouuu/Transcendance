@@ -14,11 +14,27 @@ export async function verifyToken(fastify, token) {
     throw new Error("Invalid JWT");
   }
 
-  const db = await initDB();
+  let db;
+  try {
+    db = await initDB();
+  } catch (err) {
+    throw new Error("Database connection failed");
+  }
   
-  const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(token).digest("hex");;
+  let tokenHash;
+  try {
+    tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(token).digest("hex");
+  } catch (err) {
+    throw new Error("Token hash generation failed");
+  }
 
-  const session = await db.get( "SELECT * FROM sessions WHERE token_hash = ?", [tokenHash] );
+  let session;
+  try {
+    session = await db.get("SELECT * FROM sessions WHERE token_hash = ?", [tokenHash]);
+  } catch (err) {
+    throw new Error("Session lookup failed");
+  }
+
   if (!session) throw new Error("Token invalidated");
 
   return decoded;

@@ -16,7 +16,7 @@ export default async function routes(fastify, options) {
       try {
 
         if (!request.query.code) {
-          return reply.status(400).send({ error: "Authorization code is missing." });
+          return reply.code(400).send({ error: "Authorization code is missing." });
         }
 
         const token = await this.fortyTwoOauth2.getAccessTokenFromAuthorizationCodeFlow(request);
@@ -32,7 +32,7 @@ export default async function routes(fastify, options) {
 
       if (!userInfo.ok) {
         console.error("Erreur 42 API status:", userInfo.status, await userInfo.text());
-        return reply.code(400).send({ error: "Cannot fetch 42 profile" });
+        return reply.code(500).send({ error: "Cannot fetch 42 profile" });
       }
 
       const profile = await userInfo.json();
@@ -60,34 +60,44 @@ export default async function routes(fastify, options) {
         if(!createUser.ok) {
           const text = await createUser.text();
           console.error("Error while creating user :", text);
-          return reply.code(400).send({error: "User creation failed"})
+          return reply.code(500).send({error: "User creation failed"})
         }
         const userRes = await fetch(`http://users:3000/mail/${profile.email}`);
         if (!userRes.ok) {
           console.error("User not found after creation");
-          return reply.code(400).send({ error: "User not found after creation" });
+          return reply.code(500).send({ error: "User not found after creation" });
         }
         user = await userRes.json();
       }
 
       if(!user || !user.id) {
         console.error("User not found after creation");
-        return reply.code(400).send({ error: "User not found after creation"})
+        return reply.code(500).send({ error: "User not found after creation"})
       }
 
       const jwt = fastify.jwt.sign({id: user.id, mail: user.mail });
       
       const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(jwt).digest("hex");
-      await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
+      try {
+        await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
+      } catch (err) {
+        console.error("Erreur insertion session OAuth:", err);
+        return reply.code(500).send({ error: "Session creation failed" });
+      }
       
-      await redis.set(`user:${user.id}:online`, "1", "EX", 30);
+      try {
+        await redis.set(`user:${user.id}:online`, "1", "EX", 30);
+      } catch (err) {
+        console.error("Erreur Redis set OAuth:", err);
+        // Continue même si Redis échoue
+      }
 
       //reply.code(200).send({ token:jwt, id: user.id });
       reply.redirect(`https://localhost:8443/#/oauth42-success?token=${jwt}&id=${user.id}`);
 
       } catch (err) {
         console.error("OAuth 42 error:", err);
-        reply.code(400).send({ error: "OAuth 42 callback failed" });
+        reply.code(500).send({ error: "OAuth 42 callback failed" });
       }
     });
 
@@ -130,23 +140,34 @@ export default async function routes(fastify, options) {
 
       try {
         const rez = await fetch(`http://users:3000/name/${userName}`);
-        if(rez.ok) return reply.status(400).send({ error: "User name already in use" });
+        if(rez.ok) return reply.code(409).send({ error: "User name already in use" });
         const res = await fetch(`http://users:3000/mail/${mail}`);
-        if(res.ok) return reply.status(400).send({ error: "Mail already in use" });
+        if(res.ok) return reply.code(409).send({ error: "Mail already in use" });
       } catch (err) {
         console.error("Erreur de connexion au service user:", err);
-        return reply.status(400).send({ error: "User service unavailable" });
+        return reply.code(503).send({ error: "User service unavailable" });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      let hashedPassword;
+      try {
+        hashedPassword = await bcrypt.hash(password, 10);
+      } catch (err) {
+        console.error("Erreur bcrypt hash:", err);
+        return reply.code(500).send({ error: "Password processing failed" });
+      }
 
       let secret2FA = null;
       let qrcodedata = null;
 
       if(enable2FA) {
-        secret2FA = authenticator.generateSecret();
-        const otpauth = authenticator.keyuri(mail, "Transcendence42", secret2FA);
-        qrcodedata = await QRCode.toDataURL(otpauth);
+        try {
+          secret2FA = authenticator.generateSecret();
+          const otpauth = authenticator.keyuri(mail, "Transcendence42", secret2FA);
+          qrcodedata = await QRCode.toDataURL(otpauth);
+        } catch (err) {
+          console.error("Erreur génération 2FA:", err);
+          return reply.code(500).send({ error: "2FA setup failed" });
+        }
       }
 
       try {
@@ -167,51 +188,77 @@ export default async function routes(fastify, options) {
         throw new Error(errData.error || "User creation failed");
       }
 
-      return reply.status(201).send({message: "Signup successful!",userName, mail, qrcodedata });
+      return reply.code(201).send({message: "Signup successful!",userName, mail, qrcodedata });
 
       } catch (err) {
         fastify.log.error(err, "Error signup");
-        return reply.status(400).send({error: "Signup failed"});
+        return reply.code(500).send({error: "Signup failed"});
       }
     });
 
     // connexion
     fastify.post("/login", async (request, reply) => {
-      const { mail, password, code2FA } = request.body;
-      
-      let user;
-
       try {
-        const res = await fetch(`http://users:3000/mail/${mail}`);
-        if(!res.ok) return reply.status(400).send({ error: "User not found" });
-        user = await res.json();
-      } catch (err) {
-        console.error("Erreur de connexion au service user:", err);
-        return reply.status(400).send({error: "User service unavailable" });
-      }
-      
-      const isValid = await bcrypt.compare(password, user.password); 
-      if (!isValid) return reply.status(401).send({ error: "Invalid password"});
+        const { mail, password, code2FA } = request.body;
+        
+        let user;
 
-      if(user.enable2FA) {
-        if(!code2FA) {
-          return reply.status(400).send({error: "2FA code required" });
+        try {
+          const res = await fetch(`http://users:3000/mail/${mail}`);
+          if(!res.ok) return reply.code(401).send({ error: "User not found" });
+          user = await res.json();
+        } catch (err) {
+          console.error("Erreur de connexion au service user:", err);
+          return reply.code(503).send({error: "User service unavailable" });
         }
-        const isValid2FA = authenticator.check(code2FA, user.secret2FA);
-        if(!isValid2FA) return reply.status(401).send({error: "Invalid 2FA code"});
+        
+        let isValid;
+        try {
+          isValid = await bcrypt.compare(password, user.password);
+        } catch (err) {
+          console.error("Erreur bcrypt compare:", err);
+          return reply.code(500).send({ error: "Authentication failed" });
+        }
+        if (!isValid) return reply.code(401).send({ error: "Invalid password"});
+
+        if(user.enable2FA) {
+          if(!code2FA) {
+            return reply.code(400).send({error: "2FA code required" });
+          }
+          try {
+            const isValid2FA = authenticator.check(code2FA, user.secret2FA);
+            if(!isValid2FA) return reply.code(401).send({error: "Invalid 2FA code"});
+          } catch (err) {
+            console.error("Erreur vérification 2FA:", err);
+            return reply.code(500).send({ error: "2FA verification failed" });
+          }
+        }
+
+        const token = fastify.jwt.sign({id: user.id, mail: user.mail });
+
+        const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(token).digest("hex");
+        try {
+          await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
+        } catch (err) {
+          console.error("Erreur insertion session:", err);
+          return reply.code(500).send({ error: "Session creation failed" });
+        }
+
+        try {
+          await redis.set(`user:${user.id}:online`, "1", "EX", 30);
+        } catch (err) {
+          console.error("Erreur Redis set:", err);
+          // Continue même si Redis échoue
+        }
+
+        reply.code(200).send({
+          message: "Login successful!",
+          token,
+          id: user.id});
+      } catch (err) {
+        console.error("Erreur login:", err);
+        return reply.code(500).send({ error: "Login failed" });
       }
-
-      const token = fastify.jwt.sign({id: user.id, mail: user.mail });
-
-      const tokenHash = crypto.createHmac("sha256", SECRET_HMAC).update(token).digest("hex");
-      await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
-
-      await redis.set(`user:${user.id}:online`, "1", "EX", 30);
-
-      reply.code(200).send({
-        message: "Login successful!",
-        token,
-        id: user.id});
     });
 
     // deconnexion
@@ -236,17 +283,27 @@ export default async function routes(fastify, options) {
         const userID = String(payload.id);
         if (!userID) {
           fastify.log.warn("logout: no user id in token");
-          return reply.code(400).send({ error: "Invalid token payload" });
+          return reply.code(401).send({ error: "Invalid token payload" });
         }
 
-        await db.run("DELETE FROM sessions WHERE user_id = ?", [userID]);
+        try {
+          await db.run("DELETE FROM sessions WHERE user_id = ?", [userID]);
+        } catch (err) {
+          fastify.log.error({ err }, "Erreur suppression session");
+          return reply.code(500).send({ error: "Logout failed" });
+        }
 
-        const delCount = await redis.del(`user:${userID}:online`);
+        try {
+          await redis.del(`user:${userID}:online`);
+        } catch (err) {
+          fastify.log.error({ err }, "Erreur Redis del");
+          // Continue même si Redis échoue
+        }
 
         reply.send({ message: "Logged out" });
       } catch (err) {
         fastify.log.error(err, "logout error");
-        return reply.code(400).send({ error: "Logout failed" });
+        return reply.code(500).send({ error: "Logout failed" });
       }
     });
 }
