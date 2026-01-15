@@ -165,7 +165,7 @@ async function launchLocalGame() {
 
 		const response = await res.json();
 		if (response.message === "Success") {
-			gameLoop(parseInt(userId, 10), undefined, "InitLocal", undefined);
+			gameLoop(Number(response.id), undefined, String(response.state), undefined);
 		}
 	} catch (err) {
 		console.error(err);
@@ -206,7 +206,7 @@ async function launchRemoteGame() {
 		
 		const response = await res.json();
 		if (response.message === "Success") {;
-			gameLoop(parseInt(response.id, 10), undefined, "InitRemote", undefined);
+			gameLoop(Number(response.id), undefined, String(response.state), undefined);
 		}
 	} catch (err) {
 		console.error(err);
@@ -316,7 +316,7 @@ export async function launchInvitGame(friendId: string, message: string) {
 			} else {
 				console.log("CANCEL MATTCH BUTTON NOT FOUND");
 			}
-			gameLoop(Number(response.id), undefined, "InitRemote", undefined);
+			gameLoop(Number(response.id), undefined, String(response.state), undefined);
 		}
 	} catch (err) {
 		console.error(err);

@@ -102,14 +102,37 @@ export async function runServer() {
         return reply.code(400).send(JSON.stringify({error: "No tournament found"}))
       if (tourInfo.creator_id === userId && tourInfo.status === "pending") {
         await dbtour.run("DELETE FROM tournament WHERE id = ?", [tournament_id]);
+        const res = await fetch(`https://game:3002/deleteAlias`, {
+          method: "POST",
+          headers: {
+            "x-user-id": userId,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({tournament_id: tournament_id, message: "deleteTournament"})
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          console.error(`Server error ${res.status}:`, text);
+          throw new Error(`Failed to load the game`);
+        }
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await res.text();
+          console.error(`Server did not return JSON`, text);
+          throw new Error(`Server response is not JSON`);
+        }
+        
+        const response = await res.json();
+        if (response.message !== "Success")
+          throw new Error(response.error);
       }
       else {
         if(tourInfo.creator_id !== userId)
           return reply.code(403).send({error: "Can't delete tournament, you're not the creator"});
         if(tourInfo.status !== "pending")
           return reply.code(403).send({error: "Can't delete a playing tournament"});
-        reply.code(200).send({message: "Success"})
       }
+      reply.code(200).send({message: "Success"})
     }catch(err) {
       return reply.code(400).send(JSON.stringify({error: "Failed to fetch tournament information"}))
     }
@@ -156,7 +179,7 @@ export async function runServer() {
           "x-user-id": userId,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({tournament_id: tournament_id})
+        body: JSON.stringify({tournament_id: tournament_id, message: "deleteAlias"})
       });
       if (!res.ok) {
         const text = await res.text();
