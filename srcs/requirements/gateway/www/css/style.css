@@ -8,7 +8,6 @@
 	--color-accent: #CDC5F6;
 	--color-light: #BDD2CA;
 	--color-dark: #0C0F38;
-	--color-other: #dd5b5b;
 }
 
 .page {
@@ -72,8 +71,7 @@ body.loggedIn #signupNavLink {
 
 .mainLayout{
 	@apply flex grow flex-col
-	h-[calc(100vh-8rem-5rem)]
-	/* Ajouter du responsive */
+	h-[calc(100vh-8rem-5rem)];
 }
 
 /* #endregion main */
@@ -90,6 +88,8 @@ body.loggedIn #signupNavLink {
 .accountBoxLayout {
 	@apply grid grid-cols-[19fr_1fr]
 	h-4/5 w-3/5
+    hover:shadow-[0_-20px_80px_var(--color-accent)]
+    transition
 	rounded-3xl;
 }
 
@@ -108,7 +108,7 @@ body.loggedIn #signupNavLink {
 	text-white text-lg
 	bg-dark bg-opacity-60
 	transition-all duration-500 ease-in-out
-	hover:outline hover:-outline-offset-[3px];
+	hover:outline hover:outline-accent hover:-outline-offset-[3px];
 }
 
 .accountBoxTabItems.active {
@@ -138,6 +138,7 @@ body.loggedIn #signupNavLink {
 /* #region home */
 
 #homePage p b {
+	text-shadow: 0 0 6px rgba(255, 255, 255, 0.80), 0 0 15px rgba(255, 255, 255, 0.5);
 	@apply text-white antialiased font-bold;
 }
 
@@ -165,11 +166,11 @@ body.loggedIn #signupNavLink {
 /* #region tournament */
 
 .tournamentLayout {
-	@apply flex flex-col items-center gap-16
+	@apply flex flex-col items-center justify-center gap-16
 
 	h-[calc(100vh-8rem-5rem)] w-full
 
-	p-8
+	px-4 py-8
 
 	font-geo 
 	;

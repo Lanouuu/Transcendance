@@ -29,6 +29,11 @@ export async function displayTournamentPage() {
 	const loginRedirectButtonDiv: HTMLDivElement = document.getElementById('loginRedirectButtonDiv') as HTMLDivElement;
 	const loginRedirectButton: HTMLButtonElement = document.getElementById('loginRedirectButton') as HTMLButtonElement;
 
+	if (!loginRedirectButtonDiv || !loginRedirectButton) {
+		console.error("Could not get HTML elements");
+		return ;
+	}
+
 	const isOnline = await checkToken();
 	if (!isOnline) {
 		loginRedirectButtonDiv.classList.remove('hidden');
@@ -38,8 +43,9 @@ export async function displayTournamentPage() {
 	});
 	} else {
 
+		const tournamentDiv: HTMLDivElement = document.getElementById('tournamentDiv') as HTMLDivElement;
 		const tournamentPage: HTMLDivElement = document.getElementById('tournamentPage') as HTMLDivElement;
-		tournamentPage.classList.remove('hidden');
+		tournamentDiv.classList.remove('hidden');
 		const userId: string | null = sessionStorage.getItem("userId");
 		const token: string | null = sessionStorage.getItem("jwt");
 

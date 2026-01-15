@@ -45,8 +45,14 @@ export function signup() {
 								if (!confirmBtn) {
 									confirmBtn = document.createElement("button");
 									confirmBtn.classList.add("confirm-qr");
-									confirmBtn.textContent = "J'ai scanné le QR code";
+									confirmBtn.textContent = "QR code scanned";
 									confirmBtn.type = "button";
+									confirmBtn.className = "absolute right-80 top-1/2 translate-y-1/2 py-3 w-44 rounded-xl \
+															bg-prim bg-opacity-90 hover:bg-opacity-100 \
+															text-white font-semibold font-geo \
+															shadow-[inset_0_4px_6px_rgba(255,255,255,0.15),_3px_3px_6px_rgba(0,0,0,0.6),_-3px_-3px_6px_rgba(255,255,255,0.1)] \
+															hover:shadow-[inset_0_5px_7px_rgba(255,255,255,0.2),_4px_4px_10px_rgba(0,0,0,0.7),_-4px_-4px_10px_rgba(255,255,255,0.1)] \
+															transition"
 									form.appendChild(confirmBtn);
 									
 									confirmBtn.addEventListener("click", () => {

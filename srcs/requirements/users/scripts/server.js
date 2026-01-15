@@ -151,7 +151,7 @@ export async function runServer() {
         return reply.status(201).send({ token: data.token, id: data.id });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error: " + err.message });
+        return reply.status(400).send({ error: "Internal Server Error: " + err.message });
       }
     });
 
@@ -168,7 +168,7 @@ export async function runServer() {
         return reply.status(200).send({ isGuest: checkRes.is_guest });
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(500).send({ error: "Internal Server Error: " + err.message });
+        return reply.status(400).send({ error: "Internal Server Error: " + err.message });
       }
     });
 
