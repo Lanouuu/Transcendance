@@ -23,6 +23,12 @@ export function login() {
 					body: JSON.stringify({ mail, password, code2FA }),
 				});
 
+				const contentType = res.headers.get("content-type");
+				if (!contentType || !contentType.includes("application/json")){
+					console.error(`Invalid response format: ${res.status}`);
+					return ;
+				}
+
 				const data = await res.json();
 				const msg = document.getElementById("login-msg");
 				if (msg) {
@@ -77,12 +83,12 @@ export function login() {
 					body: JSON.stringify({}), 
 				});
 
-				// Debug: afficher ce que le serveur renvoie vraiment
-    	        if (res.redirected) {
-     	           console.error("Request was redirected! Check your gateway config.");
-      	          return;
-       	     	}
-
+				const contentType = res.headers.get("content-type");
+				if (!contentType || !contentType.includes("application/json")){
+					console.error(`Invalid response format: ${res.status}`);
+					return ;
+				}
+		
 				if (res.ok) 
 					console.log(res);
 				const data = await res.json();

@@ -108,6 +108,13 @@ class Router {
 				headers: { "Authorization": `Bearer ${token}` }
 			});
 
+			const contentType = response.headers.get("content-type");
+			if (!contentType || !contentType.includes("application/json")){
+				console.error(`Invalid response format: ${response.status}`);
+				this.cleanupSession();
+				return false;
+			}
+		
 			if (!response.ok) {
 				this.cleanupSession();
 				return false;
@@ -329,10 +336,6 @@ class Router {
 				return;
 			}
 
-			const nextBackgroundUrl: string = PAGE_BACKGROUNDS[page] || PAGE_BACKGROUNDS['home'];
-			const transitionDirection: string = this.getTransitionDirection(page);
-			// await this.animateBgTransition(nextBackgroundUrl, transitionDirection);
-
 			// Fetch the file corresponding to the attribute page
 			// Then gets its content as a text in the variabe content
 			const response = await fetch(`/pages/${page}.html`);
@@ -490,6 +493,13 @@ async function notificationHandler(): Promise<void> {
 					"authorization": `Bearer ${token}`,
 				},
 			});
+
+			const contentType = res.headers.get("content-type");
+			if (!contentType || !contentType.includes("application/json")){
+				console.error(`Invalid response format: ${res.status}`);
+				return ;
+			}
+
 			if (!res.ok) {
 				console.error("Could not fetch game invitations");
 				return;
@@ -511,6 +521,13 @@ async function notificationHandler(): Promise<void> {
 						"authorization": `Bearer ${token}`,
 					},
 				});
+
+				const contentType = res.headers.get("content-type");
+				if (!contentType || !contentType.includes("application/json")){
+					console.error(`Invalid response format: ${res.status}`);
+					return ;
+				}
+
 				if (!res.ok) {
 					userNameSpan.textContent = `<undefined user>`;
 				}
@@ -546,7 +563,7 @@ async function notificationHandler(): Promise<void> {
 				notifList.innerHTML = "";
 				notifNumber = 0;
 				notifNumberBadge.classList.add('hidden');
-		};
+			};
 		} catch (error) {
 			console.error("Could not fetch invitList:", error);
 			return;

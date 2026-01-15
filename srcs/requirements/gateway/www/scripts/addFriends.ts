@@ -1,5 +1,3 @@
-// import fetch from "node-fetch";
-
 const USERS_URL: string = `${window.location.origin}/users`;
 const AUTH_URL: string = `${window.location.origin}/auth_service`;
 

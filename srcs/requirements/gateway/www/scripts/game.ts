@@ -159,10 +159,9 @@ async function launchLocalGame() {
 		}
 			
 		const contentType = res.headers.get("content-type");
-		if (!contentType || !contentType.includes("application/json")) {
-			const text = await res.text();
-			console.error(`Server did not return JSON`, text);
-			throw new Error(`Server response is not JSON`);
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
 		}
 
 		const response = await res.json();
@@ -199,11 +198,11 @@ async function launchRemoteGame() {
 			console.error(`Server error ${res.status}:`, text);
 			throw new Error(`Failed to load the game`);
 		}
+		
 		const contentType = res.headers.get("content-type");
-		if (!contentType || !contentType.includes("application/json")) {
-			const text = await res.text();
-			console.error(`Server did not return JSON`, text);
-			throw new Error(`Server response is not JSON`);
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
 		}
 		
 		const response = await res.json();
@@ -287,6 +286,13 @@ export async function launchInvitGame(friendId: string, message: string) {
 			},
 			body: JSON.stringify({friendId: friendId, message: message})
 		});
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
+		
 		if (message === "deny-invit")
 			return;
 		if (!res.ok) {
@@ -297,27 +303,6 @@ export async function launchInvitGame(friendId: string, message: string) {
 		
 		const response = await res.json();
 		if (response.message === "Success") {
-			const cancelMatchButton: HTMLButtonElement = document.getElementById('cancelMatchButton') as HTMLButtonElement;
-			if (cancelMatchButton) {
-				cancelMatchButton.classList.remove('hidden');
-				cancelMatchButton.onclick = async () => {
-					const res = await fetch(`${window.location.origin}/game/remote`, {
-						method: "POST",
-						headers: {
-							"x-user-id": userId,
-							"authorization": `Bearer ${token}`,
-							"Content-Type": "application/json"
-						},
-						body: JSON.stringify({ friendId: friendId, message: "deny-invit" })
-					});
-					if (!res.ok) {
-						console.error("Could not clear invit");
-					}
-					window.location.hash = "#account";
-				}
-			} else {
-				console.log("CANCEL MATTCH BUTTON NOT FOUND");
-			}
 			gameLoop(Number(response.id), undefined, String(response.state), undefined);
 		}
 	} catch (err) {
@@ -374,7 +359,7 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 				pongTimeoutId = window.setTimeout(() => {
 					gameAnimation(game);
 					pongTimeoutId = null;
-				}, 1000)
+				}, 2000)
 			}
 			else if (game && serverGame.message === "Countdown") {
 				game.message = serverGame.message
@@ -623,19 +608,18 @@ async function launchSnakeLocalGame() {
 			},
 		});
 
+		// Vérifie que la réponse est du JSON
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
+		
 		// Gestion des erreurs HTTP
 		if (!res.ok) {
 			const text = await res.text();
 			console.error(`Server error ${res.status}:`, text);
 			throw new Error(`Failed to load Snake game`);
-		}
-
-		// Vérifie que la réponse est du JSON
-		const contentType = res.headers.get("content-type");
-		if (!contentType || !contentType.includes("application/json")) {
-			const text = await res.text();
-			console.error(`Server did not return JSON`, text);
-			throw new Error(`Server response is not JSON`);
 		}
 
 		// Parse l'état initial de la partie
@@ -693,19 +677,18 @@ async function launchSnakeRemoteGame() {
 			},
 		});
 
+		// Vérifie que la réponse est du JSON
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
+		
 		// Gestion des erreurs HTTP
 		if (!res.ok) {
 			const text = await res.text();
 			console.error(`Server error ${res.status}:`, text);
 			throw new Error(`Failed to load Snake game`);
-		}
-
-		// Vérifie que la réponse est du JSON
-		const contentType = res.headers.get("content-type");
-		if (!contentType || !contentType.includes("application/json")) {
-			const text = await res.text();
-			console.error(`Server did not return JSON`, text);
-			throw new Error(`Server response is not JSON`);
 		}
 
 		// Parse l'état initial de la partie
