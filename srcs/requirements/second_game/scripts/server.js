@@ -538,7 +538,11 @@ export function runServer() {
             if (!userId) {
                 return reply.status(401).send({ error: "User ID required" });
             }
-
+            for (const game of games.values()) {
+                if (game.player1.id === userId || game.player2.id === userId) {
+                    return reply.status(400).send({ error: "User is already in a game" });
+                }
+            }
             const userName = await getUserName(userId);
 
             // Check if there's a pending game BEFORE adding to queue (prevent race condition)
