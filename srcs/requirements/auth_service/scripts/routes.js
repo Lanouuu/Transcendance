@@ -32,7 +32,7 @@ export default async function routes(fastify, options) {
 
       if (!userInfo.ok) {
         console.error("Erreur 42 API status:", userInfo.status, await userInfo.text());
-        return reply.code(500).send({ error: "Cannot fetch 42 profile" });
+        return reply.code(502).send({ error: "Cannot fetch 42 profile" });
       }
 
       const profile = await userInfo.json();
@@ -60,19 +60,19 @@ export default async function routes(fastify, options) {
         if(!createUser.ok) {
           const text = await createUser.text();
           console.error("Error while creating user :", text);
-          return reply.code(500).send({error: "User creation failed"})
+          return reply.code(502).send({error: "User creation failed"})
         }
         const userRes = await fetch(`http://users:3000/mail/${profile.email}`);
         if (!userRes.ok) {
           console.error("User not found after creation");
-          return reply.code(500).send({ error: "User not found after creation" });
+          return reply.code(502).send({ error: "User not found after creation" });
         }
         user = await userRes.json();
       }
 
       if(!user || !user.id) {
         console.error("User not found after creation");
-        return reply.code(500).send({ error: "User not found after creation"})
+        return reply.code(502).send({ error: "User not found after creation"})
       }
 
       const jwt = fastify.jwt.sign({id: user.id, mail: user.mail });
@@ -82,7 +82,7 @@ export default async function routes(fastify, options) {
         await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
       } catch (err) {
         console.error("Erreur insertion session OAuth:", err);
-        return reply.code(500).send({ error: "Session creation failed" });
+        return reply.code(503).send({ error: "Session creation failed" });
       }
       
       try {
@@ -97,7 +97,7 @@ export default async function routes(fastify, options) {
 
       } catch (err) {
         console.error("OAuth 42 error:", err);
-        reply.code(500).send({ error: "OAuth 42 callback failed" });
+        reply.code(502).send({ error: "OAuth 42 callback failed" });
       }
     });
 
@@ -153,7 +153,7 @@ export default async function routes(fastify, options) {
         hashedPassword = await bcrypt.hash(password, 10);
       } catch (err) {
         console.error("Erreur bcrypt hash:", err);
-        return reply.code(500).send({ error: "Password processing failed" });
+        return reply.code(400).send({ error: "Password processing failed" });
       }
 
       let secret2FA = null;
@@ -166,7 +166,7 @@ export default async function routes(fastify, options) {
           qrcodedata = await QRCode.toDataURL(otpauth);
         } catch (err) {
           console.error("Erreur génération 2FA:", err);
-          return reply.code(500).send({ error: "2FA setup failed" });
+          return reply.code(400).send({ error: "2FA setup failed" });
         }
       }
 
@@ -192,7 +192,7 @@ export default async function routes(fastify, options) {
 
       } catch (err) {
         fastify.log.error(err, "Error signup");
-        return reply.code(500).send({error: "Signup failed"});
+        return reply.code(400).send({error: "Signup failed"});
       }
     });
 
@@ -217,7 +217,7 @@ export default async function routes(fastify, options) {
           isValid = await bcrypt.compare(password, user.password);
         } catch (err) {
           console.error("Erreur bcrypt compare:", err);
-          return reply.code(500).send({ error: "Authentication failed" });
+          return reply.code(401).send({ error: "Authentication failed" });
         }
         if (!isValid) return reply.code(401).send({ error: "Invalid password"});
 
@@ -230,7 +230,7 @@ export default async function routes(fastify, options) {
             if(!isValid2FA) return reply.code(401).send({error: "Invalid 2FA code"});
           } catch (err) {
             console.error("Erreur vérification 2FA:", err);
-            return reply.code(500).send({ error: "2FA verification failed" });
+            return reply.code(401).send({ error: "2FA verification failed" });
           }
         }
 
@@ -241,7 +241,7 @@ export default async function routes(fastify, options) {
           await db.run("INSERT INTO sessions (user_id, token_hash) VALUES (?, ?)", [user.id, tokenHash]);
         } catch (err) {
           console.error("Erreur insertion session:", err);
-          return reply.code(500).send({ error: "Session creation failed" });
+          return reply.code(503).send({ error: "Session creation failed" });
         }
 
         try {
@@ -257,7 +257,7 @@ export default async function routes(fastify, options) {
           id: user.id});
       } catch (err) {
         console.error("Erreur login:", err);
-        return reply.code(500).send({ error: "Login failed" });
+        return reply.code(503).send({ error: "Login failed" });
       }
     });
 
@@ -290,7 +290,7 @@ export default async function routes(fastify, options) {
           await db.run("DELETE FROM sessions WHERE user_id = ?", [userID]);
         } catch (err) {
           fastify.log.error({ err }, "Erreur suppression session");
-          return reply.code(500).send({ error: "Logout failed" });
+          return reply.code(503).send({ error: "Logout failed" });
         }
 
         try {
@@ -303,7 +303,7 @@ export default async function routes(fastify, options) {
         reply.send({ message: "Logged out" });
       } catch (err) {
         fastify.log.error(err, "logout error");
-        return reply.code(500).send({ error: "Logout failed" });
+        return reply.code(503).send({ error: "Logout failed" });
       }
     });
 }
