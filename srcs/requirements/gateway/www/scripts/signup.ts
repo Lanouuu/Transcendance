@@ -34,7 +34,6 @@ export function signup() {
                 		msg.textContent = data.message;
                 		msg.style.color = "lightgreen";
 						
-						// Afficher le QR code si 2FA activé
 						if (data.qrcodedata) {
 							if (typeof data.qrcodedata === 'string' && data.qrcodedata.startsWith('data:image/png;base64,')) {
         						let img = document.querySelector("#signup-form img.qr") as HTMLImageElement;
@@ -46,7 +45,6 @@ export function signup() {
         						img.src = data.qrcodedata;
         						img.alt = "QR Code 2FA";
 								
-								// Ajouter un bouton de confirmation
 								let confirmBtn = document.querySelector("#signup-form button.confirm-qr") as HTMLButtonElement;
 								if (!confirmBtn) {
 									confirmBtn = document.createElement("button");
@@ -69,7 +67,6 @@ export function signup() {
 							    console.error('Invalid QR code data format');
 							}
 						} else {
-							// Pas de 2FA, redirection automatique
 							setTimeout(() => {
 								window.location.hash = '#login';
 							}, 800);

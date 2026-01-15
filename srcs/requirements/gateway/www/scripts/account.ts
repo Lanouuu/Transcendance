@@ -136,7 +136,6 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 		usernameSpan.innerText = data.name;
 		mailSpan.innerText = data.mail;
 		dblFaBox.checked = data.enable2FA;
-		console.log(`2fa = ${data.enable2FA}`);
 
 		const resImg = await fetch(`${USERS_URL}/get-avatar/${userId}`, {
 			method: "GET",
@@ -319,7 +318,6 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 					profilePic.src = originalSrc;
 					return ;
 				}
-				console.log('Avatar upload success');
 			} catch (error) {
 				console.error('Error uploading the avatar', error);
 			}
@@ -350,10 +348,10 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 		const snakeWinrate = totalSnakeMatches === 0 ? 0 : Math.round((snakeWins / totalSnakeMatches) * 100);
 		snakeWinrateDiv.textContent = `${snakeWinrate}%`;
 		// #endregion stats //
+
 	} catch (error) {
 		console.error(error);
 	}
-
 }
 
 // #region FriendsTab //
@@ -535,7 +533,6 @@ async function listenSendInvite(userId: string, token: string, invitForm: HTMLFo
 				}
 			} catch (err) {
 				console.error(err);
-				//ajouter message
 			}
             (e.target as HTMLFormElement).reset();
         });
@@ -572,40 +569,33 @@ async function displayBlockedList(userId: string, token: string, ulBlockedList: 
 		}
 		ulBlockedList.appendChild(frag);
 	} catch (error) {
-		console.error("Error displaying blocked list:", error); // afficher msg dans une div pour le user
+		console.error("Error displaying blocked list:", error);
 	}
 }
 
 function createLiFriendItem(avatarUrl: string, friendId: string, friendName: string, isOnline: boolean, userId: string, token: string, ulBlockedList: HTMLUListElement): HTMLLIElement {
-	// creation balise li
 	const li = document.createElement("li");
 	li.style.display = "grid";
 	li.style.gridTemplateColumns = "1fr 1fr 5fr 1fr 1fr 1fr";
 	li.className = "m-1";
 
-
-	// ajout de l'image
 	const img = document.createElement("img");
 	img.src = avatarUrl;
 	img.width = 36;
 	img.height = 36;
 	img.className = "rounded-full select-none";
 
-	//ajout du username
 	const nameSpan = document.createElement("span");
 	nameSpan.textContent = friendName;
 	nameSpan.className = "text-center";
 
-	// Ajout du status de connexion
 	const statusDot = document.createElement("span");
 	statusDot.textContent = isOnline ? "🟢" : "⚪️";
 	statusDot.className = "select-none";
 
-	// Ajout du bouton de defi
 	const playPongButton = document.createElement("button");
 	const playPongIcon = document.createElement("img");
 
-	// playButton.id = "fInListPlayButton"; // Si plusieurs amis id identiques
 	playPongIcon.src = "./assets/other/challenge-user.svg";
 	playPongIcon.className = "h-6 w-6 invert";
 	playPongButton.className = "w-fit h-fit place-self-center";
@@ -694,15 +684,12 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 				return ;
 			}
 			li.remove();
-			console.log("Friend deleted");
-			// Ajouter une confirmation + un msg d'info
 		} catch (error) {
 			console.error("Could not delete friend");
 			return ;
 		}
 	}
 
-	// Ajout du bouton de blocage d'un ami
 	const blockFriendButton = document.createElement("button");
 	const blockFriendIcon = document.createElement("img");
 	
@@ -727,18 +714,14 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 				return ;
 			}
 			li.remove();
-			console.log("Friend blocked");
 			await displayBlockedList(userId, token, ulBlockedList)
-			// Ajouter une confirmation + un msg d'info
 		} catch (error) {
 			console.error("Could not block friend");
 			return ;
 		}
 	};
 
-	// Ajout de tous les elements crees a la balise li
 	li.append(img, statusDot, nameSpan, playPongButton, delFriendButton, blockFriendButton);
-
 	return (li);
 }
 
@@ -751,7 +734,6 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 	nameSpan.textContent = senderName;
 	nameSpan.className = "text-center w-1/2 truncate";
 
-	// Ajout du bouton accept invitation
 	const acceptFriendButton = document.createElement("button");
 	const acceptFriendIcon = document.createElement("img");
 	
@@ -777,14 +759,12 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 			}
 			li.remove();
 			await displayFriendList(userId, token, ulFriendsList, ulBlockedList);
-			console.log("Invitation accepted");
 		} catch (error) {
 			console.error("Could not accept invitation");
 			return ;
 		}
 	};
 
-	// Ajout du bouton decline invitation
 	const declineFriendButton = document.createElement("button");
 	const declineFriendIcon = document.createElement("img");
 	
@@ -809,14 +789,12 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 				return ;
 			}
 			li.remove();
-			console.log("Invitation declined");
 		} catch (error) {
 			console.error("Could not decline invitation");
 			return ;
 		}
 	};
 
-	// Ajout du bouton de blocage d'un ami
 	const blockFriendButton = document.createElement("button");
 	const blockFriendIcon = document.createElement("img");
 	
@@ -844,8 +822,6 @@ function createLiPendingItem(userId: string, token: string, senderId: string, se
 			await displayFriendList(userId, token, ulFriendsList, ulBlockedList);
 			await displayBlockedList(userId, token, ulBlockedList);
 			li.remove();
-			console.log("Friend blocked");
-			// Ajouter une confirmation + un msg d'info
 		} catch (error) {
 			console.error("Could not block friend");
 			return ;
@@ -889,8 +865,6 @@ function createLiBlockedItem(blockedId: string, blockedName: string, userId: str
 				return ;
 			}
 			li.remove();
-			console.log("Friend unblocked");
-			// Ajouter une confirmation + un msg d'info
 		} catch (error) {
 			console.error("Could not unblock friend");
 			return ;
@@ -947,7 +921,7 @@ async function showHistoryTab(userId: string, token: string): Promise<void> {
 		}
 		ulHistoryList.appendChild(frag);
 	} catch (error) {
-		console.error("Error displaying friends list:", error); // afficher msg dans une div pour le user
+		console.error("Error displaying friends list:", error);
 	}
 }
 

@@ -11,11 +11,11 @@ let pongAnimationId: number | null = null;
 let pongTimeoutId: number | null = null;
 let game : Game;
 let selectedGame : String | null = null;
-// Variables globales pour gérer le replay
+
 let currentSnakeGameMode: 'local' | 'remote' | null = null;
 let currentWebSocket: WebSocket | null = null;
 let currentAnimationId: number | null = null;
-let localPlayerId: string | null = null;  // ID du joueur local (pour mode remote)
+let localPlayerId: string | null = null;
 let startTournament: boolean = false;
 let start: boolean = false;
 
@@ -41,6 +41,7 @@ async function checkToken(): Promise<boolean> {
 export async function setupGamePage(): Promise<void> {
 
 	const loginRedirectButton: HTMLButtonElement = document.getElementById('loginRedirectButton') as HTMLButtonElement;
+	const loginRedirectButtonDiv: HTMLDivElement = document.getElementById('loginRedirectButton') as HTMLDivElement;
 
 	const boxGamePong: HTMLDivElement = document.getElementById("boxGamePong") as HTMLDivElement;
 	const boxGameSnake: HTMLDivElement = document.getElementById("boxGameSnake") as HTMLDivElement;
@@ -59,7 +60,7 @@ export async function setupGamePage(): Promise<void> {
 		boxGamePong.classList.remove('flex');
 		boxGameSnake.classList.add('hidden');
 		boxGameSnake.classList.remove('flex');
-		loginRedirectButton.classList.add('hidden');
+		loginRedirectButtonDiv.classList.add('hidden');
 
 		return;
 	}
@@ -68,7 +69,7 @@ export async function setupGamePage(): Promise<void> {
 		boxGamePong.classList.remove('flex');
 		boxGameSnake.classList.add('hidden');
 		boxGameSnake.classList.remove('flex');
-		loginRedirectButton.classList.add('hidden');
+		loginRedirectButtonDiv.classList.add('hidden');
 		if (inviteMsg === 'sendInvit')
 			launchInvitGame(inviteId, "invit");
 		else if (inviteMsg === 'acceptInvit')
@@ -78,7 +79,7 @@ export async function setupGamePage(): Promise<void> {
 
 	const isOnline = await checkToken();
 	if (!isOnline) {
-		loginRedirectButton.classList.remove('hidden');
+		loginRedirectButtonDiv.classList.remove('hidden');
 	} else {
 		boxGamePong.classList.remove('hidden');
 		boxGamePong.classList.add('flex');
@@ -311,14 +312,11 @@ export async function launchInvitGame(friendId: string, message: string) {
 }
 
 export function closePongSocket() {
-	console.log("game: ", game);
-	console.log("start: ", start);
 	if (selectedGame === "Pong") {
 		if (game && start) {
 			if (pongSocket && pongSocket.readyState === WebSocket.OPEN) {
 				pongSocket.close();
 				pongSocket = null;
-				console.log("Closing websocket");
 			}
 		
 			if (pongTimeoutId) {
@@ -337,7 +335,7 @@ export function closePongSocket() {
 export async function gameLoop(gameId: Number, tournament_id: Number | undefined, message: String, userId: Number | undefined) {
 	selectedGame = "Pong";
 	try {
-		const ws = new WebSocket(`wss${ws_route}/ws`); // A MODIFIER
+		const ws = new WebSocket(`wss${ws_route}/ws`);
 		pongSocket = ws;
 		ws.addEventListener('open', (event) => {
 			if (ws.readyState === WebSocket.OPEN) {
@@ -394,7 +392,6 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 					window.location.hash = '#game?tournament=yes';
 					window.dispatchEvent(new Event('hashchange'));
 				}
-				console.log("Schedule names: ", serverGame.scheduleNames);
 				setTimeout(() => {
 					displayNextMatch(serverGame.scheduleNames);
 				}, 100);			
@@ -403,12 +400,11 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 				// Recuperer les matchs dans serverGame.matchs
 			}
 			else if (serverGame.message === "TournamentEnd") {
-				console.log("Vainqueur du tournois: ", serverGame.winner);
 				displayTournamentEnd(serverGame.winner);
 				start = false;
 			}				
 			else if (serverGame.message === "Error")
-				console.log("ERROR: ", serverGame.error);
+				console.error("ERROR: ", serverGame.error);
 			else {
 				game.player2.name = serverGame.name;
 			}
@@ -419,7 +415,6 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 		});
 
 		ws.addEventListener('close', () => {
-			console.log("socket closed");
 		})
 		window.addEventListener('keydown', (e) => {
 			let key;
@@ -471,7 +466,7 @@ async function gameAnimation(game: Game) {
 	const canvasDiv: HTMLDivElement = document.getElementById('canvasDiv') as HTMLDivElement;
 	
 	if (!canvasDiv) {
-		console.log("canvasDiv not found");
+		console.error("canvasDiv not found");
 		return ;
 	}
 	canvasDiv.innerHTML = "";
@@ -560,7 +555,6 @@ async function loadSprites(game: Game) {
         game.player1.sprite.image = player1.image;
         game.player2.sprite.image = player2.image;
         game.ball.image = ball.image;
-		console.log('Sprite loaded');
     }catch(e) {
         console.error("ERREUR CHARGEMENT IMAGES", e);
     }
@@ -1001,7 +995,6 @@ async function snakeGameLoop(game: SnakeGame) {
 
 		// CLOSE : Fermeture de la connexion
 		ws.addEventListener('close', () => {
-			console.log('WebSocket connection closed');
 			cleanup();  // Nettoie à la fermeture
 		});
 	} catch (error) {

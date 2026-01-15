@@ -121,7 +121,6 @@ export default async function routes(fastify, options) {
       }
     });
 
-    // signup
     fastify.post("/signup", async (request, reply) => {
       const { userName, mail, password, enable2FA } = request.body;
       if(!userName || !mail || !password)
@@ -132,11 +131,9 @@ export default async function routes(fastify, options) {
         return reply.code(400).send({error: "Wrong mail format"});
 
 
-      // check le format du password, a remettre a la fin du projet !!!!!!!!!!!
-      // //min 8 letter password, with at least a symbol, upper and lower case letters and a number
-      // let testpassword = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/.test(password);
-      // if(!testpassword)
-      //     return reply.code(400).send({error: "Wrong password format"});
+      let testpassword = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/.test(password);
+      if(!testpassword)
+          return reply.code(400).send({error: "Wrong password format"});
 
       try {
         const rez = await fetch(`http://users:3000/name/${userName}`);

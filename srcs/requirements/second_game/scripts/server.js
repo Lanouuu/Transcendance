@@ -717,7 +717,7 @@ export function runServer() {
             }
         } catch (e) {
             console.error(e.message);
-            reply.status(500).send({ error: "Internal server error" });
+            reply.status(503).send({ error: "Service unavailable" });
         }
     });
 

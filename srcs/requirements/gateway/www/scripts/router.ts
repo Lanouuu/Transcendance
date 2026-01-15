@@ -1,20 +1,5 @@
 import { launchInvitGame, closePongSocket } from "./game.js";
 
-const PAGE_BACKGROUNDS: Record<string, string> = {
-	'account': '/img/Background1.png',
-	'editProfile': '/img/Background1.png',
-	'error': '/img/Background1.png',
-	'game': '/img/Background1.png',
-	'home': '/img/Background2.png',
-	'login': '/img/Background1.png',
-	'logout': '/img/Background1.png',
-	'signup': '/img/Background1.png',
-	'tournament': '/img/Background1.png',
-};
-
-// permet de recuperer l'ID et le Token depuis la connection oAuth 42
-// et redirige vers account
-// utiliser juste avant new Router() a la fin
 function handleOauth42Redirect() {
 	const params = new URLSearchParams(window.location.hash.split("?")[1]);
 	const token = params.get("token");
@@ -32,38 +17,27 @@ function handleOauth42Redirect() {
 	}
 }
 
-const PAGE_ORDER: string[] = ['home', 'game', 'tournament', 'account', 'logout', 'signup', 'login'];
+const PAGE_ORDER: string[] = ['home', 'game', 'tournament', 'account', 'editProfile', 'logout', 'signup', 'login'];
 
 class Router {
 
 	private mainContent: HTMLElement;
-	private currentBgUrl: string;
 	private currentPage: string;
 	private heartBeatInterval: number | null = null;
-	private BASE_URL: string = `https://localhost:8443/`; // A modifier
+	private BASE_URL: string = `${window.location.origin}/`;
 
 	constructor() {
-		// Selects the part of the html doc we want to update (?)
 		this.mainContent = document.querySelector('main') as HTMLElement;
-		this.currentBgUrl = PAGE_BACKGROUNDS['home'];
 		this.currentPage = 'home';
-		// Launches the chain of function 
 		this.initRouter();
 	}
 
 
 	private sanitizeHTML(html: string): string {
-		// Supprimer tous les <script>
 		html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-
-		// Supprimer tous les event handlers (onclick, onerror, onload, etc.)
 		html = html.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '');
 		html = html.replace(/\son\w+\s*=\s*[^\s>]*/gi, '');
-
-		// Supprimer javascript: dans les URLs
 		html = html.replace(/javascript:/gi, '');
-
-		// Supprimer data: urls (peuvent contenir du JS)
 		html = html.replace(/data:text\/html/gi, '');
 
 		return html;
@@ -144,7 +118,6 @@ class Router {
 
 	private async initRouter(): Promise<void> {
 
-		// First load (supposed to launch main i guess)
 		this.handleRoute();
 
 		window.addEventListener('hashchange', () => {
@@ -155,16 +128,6 @@ class Router {
 		window.addEventListener('user:login', () => this.startHeartbeat());
 		window.addEventListener('user:logout', () => this.stopHeartbeat());
 		window.addEventListener('user:login', () => notificationHandler());
-		// window.addEventListener('user:logout', () => this.notificationHandler());
-
-		// 		window.addEventListener('storage', (ev: StorageEvent) => {
-		//			if (ev.key === 'jwt') {
-		//				if (sessionStorage.getItem('jwt')) this.startHeartbeat();
-		//				else this.stopHeartbeat();
-		//			}
-		//		});
-		// 		Potentiellement juste dispatch un event user:login ou logout en fonction et laisser ceux du haut gerer le bordel
-
 		if (sessionStorage.getItem("jwt") && sessionStorage.getItem("userId"))
 			this.startHeartbeat();
 	}
@@ -202,10 +165,6 @@ class Router {
 		}
 	}
 
-
-
-	// Gets called each time the hash (#) changes (?)
-	// Get the name of the page clean and call loadPage
 	private handleRoute(): void {
 
 		const fullHash = window.location.hash.slice(1) || 'home';
@@ -213,89 +172,6 @@ class Router {
 		this.loadPage(page);
 	}
 
-	private getTransitionDirection(page: string): string {
-		const nextPageIndex: number = PAGE_ORDER.indexOf(page);
-		const currentPageIndex: number = PAGE_ORDER.indexOf(this.currentPage);
-
-		if (currentPageIndex < nextPageIndex)
-			return 'right';
-		else
-			return 'left';
-	}
-
-	private async animateBgTransition(nextBgUrl: string, transitionDirection: string): Promise<void> {
-
-		if (nextBgUrl === this.currentBgUrl) return;
-
-		const currentBgContainer: HTMLElement = document.getElementById('backgroundContainer') as HTMLElement;
-		const nextBgContainer: HTMLElement = document.getElementById('backgroundNext') as HTMLElement;
-
-		if (!currentBgContainer || !nextBgContainer) {
-			console.error('Could not find background containers');
-			return;
-		}
-
-		nextBgContainer.style.backgroundImage = `url('${nextBgUrl}')`;
-		nextBgContainer.style.transition = 'none';
-
-		// On gere le translate de next en fonction de isRightTransition
-		if (transitionDirection === 'right') {
-			nextBgContainer.classList.remove('-translate-x-full', 'translate-x-0');
-			nextBgContainer.classList.add('translate-x-full')
-		} else {
-			nextBgContainer.classList.remove('translate-x-full', 'translate-x-0');
-			nextBgContainer.classList.add('-translate-x-full')
-		}
-
-		// Force un reflow pour eviter que le nav skip l'anim
-		// Ca ne fait rien d'autre
-		void nextBgContainer.offsetWidth;
-
-		nextBgContainer.style.transition = '';
-
-		void currentBgContainer.offsetWidth;
-		void nextBgContainer.offsetWidth;
-
-		// Ajout et retrait de classe --> Animation
-		if (transitionDirection === 'right') {
-
-			currentBgContainer.classList.add('-translate-x-full', 'bgTransiBlur');
-			nextBgContainer.classList.remove('translate-x-full');
-			nextBgContainer.classList.add('translate-x-0', 'bgTransiBlur');
-		} else {
-
-			currentBgContainer.classList.add('translate-x-full', 'bgTransiBlur');
-			nextBgContainer.classList.remove('-translate-x-full');
-			nextBgContainer.classList.add('translate-x-0', 'bgTransiBlur');
-		}
-
-		// On wait que l'animation se termine
-		await new Promise(resolve => setTimeout(resolve, 1000));
-
-		// On retire les animations
-		currentBgContainer.style.transition = 'none';
-		nextBgContainer.style.transition = 'none';
-
-		// On update l'image (le current est mtn le next) et on remet tout en place
-		currentBgContainer.style.backgroundImage = `url('${nextBgUrl}')`;
-		currentBgContainer.classList.remove('-translate-x-full', 'translate-x-full', 'bgTransiBlur');
-		nextBgContainer.classList.remove('translate-x-0', '-translate-x-full', 'translate-x-full', 'bgTransiBlur');
-		nextBgContainer.style.backgroundImage = '';
-
-		// Force reflow
-		void currentBgContainer.offsetWidth;
-		void nextBgContainer.offsetWidth;
-
-		// On remet les animations
-		currentBgContainer.style.transition = '';
-		nextBgContainer.style.transition = '';
-
-		// Update de l'url dans la structure
-		this.currentBgUrl = nextBgUrl;
-	}
-
-	// Fetch the correct html file to update the <main> of index.html
-	// Load scripts related to the page
 	private async loadPage(page: string): Promise<void> {
 
 		try {
@@ -303,7 +179,7 @@ class Router {
 			if (page === 'error') {
 				const params = new URLSearchParams(window.location.hash.split('?')[1]);
 				const errorCode = params.get('code');
-				this.displayError(errorCode || '500');
+				this.displayError(errorCode || '503');
 				this.currentPage = 'error';
 				return;
 			}
@@ -330,30 +206,25 @@ class Router {
 				return;
 			}
 
-			if (!PAGE_BACKGROUNDS[page] && page !== 'error') {
+			if (!PAGE_ORDER.includes(page) && page !== 'error') {
 				this.displayError('404');
 				this.currentPage = 'error';
 				return;
 			}
 
-			// Fetch the file corresponding to the attribute page
-			// Then gets its content as a text in the variabe content
 			const response = await fetch(`/pages/${page}.html`);
 			if (!response.ok) throw new Error(`Page ${page} not found`);
 			const content = await response.text();
 
-			// Updates the <main> of index.html
 			this.mainContent.innerHTML = this.sanitizeHTML(content);
 
 			this.currentPage = page;
 
-			// Attendre plus longtemps pour laisser le DOM se mettre à jour
 			await new Promise(resolve => setTimeout(resolve, 50));
 
-			// Loads the scripts corresponding the the page loaded
 			switch (page) {
 				case 'home':
-					const homeScript = await import('./home.js'); // on peut mettre ca en haut
+					const homeScript = await import('./home.js');
 					if (homeScript.home) homeScript.home();
 					break;
 				case 'game':
@@ -389,7 +260,7 @@ class Router {
 			}
 		} catch (error) {
 			console.error('Error loading page: ', error);
-			this.mainContent.innerHTML = this.sanitizeHTML('<h1>Page not found</h1>'); // A changer ?
+			this.mainContent.innerHTML = this.sanitizeHTML('<h1>Page not found</h1>');
 		}
 	}
 
@@ -578,17 +449,6 @@ async function notificationHandler(): Promise<void> {
 	}
 
 }
-
-// A SUPPRIMER (TESTS) /////////////////////////////////////////////////////////////////////////////////
-	(async () => {
-		if (!localStorage.getItem("userTest")) {
-			const addFriendsModule = await import('./addFriends.js');
-			if (addFriendsModule.initTest) addFriendsModule.initTest();
-			else console.log("CA MARCHE PO");
-			localStorage.setItem("userTest", "true");
-		}
-	})();
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 document.addEventListener('DOMContentLoaded', async () => {
 

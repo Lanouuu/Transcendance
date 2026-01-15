@@ -173,6 +173,8 @@ body.loggedIn #signupNavLink {
 	px-4 py-8
 
 	font-geo 
+
+	relative
 	;
 }
 /* #endregion tournament */
@@ -214,16 +216,6 @@ body.loggedIn #signupNavLink {
 
 /* #endregion footer */
 
-/* #region ANIMATIONS */
-
-@keyframes bgTransiBlur {
-	0% {filter: blur(0);}
-	50% {filter: blur(50px);}
-	100% {filter: blur(0);}
-}
-
-/* #endregion ANIMATIONS */
-
 /* #region customClasses */
 
 .text-stroke-3 {
@@ -238,10 +230,8 @@ body.loggedIn #signupNavLink {
 	-webkit-text-stroke: 0px;
 }
 
-/* #endregion customClasses */
-
-/* PAS TRES PROPRE MAAAAAAAIS BON */
-
 .hidden {
 	display: none !important;
 }
+
+/* #endregion customClasses */

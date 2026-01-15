@@ -1,9 +1,5 @@
 import { gameLoop } from './game.js'
-import { Game } from "./gameClass.js"
-import { displayNextMatch } from './game.js'
-const ws_route: string = `://${window.location.host}/game`
 const route: string = `${window.location.origin}/tournament`;
-const gameRoute: string = `${window.location.origin}/game`;
 
 async function checkToken(): Promise<boolean> {
 	const token = sessionStorage.getItem("jwt");
@@ -58,11 +54,9 @@ export async function displayTournamentPage() {
 		const joinedTournamentInfo: {tournamentId: number | undefined, isRegistered: boolean} = await isInTournament(userId, token);
 		if (joinedTournamentInfo.isRegistered && joinedTournamentInfo.tournamentId !== undefined) {
 			displayJoinedTournament(userId, token, joinedTournamentInfo.tournamentId);
-			console.log("Player is in tournament: id = ", joinedTournamentInfo.tournamentId);
 		}
 		else {
 			displayTournamentCreation(userId, token);
-			console.log("User not in tournament")
 		}
 
 		// #endregion Left //
@@ -95,12 +89,6 @@ export async function displayTournamentPage() {
 
 	// #endregion Right //
 };
-
-// Faire en sorte que les user pas connectes puissent quand meme lancer un tournois local
-
-// Demander ces fonctions:
-// - Quitter un tournois
-// - Supprimer un tournois (avant de le start)
 
 // #region Creation // 
 
@@ -161,7 +149,7 @@ async function displayTournamentCreation(userId: string, token: string) {
 	joinedTournamentDiv.classList.add('hidden');
 	tournamentCreationDiv.classList.remove('hidden');
 }
-// Checker alias unique
+
 async function displayTournamentAlias(tournamentMode: string, maxPlayer: string): Promise<string[]> {
 	const creationDiv:	HTMLDivElement = document.getElementById('tournamentCreationDiv') as HTMLDivElement;
 	const aliasDiv:		HTMLDivElement = document.getElementById('tournamentAliasDiv') as HTMLDivElement;
@@ -220,8 +208,6 @@ async function displayTournamentAlias(tournamentMode: string, maxPlayer: string)
 async function createTournament(userId: string, token: string, tournamentName: string, maxPlayerSelected: string, tournamentMode: string, msg: HTMLDivElement) {
 
 	let	aliasArray:	string[] = await displayTournamentAlias(tournamentMode, maxPlayerSelected);
-	console.log("AliasArray = ", aliasArray);
-	// Envoyer l'alias
 
 	const tournamentCreationDiv: HTMLDivElement = document.getElementById("tournamentCreationDiv") as HTMLDivElement;
 	const tournamentAliasDiv: HTMLDivElement = document.getElementById("tournamentAliasDiv") as HTMLDivElement;
@@ -396,7 +382,6 @@ async function startTournament(userId: string, token: string, msg: HTMLDivElemen
 		    console.error(`Server error ${res.status}:`, errorText.error);
 			displayMsg(msg, "Error starting tournament", "red");
 		}
-		console.log("Tournament started successfully!");
 		displayMsg(msg, "Tournament started successfully", "green");
 	} catch (err) {
 		console.error("Failed to start tournament:", err);
@@ -404,7 +389,6 @@ async function startTournament(userId: string, token: string, msg: HTMLDivElemen
 	}
 }
 
-// Envoie une string de l'id du tournois via le body
 async function deleteTournament(userId: string, token: string, tournamentId: string, msg: HTMLDivElement) {
 	try {
 		const res = await fetch(`${route}/deleteTournament`, {
@@ -427,7 +411,6 @@ async function deleteTournament(userId: string, token: string, tournamentId: str
 	}
 }
 
-// Envoie une string de l'id du tournois via le body
 async function leaveTournament(userId: string, token: string, tournamentId: string, msg: HTMLDivElement) {
 	try {
 		const res = await fetch(`${route}/leaveTournament`, {
@@ -488,7 +471,6 @@ async function displayTournamentList(userId: string, token: string, wantedStatus
 		}
 
 		const tournaments = await res.json();
-		console.log("Tournaments:", tournaments);
 		if (tournaments.length <= 0) {
 			tournamentList.textContent = "No tournaments available"
 			return;
@@ -651,14 +633,4 @@ async function getTournamentInfo(userId: string, token: string, tournamentId: st
 		console.error("Error fetching getTournamentInfo:", error);
 		return (null);
 	}
-}
-
-function createParticipantsArray(partString: string): string[] {
-	let array: string[];
-
-	array = partString.split(",", 16);
-
-	console.log("Participants:", array);
-
-	return (array);
 }

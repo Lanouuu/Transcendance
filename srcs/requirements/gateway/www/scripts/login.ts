@@ -89,8 +89,6 @@ export function login() {
 					return ;
 				}
 		
-				if (res.ok) 
-					console.log(res);
 				const data = await res.json();
 				const msg = document.getElementById("login-msg");
 
