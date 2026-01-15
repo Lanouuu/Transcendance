@@ -18,6 +18,7 @@ export async function initDB() {
             pong_losses     INTEGER DEFAULT 2,
             snake_wins      INTEGER DEFAULT 1,
             snake_losses    INTEGER DEFAULT 1,
+            snake_elo       INTEGER DEFAULT 1200,
             is_guest        BOOLEAN DEFAULT 0,
             created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
         );
