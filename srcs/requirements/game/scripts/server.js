@@ -7,11 +7,7 @@ import cors from '@fastify/cors';
 import {WebSocketServer} from 'ws';
 import fs from 'fs';
 import { imageSize } from "image-size";
-import { resolve } from 'dns';
 
-// TODO : - Clear socket pour tournoi local et recuperer alias -> DONE
-//        - Terminer gestion socket lors d'un changement de fenetre
-//        - Mettre fin a la partie si les 2 joueurs perdent la connexion ou attendre (a voir)
 const fastify = Fastify({
     logger: true,
     connectionTimeout: 120000,
@@ -95,10 +91,14 @@ function startTimer(game) {
                 game.message = "END";
                 console.log("status 1: ", game.player1.status);
                 console.log("status 2: ", game.player2.status);
-                if (game.player1.score === 5 || game.player2.status === "Disconnected")
+                if (game.player1.score === 5 || game.player2.status === "Disconnected") {
                     game.winner = game.player1.name;
-                else if (game.player2.score === 5 || game.player1.status === "Disconnected")
+                    game.player1.score = 5;
+                }
+                else if (game.player2.score === 5 || game.player1.status === "Disconnected") {
                     game.winner = game.player2.name;
+                    game.player2.score = 5;
+                }
                 game.displayWinner = game.winner + " wins";
                 game.socket.forEach(socket => {
                     if (socket.readyState === 1) {
@@ -118,8 +118,12 @@ async function sendResult(game) {
             winner_id = game.player1.id;
         else if (game.player1.score < game.player2.score)
             winner_id = game.player2.id;
-        else
-            winner_id = undefined;
+        else {
+            if (game.lastPointScored === 1)
+                winner_id = game.player1.id;
+            else
+                winner_id = game.player2.id;
+        }
         console.log("ICI");
     }
     else if (game.player1.score === 5 || game.player2.status === "Disconnected")
@@ -218,11 +222,13 @@ function updateBallPosition(game) {
         if (game.ball.position.x + game.ball.imgSize.width < 0) {
             game.ball.position = {x: game.board.imgSize.width / 2, y:game.board.imgSize.height / 2};
             game.player2.score++;
+            game.lastPointScored = 1;
         }
 
         if (game.ball.position.x - game.ball.imgSize.width > game.board.imgSize.width) {
             game.ball.position = {x: game.board.imgSize.width / 2, y:game.board.imgSize.height / 2};
             game.player1.score++;
+            game.lastPointScored = 2;
         }
         if (game.ball.position.y <= 0 || game.ball.position.y + game.ball.imgSize.height >= game.board.imgSize.height)
             game.ball.velocity.y = -game.ball.velocity.y;
@@ -347,26 +353,25 @@ function localGamehandler(game, ws) {
 }
 
 function remoteGamehandler(game, ws) {
-    if (ws.userId === undefined && game.socket.length === 0 && game.message !== "Pause") {
+    if (ws.userId === undefined && game.socket.length === 0 && game.message !== "Pause") { {
         ws.userId = game.player1.id;
+        console.log("ICI");
+    }
     } else if (ws.userId === undefined && game.socket.length === 1 && game.message !== "Pause") {
         ws.userId = game.player2.id;
         game.socket[0].send(JSON.stringify({name: game.player2.name}));
         game.message = "start";
+        console.log("ICI2");
     }
     else if (game.message === "Pause") {
         console.log("GAME FOUND IN HANDLER");
         if (parseInt(game.socket[0].userId, 10) === parseInt(game.player1.id, 10)) {
             ws.userId = game.player2.id;
             game.player2.status = "Online";
-            // if (game.mode === "remote-tournament")
-            //     ws.surname = game.player2.name;
         }
         else {
             ws.userId = game.player1.id;
             game.player1.status = "Online";
-            // if (game.mode === "remote-tournament")
-            //     ws.surname = game.player1.name;
         }
     }
     if (game.mode === "remote-tournament") {
@@ -513,11 +518,20 @@ wss.on('connection', function connection(ws) {
                     games.delete(parseInt(gameId, 10));
                     break;
                 }
-                // if (game.mode === "remote-tournament") {
-                //     for (const [userId, socket] of tournamentSocket.entries()) {
-                //         if (Number(ws.userId) === Number(userId))
-                //     }
-                // }
+                if (game.mode === "remote" && game.message === "Waiting") {
+                    const queueIndex = queue.findIndex(data => Number(data[0]) === Number(ws.userId));
+                    if (queueIndex > -1) {
+                        queue.splice(queueIndex, 1);
+                        console.log("PLAYER REMOVED FROM QUEUE");
+                    }
+                    const pendingIndex = pendingRemoteGame.findIndex(game => Number(game.id) === Number(gameId));
+                    if (pendingIndex > -1) {
+                        pendingRemoteGame.splice(pendingIndex, 1);
+                        console.log("GAME REMOVED FROM QUEUE");
+                    }
+                    games.delete(Number(gameId));
+                    // return ;
+                }
                 game.socket = game.socket.filter(socket => socket.readyState != 3)
                 if (parseInt(game.player1.id, 10) === parseInt(ws.userId, 10))
                     game.player1.status = "Disconnected";
@@ -527,9 +541,10 @@ wss.on('connection', function connection(ws) {
                 console.log("PLAYER 2 STATUS: ", game.player2.status);
                 console.log("GAME MODE: ", game.mode);
                 if (game.player1.status === "Disconnected" && game.player2.status === "Disconnected" && game.mode === "remote") {
-                    games.delete(parseInt(gameId, 10));
                     clearInterval(game.intervalId);
-                    game.intervalId = null;
+                    clearInterval(game.loopId);
+                    // game.intervalId = null;
+                    games.delete(parseInt(gameId, 10));
                     break ;
                 }
                 else if (game.player1.status === "Disconnected" && game.player2.status === "Disconnected" && game.mode === "remote-tournament") {
@@ -645,33 +660,43 @@ fastify.post("/tournamentAlias", async (request, reply) => {
 //#region Delete Alias
 
 fastify.post("/deleteAlias", async (request, reply) => {
-    const { tournament_id } = request.body || {};
+    const { tournament_id, message } = request.body || {};
     const userId = request.headers["x-user-id"]
     if (!tournament_id) {
         return reply.code(400).send(JSON.stringify("Tournament id required"));
+    }
+    if (!message) {
+        return reply.code(400).send(JSON.stringify("Message required"));
     }
     if (!userId) {
         return reply.code(400).send(JSON.stringify("User id required"));
     }
     
     try {
-        let found = false;
-        if (!tournamentAlias.has(Number(tournament_id)))
-            throw new Error("Tournament not found");
-        console.log("userid = ", userId);
-        let aliases = tournamentAlias.get(Number(tournament_id));
-        for (const data of aliases.values()) {
-            if (Number(data[0]) === Number(userId)) {
-                found = true;
-                console.log("IN DELETE ALIAS, BEFORE: ", aliases);
-                tournamentAlias.set(Number(tournament_id),  aliases.filter(data => Number(data[0]) !== Number(userId)));
-                console.log("IN DELETE ALIAS, AFTER: ", aliases);
-                console.log("IN DELETE TOURNAMENT ALIAS, AFTER: ", tournamentAlias);
-                break;
+        if (message === "deleteAlias") {
+            let found = false;
+            if (!tournamentAlias.has(Number(tournament_id)))
+                throw new Error("Tournament not found");
+            console.log("userid = ", userId);
+            let aliases = tournamentAlias.get(Number(tournament_id));
+            for (const data of aliases.values()) {
+                if (Number(data[0]) === Number(userId)) {
+                    found = true;
+                    console.log("IN DELETE ALIAS, BEFORE: ", aliases);
+                    tournamentAlias.set(Number(tournament_id),  aliases.filter(data => Number(data[0]) !== Number(userId)));
+                    console.log("IN DELETE ALIAS, AFTER: ", aliases);
+                    console.log("IN DELETE TOURNAMENT ALIAS, AFTER: ", tournamentAlias);
+                    break;
+                }
             }
+            if (!found)
+                throw new Error("User not found");
         }
-        if (!found)
-            throw new Error("User not found");
+        else if (message === "deleteTournament") {
+            console.log("IN DELETE TOURNAMENT, BEFORE: ", tournamentAlias)
+            tournamentAlias.delete(Number(tournament_id));
+            console.log("IN DELETE TOURNAMENT, AFTER: ", tournamentAlias)
+        }
         reply.code(200).send(JSON.stringify({message: "Success"}));
     }catch(error) {
         console.log("Error in alias API route: ", error.message);
@@ -682,8 +707,19 @@ fastify.post("/deleteAlias", async (request, reply) => {
 
 // #region local
 fastify.get("/local", async (request, reply) => {
+    const userId = request.headers["x-user-id"];
+    
+    for (const game of games.values() ) {
+        if (parseInt(game.player1.id, 10) === parseInt(userId, 10) || parseInt(game.player2.id, 10) === parseInt(userId, 10)) {
+            console.log("GAME FOUND");
+            if (game.message === "Pause")
+                reply.send({message: "Success", id: game.id, state: "InitRemote"});
+            else
+                reply.code(400).send(JSON.stringify({message: "Error", error: "You're already in game"}));
+            return ;
+        }           
+    }
     try {
-        const userId = request.headers["x-user-id"]
         const game = new Game({
           id: parseInt(userId, 10),
           socket: [],
@@ -695,7 +731,7 @@ fastify.get("/local", async (request, reply) => {
         game.player1.id = userId;
         game.player2.name = "Player2";
         games.set(game.id, game);
-        reply.send({message: "Success"});
+        reply.send({message: "Success", id: game.id, state: "InitLocal"});
     } catch (e) {
         console.log("Error in local API route: ", e.message);
         reply.code(400).send({message: "error", error: e.message});
@@ -737,7 +773,7 @@ async function private_matchmaking(message, userId, body, headers, reply) {
     console.log("Message: ", message);
     if (message === "invit") {
         const game = new Game({
-            id: gameId++,
+            id: Number(userId),
             socket: [],
             mode: 'remote',
             message: "Waiting"
@@ -748,7 +784,7 @@ async function private_matchmaking(message, userId, body, headers, reply) {
         game.player1.status = "Online";
         games.set(game.id, game);
         console.log("GAME ID: ", game.id);
-        reply.send({message: "Success", id: game.id});
+        reply.send({message: "Success", id: game.id, state: "InitRemote"});
     }
     else if (message === "accept-invit") {
         const {friendId} = body || {};
@@ -764,7 +800,7 @@ async function private_matchmaking(message, userId, body, headers, reply) {
                 game.player2.name = await getUserName(userId);
                 game.player2.status = "Online";
                 games.set(game.id, game);
-                reply.send({message: "Success", id: game.id});
+                reply.send({message: "Success", id: game.id, state: "InitRemote"});
                 break;
             }            
         }
@@ -827,7 +863,7 @@ async function public_matchmaking(userId, reply) {
         game.player1.status = "Online";
         pendingRemoteGame.push(game);
         games.set(game.id, game);
-        reply.send({message: "Success", id: game.id});
+        reply.send({message: "Success", id: game.id, state: "InitRemote"});
     }
     else {
         const gameTemp = pendingRemoteGame.shift();
@@ -836,7 +872,7 @@ async function public_matchmaking(userId, reply) {
         game.player2.name = queue[0][1];
         game.player2.status = "Online";
         games.set(game.id, game);
-        reply.send({message: "Success", id: game.id});
+        reply.send({message: "Success", id: game.id, state: "InitRemote"});
     }
     queue.shift();
 }
@@ -855,11 +891,14 @@ fastify.post("/remote", async (request, reply) => {
         for (const [gameId, game] of games.entries() ) {
             if (parseInt(game.player1.id, 10) === parseInt(userId, 10) || parseInt(game.player2.id, 10) === parseInt(userId, 10)) {
                 console.log("GAME FOUND");
-                if (game.message === "Pause") {
-                    console.log("GAME PAUSED");
-                    reply.send({message: "Success", id: game.id});
-                    return ;
-                }
+                // if (game.message === "Pause") {
+                //     console.log("GAME PAUSED");
+                if (game.message === "Pause")
+                    reply.send({message: "Success", id: game.id, state: "InitRemote"});
+                else
+                    reply.code(400).send(JSON.stringify({message: "Error", error: "You're already in game"}));
+                return ;
+                // }
             }           
         }
         if (!message)

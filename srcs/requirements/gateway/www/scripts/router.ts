@@ -141,7 +141,7 @@ class Router {
 		this.handleRoute();
 
 		window.addEventListener('hashchange', () => {
-			// closePongSocket();
+			closePongSocket();
 			this.handleRoute();
 		});
 
