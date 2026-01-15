@@ -20,6 +20,12 @@ export function signup() {
 					body: JSON.stringify({ userName, mail, password, enable2FA }),
 				});
 
+				const contentType = res.headers.get("content-type");
+				if (!contentType || !contentType.includes("application/json")){
+					console.error(`Invalid response format: ${res.status}`);
+					return ;
+				}
+
 				const data = await res.json();
 				const msg = document.getElementById("signup-msg");
 				if (msg)

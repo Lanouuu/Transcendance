@@ -14,6 +14,12 @@ async function updateName(userId: string, token: string) {
             body: JSON.stringify({ newName }),
         });
 
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
+
         const data = await res.json();
         
         if (msg) {
@@ -46,6 +52,12 @@ async function updateMail(userId: string, token: string) {
 		    },
             body: JSON.stringify({ newMail, confirmMail }),
         });
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
 
         const data = await res.json();
         const msg = document.getElementById("editMail-msg");
@@ -80,6 +92,12 @@ async function updatePass(userId: string, token: string) {
 			},
             body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
         });
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
 
         const data = await res.json();
         const msg = document.getElementById("editPassword-msg");

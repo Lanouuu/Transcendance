@@ -99,7 +99,7 @@ export async function runServer() {
     try {
       const tourInfo = await dbtour.get("SELECT * FROM tournament WHERE id = ?", [tournament_id]);
       if (!tourInfo)
-        return reply.code(400).send(JSON.stringify({error: "No tournament found"}))
+        return reply.code(400).send({error: "No tournament found"})
       if (tourInfo.creator_id === userId && tourInfo.status === "pending") {
         await dbtour.run("DELETE FROM tournament WHERE id = ?", [tournament_id]);
         const res = await fetch(`https://game:3002/deleteAlias`, {
@@ -134,7 +134,7 @@ export async function runServer() {
       }
       reply.code(200).send({message: "Success"})
     }catch(err) {
-      return reply.code(400).send(JSON.stringify({error: "Failed to fetch tournament information"}))
+      return reply.code(400).send({error: "Failed to fetch tournament information"})
     }
   });
 
@@ -212,9 +212,9 @@ export async function runServer() {
         [userId]
       );
       if (id) {
-        return reply.code(200).send(JSON.stringify({ tournamentId: id.id, isRegistered: true}));
+        return reply.code(200).send({ tournamentId: id.id, isRegistered: true});
       }
-      return reply.code(200).send(JSON.stringify({tournamentId: undefined, isRegistered: false }));
+      return reply.code(200).send({tournamentId: undefined, isRegistered: false });
 
   })
 
@@ -231,16 +231,16 @@ export async function runServer() {
         [tournamentId, userId]
       );
       if (!checkId || !checkId.id) {
-        return reply.code(403).send(JSON.stringify({error: "User not in tournament"}))
+        return reply.code(403).send({error: "User not in tournament"})
       }
 
       const tourInfo = await dbtour.get("SELECT * FROM tournament WHERE id = ?", [tournamentId]);
 
       if (tourInfo)
-          return reply.code(200).send(JSON.stringify({tournament: tourInfo}))
-      return reply.code(400).send(JSON.stringify({error: "No tournament found"}))
+          return reply.code(200).send({tournament: tourInfo})
+      return reply.code(400).send({error: "No tournament found"})
     }catch(err) {
-      return reply.code(400).send(JSON.stringify({error: "Failed to fetch tournament information"}))
+      return reply.code(400).send({error: "Failed to fetch tournament information"})
     }
   })
 
@@ -263,7 +263,7 @@ export async function runServer() {
 
       if (mode === "local") {
         if (checkUniqueAlias(alias) === false)
-          return reply.code(400).send(JSON.stringify({message: "Error", error:"Alias already taken"}));
+          return reply.code(400).send({message: "Error", error:"Alias already taken"});
       }
       const alreadyIn = await dbtour.get(
         "SELECT id, name FROM tournament \
@@ -441,21 +441,22 @@ export async function runServer() {
       .filter(Boolean)
       .map(id => parseInt(id, 10));
       console.log(playersIds);
-
+      
       const upd = await dbtour.run(
         "UPDATE tournament \
         SET status = 'playing' \
         WHERE id = (SELECT id FROM tournament WHERE creator_id = ? ORDER BY created_at DESC LIMIT 1) \
-          AND status = 'pending'",
+        AND status = 'pending'",
         [creator]
       );
       if(upd.changes !== 1) {
         return reply.code(409).send({error: "Tournament not updated"});
       }
-
+      
       const schedule = generateRoundRobin(playersIds);
       console.log(schedule);
       
+      reply.header('Content-Type', 'application/json').send({message: "Success"})
       if (res.mode === "remote") {
         const data = await fetch(`https://game:3002/remoteTournament`, {
           method: "POST",
@@ -499,7 +500,6 @@ export async function runServer() {
           }
         }
       }
-      reply.send({message: "Success"})
       console.log("MESSAGE SENDED");
       
     } catch (err) {

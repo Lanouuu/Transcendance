@@ -612,15 +612,15 @@ fastify.post("/tournamentAlias", async (request, reply) => {
     const userId = request.headers["x-user-id"];
 
     if (!alias) {
-        return reply.code(400).send(JSON.stringify("Alias required"));
+        return reply.code(400).send("Alias required");
     }
 
     if (!mode) {
-        return reply.code(400).send(JSON.stringify("Mode required"));
+        return reply.code(400).send("Mode required");
     }
 
     if (!tournament_id) {
-        return reply.code(400).send(JSON.stringify("Tournament id required"));
+        return reply.code(400).send("Tournament id required");
     }
    
     try {
@@ -648,10 +648,10 @@ fastify.post("/tournamentAlias", async (request, reply) => {
             }
             console.log("TOURNAMENT ALIAS: ", tournamentAlias);  
         }
-        reply.code(200).send(JSON.stringify({message: "Success"}));
+        reply.code(200).send({message: "Success"});
     }catch(error) {
         console.log("Error in alias API route: ", error.message);
-        reply.code(400).send(JSON.stringify({message: "Error", error: error.message}));
+        reply.code(400).send({message: "Error", error: error.message});
     }
 }) 
 // END
@@ -663,13 +663,13 @@ fastify.post("/deleteAlias", async (request, reply) => {
     const { tournament_id, message } = request.body || {};
     const userId = request.headers["x-user-id"]
     if (!tournament_id) {
-        return reply.code(400).send(JSON.stringify("Tournament id required"));
+        return reply.code(400).send("Tournament id required");
     }
     if (!message) {
-        return reply.code(400).send(JSON.stringify("Message required"));
+        return reply.code(400).send("Message required");
     }
     if (!userId) {
-        return reply.code(400).send(JSON.stringify("User id required"));
+        return reply.code(400).send("User id required");
     }
     
     try {
@@ -697,10 +697,10 @@ fastify.post("/deleteAlias", async (request, reply) => {
             tournamentAlias.delete(Number(tournament_id));
             console.log("IN DELETE TOURNAMENT, AFTER: ", tournamentAlias)
         }
-        reply.code(200).send(JSON.stringify({message: "Success"}));
+        reply.code(200).send({message: "Success"});
     }catch(error) {
         console.log("Error in alias API route: ", error.message);
-        reply.code(400).send(JSON.stringify({message: "Error", error: error.message}));
+        reply.code(400).send({message: "Error", error: error.message});
     }
 }) 
 // END
@@ -715,7 +715,7 @@ fastify.get("/local", async (request, reply) => {
             if (game.message === "Pause")
                 reply.send({message: "Success", id: game.id, state: "InitRemote"});
             else
-                reply.code(400).send(JSON.stringify({message: "Error", error: "You're already in game"}));
+                reply.code(400).send({message: "Error", error: "You're already in game"});
             return ;
         }           
     }
@@ -896,7 +896,7 @@ fastify.post("/remote", async (request, reply) => {
                 if (game.message === "Pause")
                     reply.send({message: "Success", id: game.id, state: "InitRemote"});
                 else
-                    reply.code(400).send(JSON.stringify({message: "Error", error: "You're already in game"}));
+                    reply.code(400).send({message: "Error", error: "You're already in game"});
                 return ;
                 // }
             }           
@@ -1158,7 +1158,7 @@ fastify.post("/input", async (request, reply) => {
             throw new Error("User id required");
         if (key) {
             if (!games.has(parseInt(gameId, 10))) {
-                reply.send(JSON.stringify({ error: "Game not found" }));
+                reply.send({ error: "Game not found" });
                 return;
             }
             const game = games.get(parseInt(gameId, 10));
@@ -1179,7 +1179,7 @@ fastify.post("/input", async (request, reply) => {
         }
     } catch (e) {
         console.log("Error, in API ROUTE INPUT: ", e.message);
-        reply.send(JSON.stringify({ error: e.message }));
+        reply.send({ error: e.message });
     }
 })
 
@@ -1192,7 +1192,7 @@ fastify.get("/state/:id", async (request, reply) => {
         }
         const game = games.get(id);
         console.log("GAME FOUND");
-        reply.send(JSON.stringify(game));
+        reply.send(game);
     }catch(e) {
         reply.status(404).send({ error: e.message });
     }

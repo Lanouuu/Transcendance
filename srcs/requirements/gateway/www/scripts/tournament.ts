@@ -44,8 +44,8 @@ export async function displayTournamentPage() {
 	} else {
 
 		const tournamentDiv: HTMLDivElement = document.getElementById('tournamentDiv') as HTMLDivElement;
-		const tournamentPage: HTMLDivElement = document.getElementById('tournamentPage') as HTMLDivElement;
 		tournamentDiv.classList.remove('hidden');
+
 		const userId: string | null = sessionStorage.getItem("userId");
 		const token: string | null = sessionStorage.getItem("jwt");
 
@@ -236,19 +236,18 @@ async function createTournament(userId: string, token: string, tournamentName: s
 			},
 			body: JSON.stringify({ name: tournamentName, creator_id: userId, nb_max_players: maxPlayerSelected, mode: tournamentMode, alias: aliasArray })
 		});
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			tournamentAliasDiv.classList.add('hidden');
+			tournamentCreationDiv.classList.remove('hidden');
+			return ;
+		}
+
 		if (!res.ok) {
 			const text = await res.json();
 			console.error(`Server error ${res.status}:`, text.error);
-			displayMsg(msg, text.error, "red");
-			tournamentAliasDiv.classList.add('hidden');
-			tournamentCreationDiv.classList.remove('hidden');
-			return;
-		}
-
-		const contentType = res.headers.get("content-type");
-		if (!contentType || !contentType.includes("application/json")) {
-			const text = await res.json();
-			console.error(`Server did not return JSON`, text.error);
 			displayMsg(msg, text.error, "red");
 			tournamentAliasDiv.classList.add('hidden');
 			tournamentCreationDiv.classList.remove('hidden');
@@ -319,6 +318,12 @@ async function displayJoinedTournament(userId: string, token: string, tournament
 			}
 		});
 
+		const contentType = resCreatorName.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${resCreatorName.status}`);
+			return ;
+		}
+
 		const dataCreator = await resCreatorName.json();
 
 		if (!resCreatorName.ok) creatorDiv.textContent = `Created by: <unknown>`;
@@ -357,14 +362,13 @@ async function displayJoinedTournament(userId: string, token: string, tournament
 			window.dispatchEvent(new Event('hashchange'));
 		};
 
+		tournamentCreationDiv.classList.add('hidden');
+		tournamentListDiv.classList.add('hidden');
+		joinedTournamentDiv.classList.remove('hidden');
 	} catch (error) {
 		console.error("Error getting tournament info", error);
 		return ;
 	}
-
-	tournamentCreationDiv.classList.add('hidden');
-	tournamentListDiv.classList.add('hidden');
-	joinedTournamentDiv.classList.remove('hidden');
 }
 
 async function startTournament(userId: string, token: string, msg: HTMLDivElement) {
@@ -380,6 +384,12 @@ async function startTournament(userId: string, token: string, msg: HTMLDivElemen
 				"x-user-id": userId,
 			}
 		});
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
 
 		if (!res.ok) {
 		    const errorText = await res.json();
@@ -466,6 +476,12 @@ async function displayTournamentList(userId: string, token: string, wantedStatus
 			}
 		});
 
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
+
 		if (!res.ok) {
 			displayMsg(tournamentListMsg, "Failed to fetch tournament list", "red");
 			return;
@@ -528,19 +544,23 @@ async function displayTournamentList(userId: string, token: string, wantedStatus
 async function joinTournament(tournamentId: number, token: string, userId: string, msg: HTMLDivElement) {
 
 	let	aliasArray:	string[] = await displayTournamentAlias('remote', '1');
-	console.log("AliasArray = ", aliasArray);
-	// Envoyer l'alias
 
 	try {
 			const res = await fetch(`${route}/tournamentJoin`, {
-			method: "POST",
-			headers: {
-				"authorization": `Bearer ${token}`,
-				"x-user-id": userId,
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify({ idTour: tournamentId, alias: aliasArray }) // Envoyer l'alias dans le body
+				method: "POST",
+				headers: {
+					"authorization": `Bearer ${token}`,
+					"x-user-id": userId,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({ idTour: tournamentId, alias: aliasArray })
 			});
+		
+			const contentType = res.headers.get("content-type");
+			if (!contentType || !contentType.includes("application/json")){
+				console.error(`Invalid response format: ${res.status}`);
+				return ;
+			}
 
 			if (!res.ok) {
 				const error = await res.json();
@@ -582,13 +602,20 @@ async function isInTournament(userId: string, token: string): Promise<{tournamen
 				"x-user-id": userId,
 			},
 		});
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ({tournamentId: undefined, isRegistered: false});
+		}
+
 		const data = await res.json();
 		if (!res.ok) {
 			console.error("Error looking up tournament registration");
 			return (data);
 		}
+
 		return (data);
-		
 	} catch (error) {
 		console.error("Error fetching isInTournament:", error);
 		return ({tournamentId: undefined, isRegistered: false});
@@ -605,6 +632,13 @@ async function getTournamentInfo(userId: string, token: string, tournamentId: st
 				"x-user-id": userId,
 			},
 		});
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return (null);
+		}
+
 		const data = await res.json();
 		if (!res.ok) {
 			console.error("Error getting tournament infos:", data.error);

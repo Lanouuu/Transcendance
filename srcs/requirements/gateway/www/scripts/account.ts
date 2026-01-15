@@ -116,6 +116,12 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 			},
 		});
 
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
+
 		const data = await res.json();
 		if (!res.ok){
 			userInfoMsg.classList.remove('opacity-0');
@@ -139,6 +145,12 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 				"x-user-id": userId
 			},
 		});
+
+		const imgContentType = res.headers.get("content-type");
+		if (!imgContentType || !imgContentType.startsWith("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
 
 		if (resImg.ok) {
 			const imgBlob = await resImg.blob();
@@ -173,6 +185,12 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 					},
 				});
 
+				const contentType = res.headers.get("content-type");
+				if (!contentType || !contentType.includes("application/json")){
+					console.error(`Invalid response format: ${res.status}`);
+					return ;
+				}
+
 				const data = await res.json();
 				if (!res.ok){
 					userInfoMsg.style.color = 'red';
@@ -201,6 +219,12 @@ async function showInfosTab(userId: string, token: string): Promise<void> {
 						"x-user-id": userId
 					},
 				});
+
+				const contentType = res.headers.get("content-type");
+				if (!contentType || !contentType.includes("application/json")){
+					console.error(`Invalid response format: ${res.status}`);
+					return ;
+				}
 
 				const data = await res.json();
 				if (!res.ok){
@@ -364,6 +388,14 @@ async function displayFriendList(userId: string, token: string, ulFriendsList: H
 				"x-user-id": userId
 			},
 		});
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
+
+		const { friendsList } = (await res.json());
 		if (friendListMsg) {
 			friendListMsg.classList.remove('opacity-0');
 			if (!res.ok) {
@@ -378,8 +410,6 @@ async function displayFriendList(userId: string, token: string, ulFriendsList: H
 			console.error("Could not fetch friendList");
 			return ;
 		}
-
-		const { friendsList } = (await res.json());
 
 		ulFriendsList.innerHTML = "";
 		const frag = document.createDocumentFragment();
@@ -400,6 +430,12 @@ async function displayFriendList(userId: string, token: string, ulFriendsList: H
 						headers: { "authorization": `Bearer ${token}` },
 					})
 				]);
+
+				const contentType = res.headers.get("content-type");
+				if (!contentType || !contentType.includes("application/json")){
+					console.error(`Invalid response format: ${res.status}`);
+					return ;
+				}
 
 				if (resStatus && resStatus.ok) {
 					isOnline = (await resStatus.json()).online;
@@ -432,6 +468,13 @@ async function displayPendingList(userId: string, token: string, ulPendingList: 
 				"x-user-id": userId
 			},
 		});
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
+
 		if (!res.ok) throw new Error(`Invite list not found`);
 		const { pendingList } = (await res.json());
 
@@ -468,6 +511,12 @@ async function listenSendInvite(userId: string, token: string, invitForm: HTMLFo
             		body: JSON.stringify({ friendName }),
 				})
 				
+				const contentType = res.headers.get("content-type");
+				if (!contentType || !contentType.includes("application/json")){
+					console.error(`Invalid response format: ${res.status}`);
+					return ;
+				}
+
 				const data = await res.json();
         		const msg = document.getElementById("sendInvit-msg");
         		if (msg) {
@@ -503,6 +552,13 @@ async function displayBlockedList(userId: string, token: string, ulBlockedList: 
 				"x-user-id": userId
 			},
 		});
+
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
+
 		if (!res.ok) throw new Error(`Blocked list not found`);
 		const { blockedUsers } = (await res.json());
 
@@ -561,6 +617,13 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 				"authorization": `Bearer ${token}`,
 			}
 		});
+		
+		const onlineContentType = onlineRes.headers.get("content-type");
+		if (!onlineContentType || !onlineContentType.includes("application/json")){
+			console.error(`Invalid response format: ${onlineRes.status}`);
+			return ;
+		}
+
 		const onlineData = await onlineRes.json();
 		if (!onlineRes.ok) {
 			console.error(onlineData.error);
@@ -587,6 +650,13 @@ function createLiFriendItem(avatarUrl: string, friendId: string, friendName: str
 			},
 			body: JSON.stringify({gameType: "pong", message: "invit"})
 		}); 
+		
+		const invContentType = inviteRes.headers.get("content-type");
+		if (!invContentType || !invContentType.includes("application/json")){
+			console.error(`Invalid response format: ${inviteRes.status}`);
+			return ;
+		}
+
 		if (!inviteRes.ok) {
 			const data = await inviteRes.json();
 			const errorMsg: HTMLDivElement = document.getElementById("friendListMsg") as HTMLDivElement;
@@ -850,6 +920,13 @@ async function showHistoryTab(userId: string, token: string): Promise<void> {
 				"x-user-id": userId
 			},
 		});
+		
+		const contentType = res.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")){
+			console.error(`Invalid response format: ${res.status}`);
+			return ;
+		}
+
 		if (!res.ok) throw new Error(`Match history not found`);
 		const { matchList } = (await res.json());
 
