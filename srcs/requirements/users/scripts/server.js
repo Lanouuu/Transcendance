@@ -285,9 +285,9 @@ export async function runServer() {
 
         let stmt = null;
         if (reqID !== id) {
-          stmt = usersDB.prepare("SELECT id, name, pong_wins, pong_losses, snake_wins, snake_losses FROM users WHERE id = ?");
+          stmt = usersDB.prepare("SELECT id, name, pong_wins, pong_losses, snake_wins, snake_losses, snake_elo FROM users WHERE id = ?");
         } else {
-          stmt = usersDB.prepare("SELECT id, name, mail, enable2FA, pong_wins, pong_losses, snake_wins, snake_losses, created_at FROM users WHERE id = ?");
+          stmt = usersDB.prepare("SELECT id, name, mail, enable2FA, pong_wins, pong_losses, snake_wins, snake_losses, snake_elo, created_at FROM users WHERE id = ?");
         }
         const user = stmt.get(id);
         if (!user) {
@@ -876,6 +876,28 @@ export async function runServer() {
 
     //#region matches_management
 
+    /**
+     * Calcule le nouveau rating ELO pour deux joueurs après un match
+     * Formule standard: Nouveau ELO = Ancien ELO + K × (Score réel - Score attendu)
+     *
+     * @param {number} eloA - ELO actuel du joueur A
+     * @param {number} eloB - ELO actuel du joueur B
+     * @param {number} scoreA - Score réel du joueur A (1 = victoire, 0.5 = draw, 0 = défaite)
+     * @param {number} scoreB - Score réel du joueur B
+     * @returns {Object} {newEloA, newEloB}
+     */
+    function calculateNewElo(eloA, eloB, scoreA, scoreB) {
+      const K = 32;  // Facteur standard pour joueurs réguliers
+
+      const expectedA = 1 / (1 + Math.pow(10, (eloB - eloA) / 400));
+      const expectedB = 1 / (1 + Math.pow(10, (eloA - eloB) / 400));
+
+      const newEloA = Math.round(eloA + K * (scoreA - expectedA));
+      const newEloB = Math.round(eloB + K * (scoreB - expectedB));
+
+      return { newEloA, newEloB };
+    }
+
     fastify.post("/save-match", async (req, reply) => {
       try {
         const { player1ID, player2ID, winnerID, scoreP1, scoreP2, matchType, gameType } = req.body;
@@ -923,6 +945,43 @@ export async function runServer() {
             WHERE id = ?
           `);
           updateLoserStmt.run(gameType, gameType, loserID);
+        }
+
+        // === CALCUL ELO POUR SNAKE ===
+        if (gameType === "snake") {
+          // Récupérer les ELO actuels
+          const p1EloStmt = usersDB.prepare('SELECT snake_elo FROM users WHERE id = ?');
+          const p2EloStmt = usersDB.prepare('SELECT snake_elo FROM users WHERE id = ?');
+
+          const p1Elo = p1EloStmt.get(player1ID)?.snake_elo || 1200;
+          const p2Elo = p2EloStmt.get(player2ID)?.snake_elo || 1200;
+
+          // Déterminer les scores (1 = victoire, 0.5 = draw, 0 = défaite)
+          let scoreP1, scoreP2;
+
+          if (Number(winnerID) === 0) {
+            // Draw
+            scoreP1 = 0.5;
+            scoreP2 = 0.5;
+          } else if (Number(winnerID) === Number(player1ID)) {
+            // Player 1 gagne
+            scoreP1 = 1;
+            scoreP2 = 0;
+          } else {
+            // Player 2 gagne
+            scoreP1 = 0;
+            scoreP2 = 1;
+          }
+
+          // Calculer les nouveaux ELO
+          const { newEloA, newEloB } = calculateNewElo(p1Elo, p2Elo, scoreP1, scoreP2);
+
+          // Mettre à jour les ELO
+          const updateEloStmt = usersDB.prepare('UPDATE users SET snake_elo = ? WHERE id = ?');
+          updateEloStmt.run(newEloA, player1ID);
+          updateEloStmt.run(newEloB, player2ID);
+
+          console.log(`ELO updated: P1 ${p1Elo} → ${newEloA}, P2 ${p2Elo} → ${newEloB}`);
         }
 
         return reply.status(201).send({ success: true, message: "Match saved" });

@@ -56,7 +56,8 @@ export function runServer() {
     // === GESTION DE L'ÉTAT DES PARTIES ===
     const games = new Map();           // Map(gameId → SnakeGame) - Toutes les parties actives
     let gameId = 0;                     // Compteur incrémental pour les IDs de partie
-    let pendingRemoteGame = [];         // File d'attente pour le matchmaking (mode remote)
+    let pendingRemoteQueue = [];        // File d'attente pour le matchmaking ELO (mode remote)
+                                        // Structure: [{game, userId, userName, elo, timestamp}]
 
     // ========================================================================
     // FONCTIONS UTILITAIRES
@@ -113,7 +114,7 @@ export function runServer() {
         try {
             const response = await fetch(`http://users:3000/get-user/${userId}`, {
                 method: "GET",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
                     "x-user-id": userId
                  }
@@ -126,6 +127,83 @@ export function runServer() {
             console.error("Error fetching username:", e.message);
         }
         return `Player ${userId}`;  // Fallback
+    }
+
+    /**
+     * Récupère l'ELO Snake d'un utilisateur depuis le service users
+     *
+     * @param {number} userId - ID de l'utilisateur
+     * @returns {Promise<number>} ELO du joueur (défaut: 1200)
+     *
+     * @description Fait une requête HTTP au microservice users pour récupérer le snake_elo
+     *   En cas d'erreur ou si l'ELO n'existe pas, retourne 1200 (ELO de départ)
+     */
+    async function getUserElo(userId) {
+        try {
+            const response = await fetch(`http://users:3000/get-user/${userId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-user-id": userId
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                return data.snake_elo || 1200;
+            }
+        } catch (e) {
+            console.error("Error fetching user ELO:", e.message);
+        }
+        return 1200;  // Fallback
+    }
+
+    /**
+     * Calcule la tolérance ELO basée sur le temps d'attente
+     *
+     * @param {number} waitTime - Temps d'attente en millisecondes
+     * @returns {number} Tolérance ELO
+     *
+     * @description Système de tolérance progressive pour garantir qu'un joueur trouve toujours un match:
+     *   0-5s:   ±100 ELO (matchs très équilibrés)
+     *   5-10s:  ±200 ELO (matchs équilibrés)
+     *   10-20s: ±500 ELO (matchs corrects)
+     *   >20s:   Infini (accepte n'importe qui)
+     */
+    function calculateEloTolerance(waitTime) {
+        const seconds = waitTime / 1000;
+
+        if (seconds < 5) return 100;
+        if (seconds < 10) return 200;
+        if (seconds < 20) return 500;
+        return Infinity;  // Après 2 minutes, accepte n'importe qui
+    }
+
+    /**
+     * Trouve le meilleur adversaire pour un joueur dans la file d'attente
+     *
+     * @param {number} playerElo - ELO du joueur cherchant un match
+     * @param {number} tolerance - Tolérance ELO acceptable
+     * @param {Array} queue - File d'attente des joueurs
+     * @returns {Object|null} Meilleur adversaire trouvé (structure: {game, userId, userName, elo, timestamp}), ou null
+     *
+     * @description Algorithme d'appairage:
+     *   1. Filtre les candidats dont l'ELO est dans la tolérance
+     *   2. Parmi les candidats valides, retourne le plus ancien (FIFO)
+     *   3. Si aucun candidat valide, retourne null
+     */
+    function findBestMatch(playerElo, tolerance, queue) {
+        if (queue.length === 0) return null;
+
+        // Filtre les candidats dans la tolérance ELO
+        const candidates = queue.filter(entry => {
+            const eloDiff = Math.abs(entry.elo - playerElo);
+            return eloDiff <= tolerance;
+        });
+
+        if (candidates.length === 0) return null;
+
+        // Prend le plus ancien (FIFO) parmi les candidats valides
+        return candidates[0];
     }
 
     /**
@@ -386,7 +464,7 @@ export function runServer() {
         // ÉTAPE 3 : Gestion de la croissance
         // Le serpent ne grandit que tous les 4 ticks
         // Entre-temps, on retire la queue pour maintenir la longueur
-        if (tickCount % 4 !== 0) {
+        if (tickCount % 2 !== 0) {
             player.snake.pop();  // Retire le dernier segment (queue)
         }
         // Si tickCount % 4 === 0 → pas de pop() → le serpent grandit d'une cellule
@@ -473,7 +551,8 @@ export function runServer() {
 
                 // Sauvegarde les résultats si partie en ligne
                 if (game.mode === "remote") {
-                    sendResult(game);  // POST vers service users
+                    sendResult(game);
+                    games.delete(game.id);  // POST vers service users
                 }
 
                 // Arrête la game loop
@@ -530,7 +609,7 @@ export function runServer() {
         }
     });
 
-    // Remote game route
+    // Remote game route with ELO-based matchmaking
     fastify.get("/remote", async (request, reply) => {
         try {
             const userId = request.headers["x-user-id"];
@@ -539,11 +618,36 @@ export function runServer() {
                 return reply.status(401).send({ error: "User ID required" });
             }
 
-            const userName = await getUserName(userId);
+            // Vérifier si le joueur est déjà en partie
+            for (const game of games.values()) {
+                if (game.player1.id === userId || game.player2.id === userId) {
+                    return reply.status(400).send({ error: "User is already in a game" });
+                }
+            }
 
-            // Check if there's a pending game BEFORE adding to queue (prevent race condition)
-            if (pendingRemoteGame.length === 0) {
-                // First player: create waiting game
+            // Vérifier si le joueur est déjà en attente
+            const alreadyInQueue = pendingRemoteQueue.find(entry => entry.userId === userId);
+            if (alreadyInQueue) {
+                return reply.status(400).send({ error: "User is already in queue" });
+            }
+
+            // Récupérer les infos du joueur
+            const userName = await getUserName(userId);
+            const userElo = await getUserElo(userId);
+
+            // Calculer la tolérance basée sur le joueur le plus ancien en attente
+            let tolerance = 100;  // Tolérance par défaut
+            if (pendingRemoteQueue.length > 0) {
+                const oldestEntry = pendingRemoteQueue[0];
+                const waitTime = Date.now() - oldestEntry.timestamp;
+                tolerance = calculateEloTolerance(waitTime);
+            }
+
+            // Chercher un adversaire compatible
+            const opponent = findBestMatch(userElo, tolerance, pendingRemoteQueue);
+
+            if (!opponent) {
+                // Aucun adversaire trouvé: créer une partie en attente
                 const game = new SnakeGame({
                     id: gameId++,
                     socket: [],
@@ -551,7 +655,7 @@ export function runServer() {
                     message: "Waiting"
                 });
 
-                // Initialize Player 1
+                // Initialiser Player 1
                 const spawn1 = generateRandomSpawn(game.grid.width, game.grid.height, null);
                 game.player1.snake = spawn1.snake;
                 game.player1.direction = spawn1.direction;
@@ -559,20 +663,33 @@ export function runServer() {
                 game.player1.id = userId;
                 game.player1.name = userName;
 
-                pendingRemoteGame.push(game);
-                games.set(game.id, game);
-                reply.send(game);
-            } else {
-                // Second player: join and start
-                const gameTemp = pendingRemoteGame.shift();
-                const game = games.get(gameTemp.id);
+                // Ajouter à la queue avec ELO et timestamp
+                pendingRemoteQueue.push({
+                    game: game,
+                    userId: userId,
+                    userName: userName,
+                    elo: userElo,
+                    timestamp: Date.now()
+                });
 
-                // Verify game still exists
+                games.set(game.id, game);
+                return reply.send(game);
+            } else {
+                // Adversaire trouvé: démarrer la partie
+                const gameEntry = opponent;
+                const game = games.get(gameEntry.game.id);
+
+                // Vérifier que la partie existe toujours
                 if (!game) {
+                    // Partie disparue, retirer de la queue et recommencer
+                    const index = pendingRemoteQueue.indexOf(gameEntry);
+                    if (index !== -1) {
+                        pendingRemoteQueue.splice(index, 1);
+                    }
                     return reply.status(404).send({ error: "Game no longer available" });
                 }
 
-                // Initialize Player 2
+                // Initialiser Player 2
                 const spawn2 = generateRandomSpawn(game.grid.width, game.grid.height, game.player1.snake);
                 game.player2.snake = spawn2.snake;
                 game.player2.direction = spawn2.direction;
@@ -582,9 +699,16 @@ export function runServer() {
 
                 game.message = "start";
                 games.set(game.id, game);
+
+                // Retirer l'adversaire de la queue
+                const index = pendingRemoteQueue.indexOf(gameEntry);
+                if (index !== -1) {
+                    pendingRemoteQueue.splice(index, 1);
+                }
+
                 reply.send(game);
 
-                // Notify first player
+                // Notifier Player 1 que la partie commence
                 game.socket.forEach(socket => {
                     if (socket.readyState === 1) {
                         socket.send(JSON.stringify(serializeGameState(game)));
@@ -593,7 +717,7 @@ export function runServer() {
             }
         } catch (e) {
             console.error(e.message);
-            reply.status(400).send({ error: "Internal server error" });
+            reply.status(500).send({ error: "Internal server error" });
         }
     });
 
@@ -723,6 +847,12 @@ export function runServer() {
         ws.on('close', function close() {
             console.log("WebSocket connection closed");
 
+            // Nettoyage de la queue d'attente (retirer les parties invalides)
+            pendingRemoteQueue = pendingRemoteQueue.filter(entry => {
+                const game = games.get(entry.game.id);
+                return game !== undefined;
+            });
+
             // Cleanup: find and remove this WebSocket from all games
             games.forEach((game, gameId) => {
                 const socketIndex = game.socket.indexOf(ws);
@@ -737,9 +867,9 @@ export function runServer() {
                         games.delete(gameId);
 
                         // Remove from pending queue if present
-                        const pendingIndex = pendingRemoteGame.findIndex(g => g.id === gameId);
+                        const pendingIndex = pendingRemoteQueue.findIndex(entry => entry.game.id === gameId);
                         if (pendingIndex !== -1) {
-                            pendingRemoteGame.splice(pendingIndex, 1);
+                            pendingRemoteQueue.splice(pendingIndex, 1);
                         }
 
                         console.log(`Game ${gameId} cleaned up`);
