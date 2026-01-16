@@ -54,7 +54,7 @@ function generateGuestPlayer(nbPlayer, ids, creator){
   for (let i = 0; i < parseInt(nbPlayer, 10) - 1; i++) {
     ids += "," + String(parseInt(creator, 10) + i + 1)
   }
-  console.log("IDS FOR LOCAL TOURNAMENT: ", ids)
+  // console.log("IDS FOR LOCAL TOURNAMENT: ", ids);
   return ids
 }
 
@@ -62,8 +62,8 @@ function checkUniqueAlias(alias) {
   for (let i = 0; i < alias.length; i++) {
     let j = 0;
     for (j = j + i + 1; j < alias.length; j++) {
-      console.log("alias[i]: ", alias[i]);
-      console.log("alias[j]: ", alias[j]);
+      // console.log("alias[i]: ", alias[i]);
+      // console.log("alias[j]: ", alias[j]);
       if (alias[i] === alias[j])
         return false;
     }
@@ -171,7 +171,7 @@ export async function runServer() {
           WHERE id = ?`,
           [userId, playerName, tournament_id]
         );
-        console.log(`Player ${userId} left tournament ${tournament_id}`);
+        // console.log(`Player ${userId} left tournament ${tournament_id}`);
       }
       const res = await fetch(`https://game:3002/deleteAlias`, {
         method: "POST",
@@ -249,11 +249,11 @@ export async function runServer() {
     const { name, creator_id, nb_max_players, mode, alias } = request.body || {};
     console.log("event detected")
     if (!name || !creator_id || !nb_max_players || !mode || !alias) {
-      console.log("name: ", name)
-      console.log("creator_id: ", creator_id)
-      console.log("nb_max_player: ", nb_max_players)
-      console.log("nb_max_player: ", mode)
-      console.log("MIssing information")
+      // console.log("name: ", name)
+      // console.log("creator_id: ", creator_id)
+      // console.log("nb_max_player: ", nb_max_players)
+      // console.log("nb_max_player: ", mode)
+      // console.log("MIssing information");
       return reply.code(400).send({ error: "name, creator_id, nb_max_players required, mode required" });
     }
 
@@ -293,7 +293,7 @@ export async function runServer() {
         "INSERT INTO tournament (name, mode, creator_id, nb_max_players, players_ids, players_names, nb_current_players) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [name, mode, creator_id, nb_max_players, `${creator_id}`, playerName, 1]
       );
-      console.log(`✓ Tournament created: "${name}" (ID: ${result.lastID}) by user ${creator_id}`);
+      // console.log(`✓ Tournament created: "${name}" (ID: ${result.lastID}) by user ${creator_id}`);
 			const res = await fetch(`https://game:3002/tournamentAlias`, {
 				method: "POST",
 				headers: {
@@ -403,7 +403,7 @@ export async function runServer() {
           nb_current_players = nb_current_players + 1
           WHERE id = ?`, [playerId, playerId, playerName, playerName, idTour]
         );
-        console.log(`✓ Player ${playerId} joined tournament ${idTour}`);
+        // console.log(`✓ Player ${playerId} joined tournament ${idTour}`);
         reply.send({ message: "Success", text: "Player added to tournament", tournament_id: idTour, id: res.creator_id });
       }
     } catch (err) {
@@ -469,7 +469,7 @@ export async function runServer() {
         if (response.message !== "Success")
           throw new Error("Fail to create match")
         else {
-          console.log("Winner: ", response.winner)
+          // console.log("Winner: ", response.winner);
           const upd = await dbtour.run(
           "UPDATE tournament SET status='finished', winner_alias = ? WHERE id=? AND status='playing'",
           [response.winner, res.id]
@@ -484,13 +484,13 @@ export async function runServer() {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ schedule, mode: res.mode, rmId: creator, id: res.id, nb_player: res.nb_max_players })
+          body: JSON.stringify({ schedule, mode: res.mode, rmId: creator, id: res.id})
         })
         const response = await data.json()
         if (response.message !== "Success")
           throw new Error("Fail to create match")
         else {
-          console.log("Winner: ", response.winner)
+          // console.log("Winner: ", response.winner);
           const upd = await dbtour.run(
           "UPDATE tournament SET status='finished', winner_alias = ? WHERE id=? AND status='playing'",
           [response.winner, res.id]
@@ -500,7 +500,7 @@ export async function runServer() {
           }
         }
       }
-      console.log("MESSAGE SENDED");
+      // console.log("MESSAGE SENDED");
       
     } catch (err) {
       request.log.error({ err }, "tournamentStart failed");

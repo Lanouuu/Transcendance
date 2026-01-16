@@ -245,7 +245,7 @@ async function createTournament(userId: string, token: string, tournamentName: s
 		if (response.message === "Success") {
 			displayMsg(msg, "Tournament created", "green");
 			displayJoinedTournament(userId, token, Number(response.tournament_id));
-            gameLoop(parseInt(response.id, 10), response.tournament_id, "initTournament", parseInt(userId, 10));
+            gameLoop(parseInt(response.id, 10), response.tournament_id, "InitTournament", parseInt(userId, 10));
 		}
 		else {
 			displayMsg(msg, "Tournament creation failed", "red");
@@ -553,7 +553,7 @@ async function joinTournament(tournamentId: number, token: string, userId: strin
 			if (response.message === "Success") {
 				displayJoinedTournament(userId, token, tournamentId);
 				displayMsg(msg, "Successfully joined tournament", "green");
-				gameLoop(parseInt(response.id, 10), response.tournament_id, "initTournament", parseInt(userId, 10));
+				gameLoop(parseInt(response.id, 10), response.tournament_id, "InitTournament", parseInt(userId, 10));
 			}
 			else 
 				displayMsg(msg, response.error, "red");				

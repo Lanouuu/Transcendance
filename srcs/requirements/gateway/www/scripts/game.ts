@@ -341,7 +341,7 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 			if (ws.readyState === WebSocket.OPEN) {
 				if (message === "InitLocal" || message === "InitRemote")
 					ws.send(JSON.stringify({id: gameId, message: message}))
-				else if (message === "initTournament")
+				else if (message === "InitTournament")
 					ws.send(JSON.stringify({id: gameId, tournamentId: tournament_id, userId: userId, message: message}))
 			}
 		})
@@ -395,9 +395,6 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 				setTimeout(() => {
 					displayNextMatch(serverGame.scheduleNames);
 				}, 100);			
-			}
-			else if (serverGame.message === "TournamentMatchs") {
-				// Recuperer les matchs dans serverGame.matchs
 			}
 			else if (serverGame.message === "TournamentEnd") {
 				displayTournamentEnd(serverGame.winner);
