@@ -10,13 +10,4 @@ export class Sprite {
         this.key = key
         this.score = score
     }
-
-    // draw() {
-    //     if (onload)
-    //         this.loaded = true
-
-    //     if (this.loaded) {
-    //         canvasContext.drawImage(this.image, this.position.x, this.position.y)
-    //     }
-    // }
 }

@@ -396,9 +396,6 @@ export async function gameLoop(gameId: Number, tournament_id: Number | undefined
 					displayNextMatch(serverGame.scheduleNames);
 				}, 100);			
 			}
-			else if (serverGame.message === "TournamentMatchs") {
-				// Recuperer les matchs dans serverGame.matchs
-			}
 			else if (serverGame.message === "TournamentEnd") {
 				displayTournamentEnd(serverGame.winner);
 				start = false;

@@ -54,7 +54,6 @@ function generateGuestPlayer(nbPlayer, ids, creator){
   for (let i = 0; i < parseInt(nbPlayer, 10) - 1; i++) {
     ids += "," + String(parseInt(creator, 10) + i + 1)
   }
-  console.log("IDS FOR LOCAL TOURNAMENT: ", ids)
   return ids
 }
 
@@ -62,8 +61,6 @@ function checkUniqueAlias(alias) {
   for (let i = 0; i < alias.length; i++) {
     let j = 0;
     for (j = j + i + 1; j < alias.length; j++) {
-      console.log("alias[i]: ", alias[i]);
-      console.log("alias[j]: ", alias[j]);
       if (alias[i] === alias[j])
         return false;
     }
@@ -247,13 +244,7 @@ export async function runServer() {
   // #region create
   fastify.post('/tournamentCreate', async (request, reply) => {
     const { name, creator_id, nb_max_players, mode, alias } = request.body || {};
-    console.log("event detected")
     if (!name || !creator_id || !nb_max_players || !mode || !alias) {
-      console.log("name: ", name)
-      console.log("creator_id: ", creator_id)
-      console.log("nb_max_player: ", nb_max_players)
-      console.log("nb_max_player: ", mode)
-      console.log("MIssing information")
       return reply.code(400).send({ error: "name, creator_id, nb_max_players required, mode required" });
     }
 
@@ -426,7 +417,6 @@ export async function runServer() {
         return reply.code(404).send({error: "Tournament not found"});
       }
       if (res.mode === "local") {
-        console.log("current player: ", res.nb_max_players)
         res.players_ids = generateGuestPlayer(res.nb_max_players, res.players_ids, creator)
       }
       if (res.status !== "pending") {
@@ -440,7 +430,6 @@ export async function runServer() {
       const playersIds = tour_ids.split(',')
       .filter(Boolean)
       .map(id => parseInt(id, 10));
-      console.log(playersIds);
       
       const upd = await dbtour.run(
         "UPDATE tournament \
@@ -454,7 +443,6 @@ export async function runServer() {
       }
       
       const schedule = generateRoundRobin(playersIds);
-      console.log(schedule);
       
       reply.header('Content-Type', 'application/json').send({message: "Success"})
       if (res.mode === "remote") {
@@ -469,7 +457,6 @@ export async function runServer() {
         if (response.message !== "Success")
           throw new Error("Fail to create match")
         else {
-          console.log("Winner: ", response.winner)
           const upd = await dbtour.run(
           "UPDATE tournament SET status='finished', winner_alias = ? WHERE id=? AND status='playing'",
           [response.winner, res.id]
@@ -490,7 +477,6 @@ export async function runServer() {
         if (response.message !== "Success")
           throw new Error("Fail to create match")
         else {
-          console.log("Winner: ", response.winner)
           const upd = await dbtour.run(
           "UPDATE tournament SET status='finished', winner_alias = ? WHERE id=? AND status='playing'",
           [response.winner, res.id]
@@ -500,7 +486,6 @@ export async function runServer() {
           }
         }
       }
-      console.log("MESSAGE SENDED");
       
     } catch (err) {
       request.log.error({ err }, "tournamentStart failed");
