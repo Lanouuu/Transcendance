@@ -20,15 +20,11 @@ export default async function routes(fastify, options) {
         }
 
         const token = await this.fortyTwoOauth2.getAccessTokenFromAuthorizationCodeFlow(request);
-        // console.log("Token reçu :", token);
-        // console.log("access Token :", token.token.access_token);
 
         const userInfo = await fetch("https://api.intra.42.fr/v2/me", {
         headers: { Authorization: `Bearer ${token.token.access_token}`,
         },
       });
-
-      // console.log("Réponse API 42 status :", userInfo.status);
 
       if (!userInfo.ok) {
         console.error("Erreur 42 API status:", userInfo.status, await userInfo.text());
@@ -89,10 +85,8 @@ export default async function routes(fastify, options) {
         await redis.set(`user:${user.id}:online`, "1", "EX", 30);
       } catch (err) {
         console.error("Erreur Redis set OAuth:", err);
-        // Continue même si Redis échoue
       }
 
-      //reply.code(200).send({ token:jwt, id: user.id });
       reply.redirect(`https://localhost:8443/#/oauth42-success?token=${jwt}&id=${user.id}`);
 
       } catch (err) {
@@ -193,7 +187,6 @@ export default async function routes(fastify, options) {
       }
     });
 
-    // connexion
     fastify.post("/login", async (request, reply) => {
       try {
         const { mail, password, code2FA } = request.body;
@@ -245,7 +238,6 @@ export default async function routes(fastify, options) {
           await redis.set(`user:${user.id}:online`, "1", "EX", 30);
         } catch (err) {
           console.error("Erreur Redis set:", err);
-          // Continue même si Redis échoue
         }
 
         reply.code(200).send({
@@ -258,7 +250,6 @@ export default async function routes(fastify, options) {
       }
     });
 
-    // deconnexion
     fastify.post("/logout", async (req, reply) => {
       try {
         const authHeader = req.headers["authorization"] || "";
@@ -294,7 +285,6 @@ export default async function routes(fastify, options) {
           await redis.del(`user:${userID}:online`);
         } catch (err) {
           fastify.log.error({ err }, "Erreur Redis del");
-          // Continue même si Redis échoue
         }
 
         reply.send({ message: "Logged out" });
