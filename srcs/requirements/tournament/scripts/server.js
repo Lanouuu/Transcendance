@@ -299,7 +299,7 @@ export async function runServer() {
 				throw new Error(error.error || "Alias already taken");
 			}
 
-      reply.send({ message: "Success", tournament_id: result.lastID, name , id: creator_id});
+      reply.code(200).send({ message: "Success", tournament_id: result.lastID, name , id: creator_id});
     } catch (err) {
       fastify.log.error({ err }, "Tournament creation failed");
       reply.code(400).send({ error: "Database insertion failed" });
@@ -309,7 +309,7 @@ export async function runServer() {
   fastify.get('/tournamentList', async (request, reply) => {
     try {
       const tourList = await dbtour.all("SELECT * FROM tournament WHERE mode = ? ORDER BY created_at DESC", ["remote"]);
-      reply.send(tourList);
+      reply.code(200).send(tourList);
     } catch (err) {
       fastify.log.error({ err }, "List tournaments failed");
       reply.code(400).send({ error: "Database read failed" });
@@ -395,7 +395,7 @@ export async function runServer() {
           WHERE id = ?`, [playerId, playerId, playerName, playerName, idTour]
         );
         console.log(`✓ Player ${playerId} joined tournament ${idTour}`);
-        reply.send({ message: "Success", text: "Player added to tournament", tournament_id: idTour, id: res.creator_id });
+        reply.code(200).send({ message: "Success", text: "Player added to tournament", tournament_id: idTour, id: res.creator_id });
       }
     } catch (err) {
       fastify.log.error({ err }, "Add player to tournament failed");
