@@ -228,8 +228,6 @@ async function gameLoop(game) {
             }
         });
     }
-    if (game.mode === "remote-tournament")
-        broadcastTournament(game.tournament_id);
     if (game.message === "END") {
         if (game.mode === "remote-tournament" || game.mode === "local-tournament")
             getScore(game);
@@ -474,7 +472,7 @@ wss.on('connection', function connection(ws) {
                         pendingRemoteGame.splice(pendingIndex, 1);
                     }
                     games.delete(Number(gameId));
-                    // return ;
+                    return ;
                 }
                 game.socket = game.socket.filter(socket => socket.readyState != 3)
                 if (Number(game.player1.id) === Number(ws.userId))
@@ -484,7 +482,6 @@ wss.on('connection', function connection(ws) {
                 if (game.player1.status === "Disconnected" && game.player2.status === "Disconnected" && game.mode === "remote") {
                     clearInterval(game.intervalId);
                     clearInterval(game.loopId);
-                    // game.intervalId = null;
                     games.delete(Number(gameId));
                     break ;
                 }
@@ -640,7 +637,7 @@ fastify.get("/local", async (request, reply) => {
     
     for (const game of games.values() ) {
         if (Number(game.player1.id) === Number(userId) || Number(game.player2.id) === Number(userId)) {
-            if (game.message === "Pause")
+            if (game.message === "Pause" || game.message === "start")
                 reply.code(200).send({message: "Success", id: game.id, state: "InitRemote"});
             else
                 reply.code(400).send({message: "Error", error: "You're already in game"});
@@ -816,7 +813,7 @@ fastify.post("/remote", async (request, reply) => {
 
         for (const [gameId, game] of games.entries() ) {
             if (Number(game.player1.id) === Number(userId) || Number(game.player2.id) === Number(userId)) {
-                if (game.message === "Pause")
+                if (game.message === "Pause" || game.message === "Waiting")
                     reply.code(200).send({message: "Success", id: game.id, state: "InitRemote"});
                 else
                     reply.code(400).send({message: "Error", error: "You're already in game"});
@@ -1069,20 +1066,24 @@ fastify.post("/input", async (request, reply) => {
                 return;
             }
             const game = games.get(Number(gameId));
-            if (game.message === "Playing") {
-                if (game.mode === "local") {
-                    localInputHandler(game, key, "keydown");
-                    updatePlayersPosition(game);
-                    localInputHandler(game, key, "keyup");
+            if (Number(game.player1.id) === Number(userId) || Number(game.player2.id) === Number(userId)) {
+                if (game.message === "Playing") {
+                    if (game.mode === "local") {
+                        localInputHandler(game, key, "keydown");
+                        updatePlayersPosition(game);
+                        localInputHandler(game, key, "keyup");
+                    }
+                    else if (game.mode === "remote" || game.mode === "tournament") {
+                        remoteInputHandler(game, userId, key, "keydown");
+                        updatePlayersPosition(game);
+                        remoteInputHandler(game, userId, key, "keyup");
+                    }
                 }
-                else if (game.mode === "remote" || game.mode === "tournament") {
-                    remoteInputHandler(game, userId, key, "keydown");
-                    updatePlayersPosition(game);
-                    remoteInputHandler(game, userId, key, "keyup");
-                }
+                else
+                    throw new Error("Game haven't started yet");
             }
             else
-                throw new Error("Game haven't started yet");
+                return reply.code(401).send({error: "Unauthorized"});
         }
     } catch (e) {
         console.log("Error, in API ROUTE INPUT: ", e.message);
