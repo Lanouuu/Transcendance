@@ -52,7 +52,7 @@ export async function displayAccountPage() {
 
 		Object.keys(tabTable).forEach(tabKey => {
 
-			tabTable[tabKey].btn.addEventListener('click', () => {
+			tabTable[tabKey].btn.onclick = () => {
 
 				Object.keys(tabTable).forEach(key => {
 
@@ -61,7 +61,7 @@ export async function displayAccountPage() {
 				});
 				tabTable[tabKey].fctn();
 				sessionStorage.setItem("accountActiveTab", tabKey);
-			});
+			};
 		});
 
 	} catch (error) {
