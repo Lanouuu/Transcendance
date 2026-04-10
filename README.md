@@ -9,12 +9,12 @@ The project is designed using a microservices architecture, ensuring scalability
 
 
 🚀 Features
-  🎮 Real-time Pong gameplay
-  👥 Multiplayer (local & online)
-  🔐 Secure authentication system
-  💬 Live chat between users
-  🏆 Leaderboard & rankings
-  👤 User profiles & match history
+🎮 Real-time Pong gameplay
+👥 Multiplayer (local & online)
+🔐 Secure authentication system
+💬 Live chat between users
+🏆 Leaderboard & rankings
+👤 User profiles & match history
 
 
 🛠️ Tech Stack
