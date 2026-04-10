@@ -1,14 +1,14 @@
-🕹️ Transcendence
+##🕹️ Transcendence
 A modern, real-time Pong platform built with a microservices architecture.
 
 
-📖 Overview
+##📖 Overview
 Transcendence is a full-stack web application developed as part of the 42 curriculum.
 It reimagines the classic Pong game with modern features such as real-time multiplayer, user authentication, and social interactions.
 The project is designed using a microservices architecture, ensuring scalability, modularity, and maintainability.
 
 
-🚀 Features
+##🚀 Features
 🎮 Real-time Pong gameplay
 👥 Multiplayer (local & online)
 🔐 Secure authentication system
@@ -17,7 +17,7 @@ The project is designed using a microservices architecture, ensuring scalability
 👤 User profiles & match history
 
 
-🛠️ Tech Stack
+##🛠️ Tech Stack
 Backend
 - Node.js
 - Fastify (high-performance web framework)
@@ -31,7 +31,7 @@ Database
 - SQlite
 
 
-🏗️ Architecture
+##🏗️ Architecture
 The application is built using a microservices approach, where each service runs in its own Docker container.
 
 Main services:
@@ -43,22 +43,22 @@ Main services:
 Services communicate via APIs and WebSockets.
 
 
-⚙️ Installation
+##⚙️ Installation
 git clone https://github.com/your-repo/transcendence.git
 cd transcendence
 Make
 
 
-▶️ Usage
+##▶️ Usage
 1.Open your browser and go to:
   https://localhost:8443/
 2.Create an account, log in or log as guest
 3.Start playing 🎮
 
 
-📸 Preview
+##📸 Preview
 ![ezgif com-optimize](https://github.com/user-attachments/assets/43ec0d60-530d-47fe-b76b-ae224b453451)
 
 
-👨‍💻 Authors
+##👨‍💻 Authors
 aciezadl - Lanouuu - Jacky8182 - AllTimeFondue - bohemianWedge
