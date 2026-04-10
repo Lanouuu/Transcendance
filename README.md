@@ -53,7 +53,7 @@ Services communicate via APIs and WebSockets.
 
 ## ⚙️ Installation
 
-``` git clone https://github.com/your-repo/transcendence.git ```  
+``` git clone git@github.com:Lanouuu/Transcendance.git ```  
 ``` cd transcendence ```  
 ``` Make ```  
 
