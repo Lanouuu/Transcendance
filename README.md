@@ -60,10 +60,10 @@ Services communicate via APIs and WebSockets.
 
 ## ▶️ Usage
 
-1.Open your browser and go to:
-  https://localhost:8443/
-2.Create an account, log in or log as guest
-3.Start playing 🎮
+1.Open your browser and go to:  
+  https://localhost:8443/  
+2.Create an account, log in or log as guest  
+3.Start playing 🎮  
 
 
 ## 📸 Preview
