@@ -25,13 +25,13 @@ The project is designed using a microservices architecture, ensuring scalability
 Backend
 - Node.js
 - Fastify (high-performance web framework)
-- REST API + WebSockets
-Frontend
-- HTML / CSS / JavaScript
-Infrastructure
+- REST API + WebSockets  
+Frontend  
+- HTML / CSS / JavaScript  
+Infrastructure  
 - Docker & Docker Compose
-- Microservices architecture
-Database
+- Microservices architecture  
+Database  
 - SQlite
 
 
