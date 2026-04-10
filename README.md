@@ -28,7 +28,7 @@ The project is designed using a microservices architecture, ensuring scalability
 - REST API + WebSockets
 
 ### Frontend
-- HTML / CSS / JavaScript
+- HTML / CSS (Tailwind) / JavaScript
 
 ### Infrastructure
 - Docker & Docker Compose
